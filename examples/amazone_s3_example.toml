@@ -3,6 +3,11 @@ duration="3600s"
 server="dynamodb.us-west-2.amazonaws.com"
 port="443"
 TSLMode=true
+[global.StatusCodesDist]
+  200 = 100.0 # upto 100% return status of 200
+  204 = 100.0
+  205 = 100.0
+
 [workloads]
 
 	[workloads.load0]
