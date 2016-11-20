@@ -1,0 +1,406 @@
+[global]
+duration="3600s"
+server="dynamodb.us-west-2.amazonaws.com"
+port="443"
+TSLMode=true
+[workloads]
+
+	[workloads.load0]
+	count=0
+	header="{}"
+	name="load0"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload0"
+	[workloads.load0.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=0280d96daa6dca1b14f3f0d968b718706ef4c953aa2ed801d6510785f85232b6"
+	x-amz-date="20160831T063654Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load1]
+	count=0
+	header="{}"
+	name="load1"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload1"
+	[workloads.load1.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=88f795427725ba68faab604d05dfbf7e50d09116402e75d3301fe2cf734c45cb"
+	x-amz-date="20160831T063654Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load2]
+	count=0
+	header="{}"
+	name="load2"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload2"
+	[workloads.load2.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=8754e82eb3536f83926d42dedb7d73b92e85e3f2d48db10ed9b3a9b62fe16f04"
+	x-amz-date="20160831T063654Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load3]
+	count=0
+	header="{}"
+	name="load3"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload3"
+	[workloads.load3.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=1eb2d1c46f76d59160480e621fb1824379b801d28fede190dfbf69d1ea2bd37a"
+	x-amz-date="20160831T063654Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load4]
+	count=0
+	header="{}"
+	name="load4"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload4"
+	[workloads.load4.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=1d75bce090d9156ce2495a0d6925d71ccb14219fd94a37776af17ba9ee062a7c"
+	x-amz-date="20160831T063654Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load5]
+	count=0
+	header="{}"
+	name="load5"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload5"
+	[workloads.load5.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=f5f6f2fcb6ff21126cc556547531e1534a7667f759d4cdcac99dde6b7b2e6fb6"
+	x-amz-date="20160831T063654Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load6]
+	count=0
+	header="{}"
+	name="load6"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload6"
+	[workloads.load6.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=209b3dadbeaf9c3d68af53dbdbe6bc1fb4c92df0598480b072bde68b3b461c3e"
+	x-amz-date="20160831T063654Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load7]
+	count=0
+	header="{}"
+	name="load7"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload7"
+	[workloads.load7.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=53715c0eb9eb3274eb99f0d7922431e0d2ee6ef3eb6eaa96fa6bb6021f277709"
+	x-amz-date="20160831T063654Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load8]
+	count=0
+	header="{}"
+	name="load8"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload8"
+	[workloads.load8.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=1cca8c9bb1b5a0331dc6a811aab32147e9e6d0bedd6485ae2aefa7d95c0fae3d"
+	x-amz-date="20160831T063655Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load9]
+	count=0
+	header="{}"
+	name="load9"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload9"
+	[workloads.load9.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=7bd9828849373c7dcea987b0e014bcb63345cb69c8f87440e23035eea9848caa"
+	x-amz-date="20160831T063655Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load10]
+	count=0
+	header="{}"
+	name="load10"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload10"
+	[workloads.load10.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=d89ddb43b2a2645f2a689b72ad2aebbbde1c71c99e61799b4ed9ffc52f6c5851"
+	x-amz-date="20160831T063655Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load11]
+	count=0
+	header="{}"
+	name="load11"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload11"
+	[workloads.load11.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=f19421777b5e677ad5ceccdc07e6c501a605d36b5ec578c9dc5445a8b7f1a56e"
+	x-amz-date="20160831T063655Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load12]
+	count=0
+	header="{}"
+	name="load12"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload12"
+	[workloads.load12.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=859acbe307c8b5a8c4d88d0c96545b97f3910a0216d3c3f1c2c722f96959323d"
+	x-amz-date="20160831T063655Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load13]
+	count=0
+	header="{}"
+	name="load13"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload13"
+	[workloads.load13.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=16329231b0790ada7e30ded8af47b5beb000863c5b9026430b73784982445c5b"
+	x-amz-date="20160831T063655Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load14]
+	count=0
+	header="{}"
+	name="load14"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload14"
+	[workloads.load14.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=33acd0b520a2120cab889bee15a8bf3a49fe2ae4309fddf6129fbd6deb78a44a"
+	x-amz-date="20160831T063655Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load15]
+	count=0
+	header="{}"
+	name="load15"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload15"
+	[workloads.load15.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=f1b099370e11062a608c8f89c88c31bff6b15ca5f648dc79cc6553aa1667acd1"
+	x-amz-date="20160831T063655Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load16]
+	count=0
+	header="{}"
+	name="load16"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload16"
+	[workloads.load16.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=f71fa75a797809b6e9aee6e7fbf3a5e368e2f3b2162cf228262e0e807cdf20a4"
+	x-amz-date="20160831T063655Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load17]
+	count=0
+	header="{}"
+	name="load17"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload17"
+	[workloads.load17.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=e552581d735187589eedfad9c505959a4c20bb93d7d0d1a141ffd34ab1adb89a"
+	x-amz-date="20160831T063656Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load18]
+	count=0
+	header="{}"
+	name="load18"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload18"
+	[workloads.load18.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=c0c42301636b4ccc3c0ae2cb31ab8169dc38e93e4ee9fcb3d010339d58d6c014"
+	x-amz-date="20160831T063656Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load19]
+	count=0
+	header="{}"
+	name="load19"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload19"
+	[workloads.load19.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=b52bf9adb6e3a43a4fb27267c169df9bc45d67e185012959d1272c849fa3d9d8"
+	x-amz-date="20160831T063656Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load20]
+	count=0
+	header="{}"
+	name="load20"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload20"
+	[workloads.load20.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=db67345e114df434a9784f2205834f3502349506a2c548499432e2280f1a2791"
+	x-amz-date="20160831T063656Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load21]
+	count=0
+	header="{}"
+	name="load21"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload21"
+	[workloads.load21.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=385c871f9b747a0ca80bcd19d69e975d92e414ad2099ae660476b7155290dcc0"
+	x-amz-date="20160831T063656Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load22]
+	count=0
+	header="{}"
+	name="load22"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload22"
+	[workloads.load22.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=20e4a71af3a11d3b2b0ee19ebee997718de90ea82ccbca4d4674a1f20f737810"
+	x-amz-date="20160831T063656Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load23]
+	count=0
+	header="{}"
+	name="load23"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload23"
+	[workloads.load23.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=8262166240d7dca926d94bdf300bd79cbb122e0adcc0a5fba0f2ece9e2a9084d"
+	x-amz-date="20160831T063656Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
+
+	[workloads.load24]
+	count=0
+	header="{}"
+	name="load24"
+	duration="20s"
+	type="POST"
+	workers=3
+	bucket=""
+	file_path=""
+	payload="examples/payloads/payload24"
+	[workloads.load24.Header]
+	Authorization="AWS4-HMAC-SHA256 Credential=AKIAI6LU27UN3AIWNIQQ/20160831/us-west-2/dynamodb/aws4_request,SignedHeaders=content-type;host;x-amz-date;x-amz-target,Signature=c11ae6c7b18f7150d4d6f5741d9c29d33154b0a5930beff856a63b1215633364"
+	x-amz-date="20160831T063656Z"
+	Content-Type="application/x-amz-json-1.0"
+	x-amz-target="DynamoDB_20120810.GetItem"
