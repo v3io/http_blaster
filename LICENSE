@@ -1,4 +1,3 @@
-/*
 Copyright 2016 Iguazio.io Systems Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License") with
@@ -16,16 +15,3 @@ In addition, you may not use the software for any purposes that are
 illegal under applicable law, and the grant of the foregoing license
 under the Apache 2.0 license is conditioned upon your compliance with
 such restriction.
-*/
-package main
-
-import (
-	"github.com/valyala/fasthttp"
-)
-
-func clone_request(req *fasthttp.Request) *fasthttp.Request {
-	new_req := new(fasthttp.Request)
-	req.Header.CopyTo(&new_req.Header)
-	new_req.AppendBody(req.Body())
-	return new_req
-}
