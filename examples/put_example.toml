@@ -1,0 +1,22 @@
+title = "Workload put example"
+
+[global]
+block_size = 5
+Duration = "160s"
+server="127.0.0.1"
+port="8080"
+TSLMode=false
+ [global.StatusCodesDist]
+  200 = 100.0
+  204 = 100.0
+  205 = 100.0
+
+[workloads]
+   [workloads.put]
+    name="10 seconds put from 20 workers"
+    bucket=""
+    file_path="test.html"
+    Duration = "10s"
+    TYPE="PUT"
+    workers=20
+    count=0

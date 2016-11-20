@@ -1,0 +1,100 @@
+title = "Workload example"
+
+[global]
+block_size = 5
+Duration = "160s"
+server="127.0.0.1"
+port="8080"
+TSLMode=false
+ [global.StatusCodesDist]
+  200 = 100.0 # upto 100% return status of 200
+  204 = 100.0
+  205 = 100.0
+
+[workloads]
+   # [workloads.get1]
+   # name="first"
+   # bucket=""
+   # file_path="test.html"
+   # Duration = "30s"
+   # TYPE="PUT"
+   # workers=20
+   # count=1
+    #payload="payload.dat"
+    #[workloads.get1.Header]
+    #   range = "-1"
+
+
+   [workloads.get2]
+    name="multi get from 20 workers"
+    bucket=""
+    file_path="test.html"
+    Duration = "10s"
+    TYPE="GET"
+    count=0
+    workers=20
+    #payload="payload.dat"
+
+ [workloads.get1]
+    name="multi get1 from 20 workers"
+    bucket=""
+    file_path="test.html"
+    Duration = "10s"
+    TYPE="GET"
+    count=0
+    workers=20
+    #payload="payload.dat"
+
+
+#    [workloads.put]
+#    name="third"
+#    bucket=""
+#    file_path="test.html"
+#    Duration = "10s"
+#    TYPE="PUT"
+#    workers=2
+#    payload="payload.dat"
+#    [workloads.put.Header]
+#         range = "-1"
+
+#    [workloads.put]
+#    name="put"
+#    bucket=""
+#    file_path="test.html"
+#    Duration = "60s"
+#    TYPE="PUT"
+#    executors=2
+
+ #   [workloads.putappend2]
+ #   name="putappend2"
+ #   bucket="1"
+ #   file_path="test_file7"
+ #   duration = "16s"
+ #   type="PUTAPPEND"
+ #   executors=6
+
+ #   [workloads.putappend1]
+ #   name="putappend"
+ #   bucket="1"
+ #   file_path="test_file1"
+ #   Duration = "10s"
+ #   TYPE="PUTAPPEND"
+ #   executors=3
+
+  #  [workloads.putappend4]
+  #  name="putappend"
+  #  bucket="1"
+  #  file_path="test_file2"
+  #  Duration = "10s"
+  #  TYPE="PUTAPPEND"
+  #  executors=3
+
+  # [workloads.putappend3]
+  # name="putappend"
+  # bucket="1"
+  # file_path="test_file3"
+  # Duration = "10s"
+  # TYPE="PUTAPPEND"
+  # executors=3
+
+
