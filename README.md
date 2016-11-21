@@ -3,11 +3,11 @@
 ## Getting started
 
 ### Get the code into your workspace
-    cd $GOPATH
+    cd $GOPATH/src
     git clone https://github.com/v3io/http_blaster.git
 
 ### Build
-    cd $GOPATH/http_blaster
+    cd $GOPATH/src/http_blaster
     go get
     go build
 
