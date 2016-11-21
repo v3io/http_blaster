@@ -46,7 +46,7 @@ type worker_results struct {
 	avg   time.Duration
 	read  uint64
 	write uint64
-	codes map[int]int
+	codes map[int]uint64
 }
 
 func (self *worker_load) Prepare_request(content_type string,
@@ -73,6 +73,7 @@ type worker struct {
 	bw                  *bufio.Writer
 	results             worker_results
 	connection_restarts uint32
+	error_count	    uint32
 	is_tls_client       bool
 }
 
@@ -160,15 +161,18 @@ WLoop:
 				if err == nil {
 					code = resp.StatusCode()
 					w.results.codes[code]++
+
+					w.results.count++
+					if duration < w.results.min {
+						w.results.min = duration
+					}
+					if duration > w.results.max {
+						w.results.max = duration
+					}
+					w.results.avg = w.results.avg + (duration - w.results.avg) / time.Duration(w.results.count)
+				}else{
+					w.error_count++
 				}
-				w.results.count++
-				if duration < w.results.min {
-					w.results.min = duration
-				}
-				if duration > w.results.max {
-					w.results.max = duration
-				}
-				w.results.avg = w.results.avg + (duration-w.results.avg)/time.Duration(w.results.count)
 			} else {
 				break WLoop
 			}
@@ -181,7 +185,7 @@ func NewWorker(host string, tls_client bool) *worker {
 		return nil
 	}
 	worker := worker{host: host, is_tls_client: tls_client}
-	worker.results.codes = make(map[int]int)
+	worker.results.codes = make(map[int]uint64)
 	worker.open_connection()
 	return &worker
 }

@@ -38,7 +38,7 @@ type executor_result struct {
 	Avg      time.Duration
 	Iops     uint64
 	Latency  map[int]int64
-	Statuses map[int]int
+	Statuses map[int]uint64
 	Errors   map[string]int
 }
 
@@ -134,7 +134,7 @@ func (self *executor) run(wg *sync.WaitGroup) error {
 }
 
 func (self *executor) Start(wg *sync.WaitGroup) error {
-	self.results.Statuses = make(map[int]int)
+	self.results.Statuses = make(map[int]uint64)
 	log.Println("at executor start ", self.Workload)
 	go func() {
 		self.run(wg)
