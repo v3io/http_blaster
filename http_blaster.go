@@ -128,7 +128,7 @@ func load_test_Config() {
 		log.Fatalln("Failed to parse config file")
 	}
 	log.Printf("Running test on %s:%s, tls mode=%v, block size=%d, test timeout %v",
-		config.Global.Server, config.Global.Port, config.Global.TSLMode,
+		config.Global.Server, config.Global.Port, config.Global.TLSMode,
 		config.Global.Block_size, config.Global.Duration)
 	dataBfr = make([]byte, config.Global.Block_size, config.Global.Block_size)
 	for i, _ := range dataBfr {

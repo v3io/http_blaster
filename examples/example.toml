@@ -5,7 +5,7 @@ block_size = 5
 Duration = "160s"
 server="127.0.0.1"
 port="8080"
-TSLMode=false
+TLSMode=false
  [global.StatusCodesAcceptance]
   200 = 100.0 # upto 100% return status of 200
   204 = 100.0

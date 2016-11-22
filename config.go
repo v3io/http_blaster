@@ -46,7 +46,7 @@ type global struct {
 	Block_size            int32
 	Server                string
 	Port                  string
-	TSLMode               bool
+	TLSMode               bool
 	StatusCodesAcceptance map[string]float64
 }
 

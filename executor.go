@@ -68,7 +68,7 @@ func (self *executor) run(wg *sync.WaitGroup) error {
 	workers_wg.Add(self.Workload.Workers)
 	for i := 0; i < self.Workload.Workers; i++ {
 		var url string = " "
-		if config.Global.TSLMode {
+		if config.Global.TLSMode {
 			url = fmt.Sprintf("https://%s/%s/%s", self.host, self.Workload.Bucket, self.Workload.File_path)
 		} else {
 			url = fmt.Sprintf("http://%s/%s/%s", self.host, self.Workload.Bucket, self.Workload.File_path)
@@ -93,7 +93,7 @@ func (self *executor) run(wg *sync.WaitGroup) error {
 		l.Prepare_request(contentType, self.Workload.Header, string(self.Workload.Type),
 			url, string(payload))
 		server := fmt.Sprintf("%s:%s", config.Global.Server, config.Global.Port)
-		w := NewWorker(server, config.Global.TSLMode)
+		w := NewWorker(server, config.Global.TLSMode)
 		self.workers = append(self.workers, w)
 		go w.run_worker(&l, &workers_wg)
 	}
