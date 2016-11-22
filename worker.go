@@ -73,7 +73,7 @@ type worker struct {
 	bw                  *bufio.Writer
 	results             worker_results
 	connection_restarts uint32
-	error_count	    uint32
+	error_count         uint32
 	is_tls_client       bool
 }
 
@@ -169,8 +169,8 @@ WLoop:
 					if duration > w.results.max {
 						w.results.max = duration
 					}
-					w.results.avg = w.results.avg + (duration - w.results.avg) / time.Duration(w.results.count)
-				}else{
+					w.results.avg = w.results.avg + (duration-w.results.avg)/time.Duration(w.results.count)
+				} else {
 					w.error_count++
 				}
 			} else {
