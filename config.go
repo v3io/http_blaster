@@ -42,12 +42,12 @@ type tomlConfig struct {
 }
 
 type global struct {
-	Duration        duration
-	Block_size      int32
-	Server          string
-	Port            string
-	TSLMode         bool
-	StatusCodesDist map[string]float64
+	Duration              duration
+	Block_size            int32
+	Server                string
+	Port                  string
+	TSLMode               bool
+	StatusCodesAcceptance map[string]float64
 }
 
 type workload struct {

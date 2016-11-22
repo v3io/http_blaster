@@ -19,7 +19,7 @@
 	    Server        127.0.0.1 - server address
 	    Port          8080 - server port
 	    TSLMode       false - use secure connection
-	    [global.StatusCodesDist]
+	    [global.StatusCodesAcceptance]
         	200 = 100   -accept upto 100% from total responses to be with status code 200
         	500 = 0.1   -accept upto 0.1% from total responses to be with status code 500
 

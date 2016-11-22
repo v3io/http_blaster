@@ -60,7 +60,7 @@ func Test_GET_Worker(t* testing.T){
 	rand.Seed(time.Now().UTC().UnixNano())
 	workers_wg := sync.WaitGroup{}
 	url := fmt.Sprintf("http://%s/%s", host, file)
-	wl := worker_load{req_count: 10,
+	wl := worker_load{req_count: uint64(rand.Int31n(500)),
 		duration: duration{time.Duration(time.Second * 1)},
 		port: port}
 	header := make(map[string]string)

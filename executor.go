@@ -159,7 +159,7 @@ func (self *executor) Report() (executor_result, error) {
 
 	log.Println("iops: ", self.results.Iops)
 	for err_code, err_count := range self.results.Statuses {
-		if max_errors, ok := config.Global.StatusCodesDist[strconv.Itoa(err_code)]; ok {
+		if max_errors, ok := config.Global.StatusCodesAcceptance[strconv.Itoa(err_code)]; ok {
 			if self.results.Total > 0 && err_count > 0 {
 				err_percent := (float64(err_count) * float64(100)) / float64(self.results.Total)
 				log.Printf("errors type %d occured %f%% during the test \"%s\"",
