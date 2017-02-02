@@ -71,11 +71,10 @@ func (self *executor) run(wg *sync.WaitGroup) error {
 		var url string = " "
 		var base_uri string = ""
 		if config.Global.TLSMode {
-			base_uri = fmt.Sprintf("https://%s/%s/s", self.host, self.Workload.Bucket, self.Workload.File_path)
+			base_uri = fmt.Sprintf("https://%s/%s/%s", self.host, self.Workload.Bucket, self.Workload.File_path)
 		} else {
-			base_uri = fmt.Sprintf("http://%s/%s/s", self.host, self.Workload.Bucket, self.Workload.File_path)
+			base_uri = fmt.Sprintf("http://%s/%s/%s", self.host, self.Workload.Bucket, self.Workload.File_path)
 		}
-
 		url = base_uri
 		l := worker_load{req_count: req_per_worker, duration: self.Workload.Duration,
 			port: config.Global.Port}
