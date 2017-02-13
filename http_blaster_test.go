@@ -24,6 +24,9 @@ func Test_Validate_Config_Examples(t *testing.T) {
 
 	for _, file := range files {
 		if !file.IsDir() {
+			if file.Name() == "cfg_generator.sh"{
+				continue
+			}
 			_, err := LoadConfig(path.Join(example_dir, file.Name()))
 			if err != nil {
 				t.Errorf("Failed to load conf %s", file.Name())
@@ -69,9 +72,9 @@ func Test_GET_Worker(t *testing.T) {
 	wl.Prepare_request(contentType, header, method,
 		url, string(payload))
 	server := fmt.Sprintf("%s:%s", host, port)
-	worker := NewWorker(server, false)
+	worker := NewWorker(server, false, url)
 	workers_wg.Add(1)
-	worker.run_worker(&wl, &workers_wg)
+	worker.run_worker(&wl, &workers_wg,0,0)
 	workers_wg.Wait()
 	if worker.error_count > 0 {
 		t.Errorf("test ended with errors")
@@ -115,9 +118,9 @@ func Test_PUT_Worker(t *testing.T) {
 	wl.Prepare_request(contentType, header, method,
 		url, string(payload))
 	server := fmt.Sprintf("%s:%s", host, port)
-	worker := NewWorker(server, false)
+	worker := NewWorker(server, false, url)
 	workers_wg.Add(1)
-	worker.run_worker(&wl, &workers_wg)
+	worker.run_worker(&wl, &workers_wg,0,0)
 	workers_wg.Wait()
 	if worker.results.count != wl.req_count {
 		t.Errorf("count mismatch req=%d, actual=%d", wl.req_count, worker.results.count)
