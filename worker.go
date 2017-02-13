@@ -22,6 +22,7 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
+	"fmt"
 	"github.com/valyala/fasthttp"
 	"log"
 	"net"
@@ -75,12 +76,31 @@ type worker struct {
 	connection_restarts uint32
 	error_count         uint32
 	is_tls_client       bool
+	base_uri            string
 }
 
-func (w *worker) send_request(req *fasthttp.Request, resp *fasthttp.Response) (error, time.Duration) {
-	err, duration := w.send(req, resp)
-	if err != nil || resp.ConnectionClose() {
+func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response) (error, time.Duration) {
+	var (
+		code int
+	)
+	err, duration := w.send(req, response)
+	if err != nil || response.ConnectionClose() {
 		w.restart_connection()
+	}
+	if err == nil {
+		code = response.StatusCode()
+		w.results.codes[code]++
+
+		w.results.count++
+		if duration < w.results.min {
+			w.results.min = duration
+		}
+		if duration > w.results.max {
+			w.results.max = duration
+		}
+		w.results.avg = w.results.avg + (duration-w.results.avg)/time.Duration(w.results.count)
+	} else {
+		w.error_count++
 	}
 
 	return err, duration
@@ -117,15 +137,15 @@ func (w *worker) restart_connection() {
 func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, time.Duration) {
 	start := time.Now()
 	if err := req.Write(w.bw); err != nil {
-		log.Printf("send write error: %s\n", err)
+		log.Printf("send write error: %s %s\n", req.URI().String(), err.Error())
 		return err, 0
 	}
 	if err := w.bw.Flush(); err != nil {
-		log.Printf("send flush error: %s\n", err)
+		log.Printf("send flush error: %s %s\n", req.URI().String(), err.Error())
 		return err, 0
 	}
 	if err := resp.Read(w.br); err != nil {
-		log.Printf("send read error: %s\n", err)
+		log.Printf("send read error: %s %s\n",req.URI().String(), err.Error())
 		return err, 0
 	}
 	end := time.Now()
@@ -133,11 +153,68 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, ti
 	return nil, duration
 }
 
-func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup) {
+func (w *worker) gen_files_uri(file_index int, count int) chan string {
+	ch := make(chan string, 1000)
+	go func() {
+		file_pref := file_index
+		for {
+
+			if file_pref == file_index + count {
+				file_pref = file_index
+			}
+			ch <- fmt.Sprintf("%s_%d", w.base_uri, file_pref)
+			file_pref += 1
+
+		}
+	}()
+	return ch
+}
+
+func(w *worker) single_file_submitter(done chan struct{}, load *worker_load){
+	request := clone_request(load.req)
+	response := fasthttp.Response{}
+LOOP:
+	for {
+		select {
+		case <-done:
+			break LOOP
+		default:
+			if w.results.count < load.req_count{
+				w.send_request(request, &response)
+			}else{
+				break LOOP
+			}
+
+		}
+	}
+
+}
+
+func (w *worker) multi_file_submitter(done chan struct{}, load *worker_load, file_index int, count int)  {
+	ch_uri := w.gen_files_uri(file_index, count)
+	request := clone_request(load.req)
+	response := fasthttp.Response{}
+WLoop:
+	for {
+		select {
+		case <-done:
+			break WLoop
+		case uri := <-ch_uri:
+			if w.results.count < load.req_count {
+				request.SetRequestURI(uri)
+				w.send_request(request, &response)
+			} else {
+				break WLoop
+			}
+
+		}
+	}
+
+}
+
+func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup, file_index int, count int) {
 	defer wg.Done()
-	r := clone_request(load.req)
 	w.results.min = time.Duration(10 * time.Second)
-	resp := fasthttp.Response{}
 	done := make(chan struct{})
 
 	go func() {
@@ -146,45 +223,18 @@ func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup) {
 			close(done)
 		}
 	}()
-
-WLoop:
-	for {
-		select {
-		case <-done:
-			break WLoop
-		default:
-			if w.results.count < load.req_count {
-				var (
-					code int
-				)
-				err, duration := w.send_request(r, &resp)
-				if err == nil {
-					code = resp.StatusCode()
-					w.results.codes[code]++
-
-					w.results.count++
-					if duration < w.results.min {
-						w.results.min = duration
-					}
-					if duration > w.results.max {
-						w.results.max = duration
-					}
-					w.results.avg = w.results.avg + (duration-w.results.avg)/time.Duration(w.results.count)
-				} else {
-					w.error_count++
-				}
-			} else {
-				break WLoop
-			}
-		}
+	if file_index == 0 && count == 0 {
+		w.single_file_submitter(done, load)
+	}else{
+		w.multi_file_submitter(done, load, file_index, count)
 	}
 }
 
-func NewWorker(host string, tls_client bool) *worker {
+func NewWorker(host string, tls_client bool, base_uri string) *worker {
 	if host == "" {
 		return nil
 	}
-	worker := worker{host: host, is_tls_client: tls_client}
+	worker := worker{host: host, is_tls_client: tls_client, base_uri: base_uri}
 	worker.results.codes = make(map[int]uint64)
 	worker.open_connection()
 	return &worker

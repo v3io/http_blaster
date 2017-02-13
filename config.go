@@ -51,16 +51,18 @@ type global struct {
 }
 
 type workload struct {
-	Name      string
-	Bucket    string
-	File_path string
-	Type      CommandType
-	Duration  duration
-	Count     uint64
-	Workers   int
-	Id        int32
-	Header    map[string]string
-	Payload   string
+	Name       string
+	Bucket     string
+	File_path  string
+	Type       CommandType
+	Duration   duration
+	Count      uint64
+	Workers    int
+	Id         int32
+	Header     map[string]string
+	Payload    string
+	FileIndex  int
+	FilesCount int
 }
 
 func LoadConfig(file_path string) (tomlConfig, error) {

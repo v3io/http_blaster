@@ -66,14 +66,16 @@ func (self *executor) run(wg *sync.WaitGroup) error {
 		req_per_worker = self.Workload.Count
 	}
 	workers_wg.Add(self.Workload.Workers)
+	worker_file_count := self.Workload.FilesCount / self.Workload.Workers
 	for i := 0; i < self.Workload.Workers; i++ {
 		var url string = " "
+		var base_uri string = ""
 		if config.Global.TLSMode {
-			url = fmt.Sprintf("https://%s/%s/%s", self.host, self.Workload.Bucket, self.Workload.File_path)
+			base_uri = fmt.Sprintf("https://%s/%s/%s", self.host, self.Workload.Bucket, self.Workload.File_path)
 		} else {
-			url = fmt.Sprintf("http://%s/%s/%s", self.host, self.Workload.Bucket, self.Workload.File_path)
+			base_uri = fmt.Sprintf("http://%s/%s/%s", self.host, self.Workload.Bucket, self.Workload.File_path)
 		}
-
+		url = base_uri
 		l := worker_load{req_count: req_per_worker, duration: self.Workload.Duration,
 			port: config.Global.Port}
 		var payload []byte
@@ -93,9 +95,10 @@ func (self *executor) run(wg *sync.WaitGroup) error {
 		l.Prepare_request(contentType, self.Workload.Header, string(self.Workload.Type),
 			url, string(payload))
 		server := fmt.Sprintf("%s:%s", config.Global.Server, config.Global.Port)
-		w := NewWorker(server, config.Global.TLSMode)
+		w := NewWorker(server, config.Global.TLSMode, base_uri)
 		self.workers = append(self.workers, w)
-		go w.run_worker(&l, &workers_wg)
+		file_index := self.Workload.FileIndex + worker_file_count*i
+		go w.run_worker(&l, &workers_wg, file_index, worker_file_count)
 	}
 	workers_wg.Wait()
 	self.results.Duration = time.Now().Sub(self.Start_time)
@@ -162,7 +165,7 @@ func (self *executor) Report() (executor_result, error) {
 		if max_errors, ok := config.Global.StatusCodesAcceptance[strconv.Itoa(err_code)]; ok {
 			if self.results.Total > 0 && err_count > 0 {
 				err_percent := (float64(err_count) * float64(100)) / float64(self.results.Total)
-				log.Printf("errors type %d occured %f%% during the test \"%s\"",
+				log.Printf("status code %d occured %f%% during the test \"%s\"",
 					err_code, err_percent, self.Workload.Name)
 				if float64(err_percent) > float64(max_errors) {
 					return self.results,
