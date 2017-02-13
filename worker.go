@@ -137,15 +137,15 @@ func (w *worker) restart_connection() {
 func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, time.Duration) {
 	start := time.Now()
 	if err := req.Write(w.bw); err != nil {
-		log.Printf("send write error: %s %s\n", string(req.RequestURI()), err.Error())
+		log.Printf("send write error: %s %s\n", req.URI().String(), err.Error())
 		return err, 0
 	}
 	if err := w.bw.Flush(); err != nil {
-		log.Printf("send flush error: %s %s\n", string(req.RequestURI()), err.Error())
+		log.Printf("send flush error: %s %s\n", req.URI().String(), err.Error())
 		return err, 0
 	}
 	if err := resp.Read(w.br); err != nil {
-		log.Printf("send read error: %s %s\n", string(req.RequestURI()), err.Error())
+		log.Printf("send read error: %s %s\n",req.URI().String(), err.Error())
 		return err, 0
 	}
 	end := time.Now()
@@ -180,7 +180,7 @@ LOOP:
 			break LOOP
 		default:
 			if w.results.count < load.req_count{
-				w.send(request, &response)
+				w.send_request(request, &response)
 			}else{
 				break LOOP
 			}
