@@ -4,6 +4,7 @@ PUT_FILE="blaster_put.cfg"
 SERVER="127.0.0.1"
 PORT="8081"
 BUCKET="1"
+FILE_NAME="test_file"
 
 PUT_DURATION="200s"
 PUT_LOAD_START=1
@@ -12,7 +13,6 @@ PUT_LOAD_WORKERS=1
 PUT_COUNT=1000
 PUT_FILES_START=0
 PUT_FILES_COUNT=30000
-
 
 GET_DURATION="200s"
 GET_COUNT=1000
@@ -42,7 +42,7 @@ TLSMode=false
 for (( i=$PUT_LOAD_START; i<=$PUT_LOAD_END; i++ )) do echo "[workloads.$i]
     name=\"PUT-$i\"
     bucket=\"$BUCKET\"
-    file_path=\"$i/test_file\"
+    file_path=\"$i/$FILE_NAME\"
     Duration = \"$PUT_DURATION\"
     TYPE=\"PUT\"
     workers=$PUT_LOAD_WORKERS
@@ -71,7 +71,7 @@ TLSMode=false
 for (( i=$GET_LOAD_START; i<=$GET_LOAD_END; i++ )) do echo "[workloads.$i]
     name=\"GET-$i\"
     bucket=\"$BUCKET\"
-    file_path=\"$i/test_file\"
+    file_path=\"$i/$FILE_NAME\"
     Duration = \"$GET_DURATION\"
     TYPE=\"GET\"
     workers=$GET_LOAD_WORKERS
