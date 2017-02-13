@@ -165,7 +165,7 @@ func (self *executor) Report() (executor_result, error) {
 		if max_errors, ok := config.Global.StatusCodesAcceptance[strconv.Itoa(err_code)]; ok {
 			if self.results.Total > 0 && err_count > 0 {
 				err_percent := (float64(err_count) * float64(100)) / float64(self.results.Total)
-				log.Printf("errors type %d occured %f%% during the test \"%s\"",
+				log.Printf("status code %d occured %f%% during the test \"%s\"",
 					err_code, err_percent, self.Workload.Name)
 				if float64(err_percent) > float64(max_errors) {
 					return self.results,

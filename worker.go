@@ -79,10 +79,28 @@ type worker struct {
 	base_uri            string
 }
 
-func (w *worker) send_request(req *fasthttp.Request, resp *fasthttp.Response) (error, time.Duration) {
-	err, duration := w.send(req, resp)
-	if err != nil || resp.ConnectionClose() {
+func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response) (error, time.Duration) {
+	var (
+		code int
+	)
+	err, duration := w.send(req, response)
+	if err != nil || response.ConnectionClose() {
 		w.restart_connection()
+	}
+	if err == nil {
+		code = response.StatusCode()
+		w.results.codes[code]++
+
+		w.results.count++
+		if duration < w.results.min {
+			w.results.min = duration
+		}
+		if duration > w.results.max {
+			w.results.max = duration
+		}
+		w.results.avg = w.results.avg + (duration-w.results.avg)/time.Duration(w.results.count)
+	} else {
+		w.error_count++
 	}
 
 	return err, duration
@@ -135,26 +153,68 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, ti
 	return nil, duration
 }
 
-func (w *worker)gen_files_uri(file_index int, count int) chan string {
+func (w *worker) gen_files_uri(file_index int, count int) chan string {
 	ch := make(chan string, 1000)
 	go func() {
 		file_pref := file_index
-		for{
-			if file_pref == file_index+count {
+		for {
+
+			if file_pref == file_index + count {
 				file_pref = file_index
 			}
 			ch <- fmt.Sprintf("%s_%d", w.base_uri, file_pref)
 			file_pref += 1
+
 		}
 	}()
 	return ch
 }
 
+func(w *worker) single_file_submitter(done chan struct{}, load *worker_load){
+	request := clone_request(load.req)
+	response := fasthttp.Response{}
+LOOP:
+	for {
+		select {
+		case <-done:
+			break LOOP
+		default:
+			if w.results.count < load.req_count{
+				w.send(request, &response)
+			}else{
+				break LOOP
+			}
+
+		}
+	}
+
+}
+
+func (w *worker) multi_file_submitter(done chan struct{}, load *worker_load, file_index int, count int)  {
+	ch_uri := w.gen_files_uri(file_index, count)
+	request := clone_request(load.req)
+	response := fasthttp.Response{}
+WLoop:
+	for {
+		select {
+		case <-done:
+			break WLoop
+		case uri := <-ch_uri:
+			if w.results.count < load.req_count {
+				request.SetRequestURI(uri)
+				w.send_request(request, &response)
+			} else {
+				break WLoop
+			}
+
+		}
+	}
+
+}
+
 func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup, file_index int, count int) {
 	defer wg.Done()
-	r := clone_request(load.req)
 	w.results.min = time.Duration(10 * time.Second)
-	resp := fasthttp.Response{}
 	done := make(chan struct{})
 
 	go func() {
@@ -163,38 +223,10 @@ func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup, file_index in
 			close(done)
 		}
 	}()
-	ch_uri := w.gen_files_uri(file_index, count)
-WLoop:
-	for {
-		select {
-		case <-done:
-			break WLoop
-		case uri := <- ch_uri:
-			if w.results.count < load.req_count {
-				var (
-					code int
-				)
-				r.SetRequestURI(uri)
-				err, duration := w.send_request(r, &resp)
-				if err == nil {
-					code = resp.StatusCode()
-					w.results.codes[code]++
-
-					w.results.count++
-					if duration < w.results.min {
-						w.results.min = duration
-					}
-					if duration > w.results.max {
-						w.results.max = duration
-					}
-					w.results.avg = w.results.avg + (duration-w.results.avg)/time.Duration(w.results.count)
-				} else {
-					w.error_count++
-				}
-			} else {
-				break WLoop
-			}
-		}
+	if file_index == 0 && count == 0 {
+		w.single_file_submitter(done, load)
+	}else{
+		w.multi_file_submitter(done, load, file_index, count)
 	}
 }
 
