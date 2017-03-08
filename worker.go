@@ -20,15 +20,12 @@ such restriction.
 package main
 
 import (
-	"bufio"
-	"crypto/tls"
 	"fmt"
 	"github.com/valyala/fasthttp"
-	"log"
 	"net"
-	"os"
 	"sync"
 	"time"
+	"crypto/tls"
 )
 
 const DialTimeout = 60 * time.Second
@@ -70,13 +67,12 @@ func (self *worker_load) Prepare_request(content_type string,
 type worker struct {
 	host                string
 	conn                net.Conn
-	br                  *bufio.Reader
-	bw                  *bufio.Writer
 	results             worker_results
 	connection_restarts uint32
 	error_count         uint32
 	is_tls_client       bool
 	base_uri            string
+	client    *fasthttp.HostClient
 }
 
 func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response) (error, time.Duration) {
@@ -107,25 +103,16 @@ func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response
 }
 
 func (w *worker) open_connection() {
-	conn, err := fasthttp.DialTimeout(w.host, DialTimeout)
-	if err != nil {
-		log.Printf("open connection error: %s\n", err)
-		os.Exit(1)
+	conf := &tls.Config{
+		InsecureSkipVerify: true,
 	}
-	if w.is_tls_client {
-		conf := &tls.Config{
-			InsecureSkipVerify: true,
-		}
-		w.conn = tls.Client(conn, conf)
-	} else {
-		w.conn = conn
-	}
-	w.br = bufio.NewReaderSize(w.conn, 16*1024)
-	w.bw = bufio.NewWriter(w.conn)
+	w.client = &fasthttp.HostClient{Addr: w.host, IsTLS:w.is_tls_client, TLSConfig:conf}
 }
 
 func (w *worker) close_connection() {
-	w.conn.Close()
+	if w.conn != nil {
+		w.conn.Close()
+	}
 }
 
 func (w *worker) restart_connection() {
@@ -136,18 +123,7 @@ func (w *worker) restart_connection() {
 
 func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, time.Duration) {
 	start := time.Now()
-	if err := req.Write(w.bw); err != nil {
-		log.Printf("send write error: %s %s\n", req.URI().String(), err.Error())
-		return err, 0
-	}
-	if err := w.bw.Flush(); err != nil {
-		log.Printf("send flush error: %s %s\n", req.URI().String(), err.Error())
-		return err, 0
-	}
-	if err := resp.Read(w.br); err != nil {
-		log.Printf("send read error: %s %s\n",req.URI().String(), err.Error())
-		return err, 0
-	}
+	w.client.DoTimeout(req, resp, time.Duration(10 * time.Second))
 	end := time.Now()
 	duration := end.Sub(start)
 	return nil, duration
