@@ -123,7 +123,7 @@ func (w *worker) restart_connection() {
 
 func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, time.Duration) {
 	start := time.Now()
-	w.client.DoTimeout(req, resp, time.Duration(10 * time.Second))
+	w.client.DoTimeout(req, resp, time.Duration(60 * time.Second))
 	end := time.Now()
 	duration := end.Sub(start)
 	return nil, duration
