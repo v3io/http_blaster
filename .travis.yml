@@ -5,4 +5,4 @@ go:
     - 1.7
     - tip
 
-go_import_path: github.com/v3io/http_blaster
+go_import_path: github.com/bivas/http_blaster
