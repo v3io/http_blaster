@@ -1,5 +1,7 @@
 # http_blaster - go http load tool
 
+[![Build Status](https://travis-ci.org/v3io/http_blaster.svg?branch=master)](https://travis-ci.org/v3io/http_blaster)
+
 ## Getting started
 
 ### Get the code into your workspace
