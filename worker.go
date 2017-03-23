@@ -126,7 +126,7 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, ti
 	start := time.Now()
 	r := fasthttp.Request{}
 	req.CopyTo(&r)
-	w.client.DoTimeout(&r, resp, time.Duration(60 * time.Second))
+	w.client.DoTimeout(&r, resp, time.Duration(10 * time.Second))
 	end := time.Now()
 	duration := end.Sub(start)
 	return nil, duration
