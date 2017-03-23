@@ -123,9 +123,9 @@ func (w *worker) restart_connection() {
 }
 
 func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, time.Duration) {
-	start := time.Now()
 	r := fasthttp.Request{}
 	req.CopyTo(&r)
+	start := time.Now()
 	w.client.DoTimeout(&r, resp, time.Duration(10 * time.Second))
 	end := time.Now()
 	duration := end.Sub(start)
