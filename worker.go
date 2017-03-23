@@ -20,12 +20,12 @@ such restriction.
 package httpblaster
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/valyala/fasthttp"
 	"net"
 	"sync"
 	"time"
-	"crypto/tls"
 )
 
 const DialTimeout = 60 * time.Second
@@ -72,7 +72,7 @@ type worker struct {
 	error_count         uint32
 	is_tls_client       bool
 	base_uri            string
-	client    *fasthttp.HostClient
+	client              *fasthttp.HostClient
 }
 
 func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response) (error, time.Duration) {
@@ -80,6 +80,7 @@ func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response
 		code int
 	)
 	err, duration := w.send(req, response)
+
 	if err != nil || response.ConnectionClose() {
 		w.restart_connection()
 	}
@@ -106,7 +107,7 @@ func (w *worker) open_connection() {
 	conf := &tls.Config{
 		InsecureSkipVerify: true,
 	}
-	w.client = &fasthttp.HostClient{Addr: w.host, IsTLS:w.is_tls_client, TLSConfig:conf}
+	w.client = &fasthttp.HostClient{Addr: w.host, IsTLS: w.is_tls_client, TLSConfig: conf}
 }
 
 func (w *worker) close_connection() {
@@ -122,8 +123,10 @@ func (w *worker) restart_connection() {
 }
 
 func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, time.Duration) {
+	r := fasthttp.Request{}
+	req.CopyTo(&r)
 	start := time.Now()
-	w.client.DoTimeout(req, resp, time.Duration(60 * time.Second))
+	w.client.DoTimeout(&r, resp, time.Duration(10*time.Second))
 	end := time.Now()
 	duration := end.Sub(start)
 	return nil, duration
@@ -135,7 +138,7 @@ func (w *worker) gen_files_uri(file_index int, count int) chan string {
 		file_pref := file_index
 		for {
 
-			if file_pref == file_index + count {
+			if file_pref == file_index+count {
 				file_pref = file_index
 			}
 			ch <- fmt.Sprintf("%s_%d", w.base_uri, file_pref)
@@ -146,7 +149,7 @@ func (w *worker) gen_files_uri(file_index int, count int) chan string {
 	return ch
 }
 
-func(w *worker) single_file_submitter(done chan struct{}, load *worker_load){
+func (w *worker) single_file_submitter(done chan struct{}, load *worker_load) {
 	request := clone_request(load.req)
 	response := fasthttp.Response{}
 LOOP:
@@ -155,9 +158,9 @@ LOOP:
 		case <-done:
 			break LOOP
 		default:
-			if w.results.count < load.req_count{
+			if w.results.count < load.req_count {
 				w.send_request(request, &response)
-			}else{
+			} else {
 				break LOOP
 			}
 
@@ -166,7 +169,7 @@ LOOP:
 
 }
 
-func (w *worker) multi_file_submitter(done chan struct{}, load *worker_load, file_index int, count int)  {
+func (w *worker) multi_file_submitter(done chan struct{}, load *worker_load, file_index int, count int) {
 	ch_uri := w.gen_files_uri(file_index, count)
 	request := clone_request(load.req)
 	response := fasthttp.Response{}
@@ -201,7 +204,7 @@ func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup, file_index in
 	}()
 	if file_index == 0 && count == 0 {
 		w.single_file_submitter(done, load)
-	}else{
+	} else {
 		w.multi_file_submitter(done, load, file_index, count)
 	}
 }
