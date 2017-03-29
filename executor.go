@@ -98,7 +98,7 @@ func (self *executor) run(wg *sync.WaitGroup) error {
 		w := NewWorker(server, config.Global.TLSMode, base_uri)
 		self.workers = append(self.workers, w)
 		file_index := self.Workload.FileIndex + worker_file_count*i
-		go w.run_worker(&l, &workers_wg, file_index, worker_file_count)
+		go w.run_worker(&l, &workers_wg, file_index, worker_file_count, self.Workload.Random)
 	}
 	workers_wg.Wait()
 	self.results.Duration = time.Now().Sub(self.Start_time)
