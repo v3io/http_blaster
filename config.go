@@ -63,6 +63,7 @@ type workload struct {
 	Payload    string
 	FileIndex  int
 	FilesCount int
+	Random     bool
 }
 
 func LoadConfig(file_path string) (tomlConfig, error) {
