@@ -301,7 +301,7 @@ func handle_exit() {
 	}
 }
 
-func main() {
+func Start() {
 	parse_cmd_line_args()
 	configure_log_to_file()
 
