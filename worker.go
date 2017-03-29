@@ -23,10 +23,10 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/valyala/fasthttp"
+	"math/rand"
 	"net"
 	"sync"
 	"time"
-	"math/rand"
 )
 
 const DialTimeout = 60 * time.Second
@@ -136,16 +136,16 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, ti
 func (w *worker) gen_files_uri(file_index int, count int, random bool) chan string {
 	ch := make(chan string, 1000)
 	go func() {
-		if random{
+		if random {
 			for {
 				n := rand.Intn(count)
-				ch <- fmt.Sprintf("%s_%d", w.base_uri, n + file_index)
+				ch <- fmt.Sprintf("%s_%d", w.base_uri, n+file_index)
 			}
-		}else {
+		} else {
 			file_pref := file_index
 			for {
 
-				if file_pref == file_index + count {
+				if file_pref == file_index+count {
 					file_pref = file_index
 				}
 				ch <- fmt.Sprintf("%s_%d", w.base_uri, file_pref)
