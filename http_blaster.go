@@ -51,7 +51,7 @@ var (
 	log_file     *os.File
 )
 
-const AppVersion = "1.0.0"
+const AppVersion = "2.0.0"
 
 
 func init() {
