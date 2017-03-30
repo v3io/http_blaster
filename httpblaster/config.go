@@ -29,13 +29,21 @@ type duration struct {
 	time.Duration
 }
 
+type CommandType string
+
+const (
+	GET  CommandType = "GET"
+	PUT              = "PUT"
+	POST             = "POST"
+)
+
 func (d *duration) UnmarshalText(text []byte) error {
 	var err error
 	d.Duration, err = time.ParseDuration(string(text))
 	return err
 }
 
-type tomlConfig struct {
+type TomlConfig struct {
 	Title     string
 	Global    global
 	Workloads map[string]workload
@@ -66,8 +74,8 @@ type workload struct {
 	Random     bool
 }
 
-func LoadConfig(file_path string) (tomlConfig, error) {
-	var config tomlConfig
+func LoadConfig(file_path string) (TomlConfig, error) {
+	var config TomlConfig
 	if _, err := toml.DecodeFile(file_path, &config); err != nil {
 		return config, err
 	}
