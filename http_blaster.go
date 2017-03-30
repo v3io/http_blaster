@@ -31,7 +31,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"http_blaster/httpblaster"
+	"github.com/v3io/http_blaster/httpblaster"
 )
 
 var (
