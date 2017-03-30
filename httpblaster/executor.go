@@ -42,17 +42,20 @@ type executor_result struct {
 	Errors   map[string]int
 }
 
-type executor struct {
-	connections int32
-	Workload    workload
-	host        string
-	port        string
-	results     executor_result
-	workers     []*worker
-	Start_time  time.Time
+type Executor struct {
+	connections           int32
+	Workload              workload
+	Host                  string
+	Port                  string
+	Tls_mode              bool
+	results               executor_result
+	workers               []*worker
+	Start_time            time.Time
+	StatusCodesAcceptance map[string]float64
+	Data_bfr              []byte
 }
 
-func (self *executor) run(wg *sync.WaitGroup) error {
+func (self *Executor) run(wg *sync.WaitGroup) error {
 	defer wg.Done()
 	self.Start_time = time.Now()
 	workers_wg := sync.WaitGroup{}
@@ -70,14 +73,14 @@ func (self *executor) run(wg *sync.WaitGroup) error {
 	for i := 0; i < self.Workload.Workers; i++ {
 		var url string = " "
 		var base_uri string = ""
-		if config.Global.TLSMode {
-			base_uri = fmt.Sprintf("https://%s/%s/%s", self.host, self.Workload.Bucket, self.Workload.File_path)
+		if self.Tls_mode {
+			base_uri = fmt.Sprintf("https://%s/%s/%s", self.Host, self.Workload.Bucket, self.Workload.File_path)
 		} else {
-			base_uri = fmt.Sprintf("http://%s/%s/%s", self.host, self.Workload.Bucket, self.Workload.File_path)
+			base_uri = fmt.Sprintf("http://%s/%s/%s", self.Host, self.Workload.Bucket, self.Workload.File_path)
 		}
 		url = base_uri
 		l := worker_load{req_count: req_per_worker, duration: self.Workload.Duration,
-			port: config.Global.Port}
+			port: self.Port}
 		var payload []byte
 		var ferr error
 		if self.Workload.Payload != "" {
@@ -87,18 +90,18 @@ func (self *executor) run(wg *sync.WaitGroup) error {
 			}
 		} else {
 			if self.Workload.Type == PUT || self.Workload.Type == POST {
-				payload = bytes.NewBuffer(dataBfr).Bytes()
+				payload = bytes.NewBuffer(self.Data_bfr).Bytes()
 
 			}
 		}
 		var contentType string = "text/html"
 		l.Prepare_request(contentType, self.Workload.Header, string(self.Workload.Type),
 			url, string(payload))
-		server := fmt.Sprintf("%s:%s", config.Global.Server, config.Global.Port)
-		w := NewWorker(server, config.Global.TLSMode, base_uri)
+		server := fmt.Sprintf("%s:%s", self.Host, self.Port)
+		w := NewWorker(server, self.Tls_mode, base_uri)
 		self.workers = append(self.workers, w)
 		file_index := self.Workload.FileIndex + worker_file_count*i
-		go w.run_worker(&l, &workers_wg, file_index, worker_file_count)
+		go w.run_worker(&l, &workers_wg, file_index, worker_file_count, self.Workload.Random)
 	}
 	workers_wg.Wait()
 	self.results.Duration = time.Now().Sub(self.Start_time)
@@ -136,7 +139,7 @@ func (self *executor) run(wg *sync.WaitGroup) error {
 	return nil
 }
 
-func (self *executor) Start(wg *sync.WaitGroup) error {
+func (self *Executor) Start(wg *sync.WaitGroup) error {
 	self.results.Statuses = make(map[int]uint64)
 	log.Println("at executor start ", self.Workload)
 	go func() {
@@ -145,11 +148,11 @@ func (self *executor) Start(wg *sync.WaitGroup) error {
 	return nil
 }
 
-func (self *executor) Stop() error {
+func (self *Executor) Stop() error {
 	return errors.New("Not Implimented!!!")
 }
 
-func (self *executor) Report() (executor_result, error) {
+func (self *Executor) Report() (executor_result, error) {
 	log.Println("report for wl ", self.Workload.Id, ":")
 	log.Println("Total Requests ", self.results.Total)
 	log.Println("Min: ", self.results.Min)
@@ -162,7 +165,7 @@ func (self *executor) Report() (executor_result, error) {
 
 	log.Println("iops: ", self.results.Iops)
 	for err_code, err_count := range self.results.Statuses {
-		if max_errors, ok := config.Global.StatusCodesAcceptance[strconv.Itoa(err_code)]; ok {
+		if max_errors, ok := self.StatusCodesAcceptance[strconv.Itoa(err_code)]; ok {
 			if self.results.Total > 0 && err_count > 0 {
 				err_percent := (float64(err_count) * float64(100)) / float64(self.results.Total)
 				log.Printf("status code %d occured %f%% during the test \"%s\"",

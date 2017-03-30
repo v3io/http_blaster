@@ -17,7 +17,7 @@ illegal under applicable law, and the grant of the foregoing license
 under the Apache 2.0 license is conditioned upon your compliance with
 such restriction.
 */
-package httpblaster
+package main
 
 import (
 	"errors"
@@ -31,6 +31,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"github.com/v3io/http_blaster/httpblaster"
 )
 
 var (
@@ -43,22 +44,15 @@ var (
 	dataBfr      []byte
 	cpu_profile  = false
 	mem_profile  = false
-	config       tomlConfig
-	executors    []*executor
+	config       httpblaster.TomlConfig
+	executors    []*httpblaster.Executor
 	ex_group     sync.WaitGroup
 	enable_log   bool
 	log_file     *os.File
 )
 
-const AppVersion = "1.0.0"
+const AppVersion = "2.0.0"
 
-type CommandType string
-
-const (
-	GET  CommandType = "GET"
-	PUT              = "PUT"
-	POST             = "POST"
-)
 
 func init() {
 	const (
@@ -122,7 +116,7 @@ func parse_cmd_line_args() {
 
 func load_test_Config() {
 	var err error
-	config, err = LoadConfig(conf_file)
+	config, err = httpblaster.LoadConfig(conf_file)
 	if err != nil {
 		log.Println(err)
 		log.Fatalln("Failed to parse config file")
@@ -141,8 +135,9 @@ func generate_executors() {
 	for Name, workload := range config.Workloads {
 		log.Println("Adding executor for ", Name)
 		workload.Id = get_workload_id()
-		e := &executor{Workload: workload, host: config.Global.Server,
-			port: config.Global.Port}
+		e := &httpblaster.Executor{Workload: workload, Host: config.Global.Server,
+			Port: config.Global.Port, Tls_mode:  config.Global.TLSMode,
+		StatusCodesAcceptance:config.Global.StatusCodesAcceptance, Data_bfr:dataBfr}
 		executors = append(executors, e)
 	}
 }

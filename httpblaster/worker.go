@@ -23,6 +23,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/valyala/fasthttp"
+	"math/rand"
 	"net"
 	"sync"
 	"time"
@@ -132,18 +133,25 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, ti
 	return nil, duration
 }
 
-func (w *worker) gen_files_uri(file_index int, count int) chan string {
+func (w *worker) gen_files_uri(file_index int, count int, random bool) chan string {
 	ch := make(chan string, 1000)
 	go func() {
-		file_pref := file_index
-		for {
-
-			if file_pref == file_index+count {
-				file_pref = file_index
+		if random {
+			for {
+				n := rand.Intn(count)
+				ch <- fmt.Sprintf("%s_%d", w.base_uri, n+file_index)
 			}
-			ch <- fmt.Sprintf("%s_%d", w.base_uri, file_pref)
-			file_pref += 1
+		} else {
+			file_pref := file_index
+			for {
 
+				if file_pref == file_index+count {
+					file_pref = file_index
+				}
+				ch <- fmt.Sprintf("%s_%d", w.base_uri, file_pref)
+				file_pref += 1
+
+			}
 		}
 	}()
 	return ch
@@ -169,8 +177,8 @@ LOOP:
 
 }
 
-func (w *worker) multi_file_submitter(done chan struct{}, load *worker_load, file_index int, count int) {
-	ch_uri := w.gen_files_uri(file_index, count)
+func (w *worker) multi_file_submitter(done chan struct{}, load *worker_load, file_index int, count int, random bool) {
+	ch_uri := w.gen_files_uri(file_index, count, random)
 	request := clone_request(load.req)
 	response := fasthttp.Response{}
 WLoop:
@@ -191,7 +199,7 @@ WLoop:
 
 }
 
-func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup, file_index int, count int) {
+func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup, file_index int, count int, random bool) {
 	defer wg.Done()
 	w.results.min = time.Duration(10 * time.Second)
 	done := make(chan struct{})
@@ -205,7 +213,7 @@ func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup, file_index in
 	if file_index == 0 && count == 0 {
 		w.single_file_submitter(done, load)
 	} else {
-		w.multi_file_submitter(done, load, file_index, count)
+		w.multi_file_submitter(done, load, file_index, count, random)
 	}
 }
 
