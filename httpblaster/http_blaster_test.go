@@ -58,7 +58,7 @@ func Test_GET_Worker(t *testing.T) {
 	if e != nil {
 		t.Errorf("failed to create file for test")
 	}
-	go http.ListenAndServe(fmt.Sprintf("%s:%s",host, port), http.FileServer(http.Dir(folder)))
+	go http.ListenAndServe(fmt.Sprintf("%s:%s", host, port), http.FileServer(http.Dir(folder)))
 	rand.Seed(time.Now().UTC().UnixNano())
 	workers_wg := sync.WaitGroup{}
 	url := fmt.Sprintf("http://%s/%s", host, file)
@@ -97,7 +97,7 @@ func Test_PUT_Worker(t *testing.T) {
 	folder := "/tmp"
 	var payload []byte = bytes.Repeat([]byte("a"), 100)
 
-	go http.ListenAndServe(fmt.Sprintf("%s:%s",host, port), http.FileServer(http.Dir(folder)))
+	go http.ListenAndServe(fmt.Sprintf("%s:%s", host, port), http.FileServer(http.Dir(folder)))
 
 	e := prepare_test_file(folder, file, payload)
 	if e != nil {

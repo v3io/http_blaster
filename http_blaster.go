@@ -23,6 +23,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/v3io/http_blaster/httpblaster"
 	"io"
 	"log"
 	"math/rand"
@@ -31,7 +32,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"github.com/v3io/http_blaster/httpblaster"
 )
 
 var (
@@ -52,7 +52,6 @@ var (
 )
 
 const AppVersion = "2.0.0"
-
 
 func init() {
 	const (
@@ -136,8 +135,8 @@ func generate_executors() {
 		log.Println("Adding executor for ", Name)
 		workload.Id = get_workload_id()
 		e := &httpblaster.Executor{Workload: workload, Host: config.Global.Server,
-			Port: config.Global.Port, Tls_mode:  config.Global.TLSMode,
-		StatusCodesAcceptance:config.Global.StatusCodesAcceptance, Data_bfr:dataBfr}
+			Port: config.Global.Port, Tls_mode: config.Global.TLSMode,
+			StatusCodesAcceptance: config.Global.StatusCodesAcceptance, Data_bfr: dataBfr}
 		executors = append(executors, e)
 	}
 }
@@ -154,6 +153,34 @@ func wait_for_completion() {
 	log.Println("Wait for executors to finish")
 	ex_group.Wait()
 	end_time = time.Now()
+}
+
+func report_executor_result(file string) {
+	fname := fmt.Sprintf("%s.executors", file)
+	f, err := os.Create(fname)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	for _, executor := range executors {
+		r, e := executor.Report()
+		if e != nil {
+			f.WriteString(e.Error())
+		} else {
+			f.WriteString("======================================\n")
+			f.WriteString(fmt.Sprintf("Duration = %v\n", r.Duration))
+			f.WriteString(fmt.Sprintf("Iops = %v\n", r.Iops))
+			f.WriteString(fmt.Sprintf("Statuses = %v\n", r.Statuses))
+
+			f.WriteString(fmt.Sprintf("Avg = %v\n", r.Avg))
+			f.WriteString(fmt.Sprintf("Max = %v\n", r.Max))
+			f.WriteString(fmt.Sprintf("Min = %v\n", r.Min))
+			f.WriteString(fmt.Sprintf("Latency = %v\n", r.Latency))
+
+			f.WriteString(fmt.Sprintf("Total = %v\n", r.Total))
+			f.WriteString(fmt.Sprintf("Errors = %v\n", r.Errors))
+		}
+	}
 }
 
 func report() int {
@@ -230,6 +257,7 @@ func report() int {
 	log.Println("Overall GET IOPS: ", overall_get_iops)
 	log.Println("Overall PUT IOPS: ", overall_put_iops)
 
+	report_executor_result(results_file)
 	f, err := os.Create(results_file)
 	defer f.Close()
 	if err != nil {

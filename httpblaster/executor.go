@@ -61,8 +61,10 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	workers_wg := sync.WaitGroup{}
 
 	var req_per_worker uint64 = ^uint64(0)
+	var req_remain uint64 = 0
 	if self.Workload.Count > 0 {
 		req_per_worker = self.Workload.Count / uint64(self.Workload.Workers)
+		req_remain = self.Workload.Count - req_per_worker*uint64(self.Workload.Workers)
 	}
 	if req_per_worker == 0 {
 		self.Workload.Workers = 1
@@ -73,13 +75,17 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	for i := 0; i < self.Workload.Workers; i++ {
 		var url string = " "
 		var base_uri string = ""
+		var request_count uint64 = req_per_worker
 		if self.Tls_mode {
 			base_uri = fmt.Sprintf("https://%s/%s/%s", self.Host, self.Workload.Bucket, self.Workload.File_path)
 		} else {
 			base_uri = fmt.Sprintf("http://%s/%s/%s", self.Host, self.Workload.Bucket, self.Workload.File_path)
 		}
 		url = base_uri
-		l := worker_load{req_count: req_per_worker, duration: self.Workload.Duration,
+		if i == 0 {
+			request_count += req_remain
+		}
+		l := worker_load{req_count: request_count, duration: self.Workload.Duration,
 			port: self.Port}
 		var payload []byte
 		var ferr error
