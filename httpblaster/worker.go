@@ -81,10 +81,15 @@ func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response
 	var (
 		code int
 	)
+	response.SetStatusCode(0)
 	err, duration := w.send(req, response)
 	if err != nil || response.ConnectionClose() {
 		w.restart_connection()
-		log.Println("[ERROR]", err.Error())
+		if err != nil {
+			log.Println("[ERROR]", err.Error())
+		}else{
+			log.Println(fmt.Sprintf("Connection close, resonse status code %d",response.StatusCode()))
+		}
 	}
 	if err == nil {
 		code = response.StatusCode()

@@ -332,7 +332,8 @@ func main() {
 		panic(err)
 	}
 	defer f.Close()
-	log.SetOutput(f)
+	mw:=io.MultiWriter(os.Stdout, f)
+	log.SetOutput(mw)
 	log.Println("Starting http_blaster")
 
 	parse_cmd_line_args()
