@@ -324,7 +324,17 @@ func handle_exit() {
 	}
 }
 
+
 func main() {
+	//create log file and truncate if exist
+	f, err := os.OpenFile("http_blaster.log", os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
+	if err != nil{
+		panic(err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+	log.Println("Starting http_blaster")
+
 	parse_cmd_line_args()
 	configure_log_to_file()
 

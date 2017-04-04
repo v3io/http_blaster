@@ -27,6 +27,7 @@ import (
 	"net"
 	"sync"
 	"time"
+	"log"
 )
 
 const DialTimeout = 60 * time.Second
@@ -81,9 +82,9 @@ func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response
 		code int
 	)
 	err, duration := w.send(req, response)
-
 	if err != nil || response.ConnectionClose() {
 		w.restart_connection()
+		log.Println("[ERROR]", err.Error())
 	}
 	if err == nil {
 		code = response.StatusCode()
@@ -127,10 +128,10 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, ti
 	r := fasthttp.Request{}
 	req.CopyTo(&r)
 	start := time.Now()
-	w.client.DoTimeout(&r, resp, time.Duration(600*time.Second))
+	err := w.client.DoTimeout(&r, resp, time.Duration(600*time.Second))
 	end := time.Now()
 	duration := end.Sub(start)
-	return nil, duration
+	return err, duration
 }
 
 func (w *worker) gen_files_uri(file_index int, count int, random bool) chan string {
