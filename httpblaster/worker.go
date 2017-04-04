@@ -23,11 +23,11 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/valyala/fasthttp"
+	"log"
 	"math/rand"
 	"net"
 	"sync"
 	"time"
-	"log"
 )
 
 const DialTimeout = 60 * time.Second
@@ -87,8 +87,8 @@ func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response
 		w.restart_connection()
 		if err != nil {
 			log.Println("[ERROR]", err.Error())
-		}else{
-			log.Println(fmt.Sprintf("Connection close, resonse status code %d",response.StatusCode()))
+		} else {
+			log.Println(fmt.Sprintf("Connection close, resonse status code %d", response.StatusCode()))
 		}
 	}
 	if err == nil {

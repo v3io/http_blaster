@@ -60,6 +60,7 @@ func init() {
 		usage_version        = "show version"
 		usage_results_file   = "results file path"
 		default_results_file = "example.results"
+		default_log_file     = true
 	)
 	flag.StringVar(&conf_file, "conf", default_conf, usage_conf)
 	flag.StringVar(&conf_file, "c", default_conf, usage_conf+" (shorthand)")
@@ -67,7 +68,7 @@ func init() {
 	flag.BoolVar(&showVersion, "v", false, usage_version)
 	flag.BoolVar(&cpu_profile, "p", false, "write cpu profile to file")
 	flag.BoolVar(&mem_profile, "m", false, "write mem profile to file")
-	flag.BoolVar(&enable_log, "d", false, "enable stdout to log")
+	flag.BoolVar(&enable_log, "d", default_log_file, "enable stdout to log")
 }
 
 func get_workload_id() int32 {
@@ -291,7 +292,7 @@ func report() int {
 
 func configure_log_to_file() {
 	if enable_log {
-		file_name := fmt.Sprintf("%s-loader.log", time.Now().Format("2006-01-02-15-04-05"))
+		file_name := fmt.Sprintf("%s.log", results_file)
 		var err error = nil
 		log_file, err = os.Create(file_name)
 		if err != nil {
@@ -324,20 +325,10 @@ func handle_exit() {
 	}
 }
 
-
 func main() {
-	//create log file and truncate if exist
-	f, err := os.OpenFile("http_blaster.log", os.O_RDWR | os.O_CREATE | os.O_TRUNC, 0666)
-	if err != nil{
-		panic(err)
-	}
-	defer f.Close()
-	mw:=io.MultiWriter(os.Stdout, f)
-	log.SetOutput(mw)
-	log.Println("Starting http_blaster")
-
 	parse_cmd_line_args()
 	configure_log_to_file()
+	log.Println("Starting http_blaster")
 
 	defer handle_exit()
 	defer close_log_file()
