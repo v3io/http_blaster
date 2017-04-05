@@ -130,10 +130,11 @@ func (w *worker) restart_connection() {
 }
 
 func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, time.Duration) {
-	r := fasthttp.Request{}
-	req.CopyTo(&r)
+	r := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(r)
+	req.CopyTo(r)
 	start := time.Now()
-	err := w.client.DoTimeout(&r, resp, time.Duration(600*time.Second))
+	err := w.client.DoTimeout(r, resp, time.Duration(600*time.Second))
 	end := time.Now()
 	duration := end.Sub(start)
 	return err, duration
@@ -165,7 +166,8 @@ func (w *worker) gen_files_uri(file_index int, count int, random bool) chan stri
 
 func (w *worker) single_file_submitter(done chan struct{}, load *worker_load) {
 	request := clone_request(load.req)
-	response := fasthttp.Response{}
+	response := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(response)
 LOOP:
 	for {
 		select {
@@ -173,7 +175,7 @@ LOOP:
 			break LOOP
 		default:
 			if w.results.count < load.req_count {
-				w.send_request(request, &response)
+				w.send_request(request, response)
 			} else {
 				break LOOP
 			}
@@ -186,7 +188,8 @@ LOOP:
 func (w *worker) multi_file_submitter(done chan struct{}, load *worker_load, file_index int, count int, random bool) {
 	ch_uri := w.gen_files_uri(file_index, count, random)
 	request := clone_request(load.req)
-	response := fasthttp.Response{}
+	response := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(response)
 WLoop:
 	for {
 		select {
@@ -195,7 +198,7 @@ WLoop:
 		case uri := <-ch_uri:
 			if w.results.count < load.req_count {
 				request.SetRequestURI(uri)
-				w.send_request(request, &response)
+				w.send_request(request, response)
 			} else {
 				break WLoop
 			}
