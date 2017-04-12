@@ -28,6 +28,9 @@ import (
 	"net"
 	"sync"
 	"time"
+	//"os"
+	"bufio"
+	"errors"
 )
 
 const DialTimeout = 60 * time.Second
@@ -50,7 +53,7 @@ type worker_results struct {
 }
 
 func (self *worker_load) Prepare_request(content_type string,
-	header_args map[string]string, method string, uri string, body string) {
+	header_args map[string]string, method string, uri string, body string, host string) {
 
 	self.req = &fasthttp.Request{}
 	header := fasthttp.RequestHeader{}
@@ -58,6 +61,7 @@ func (self *worker_load) Prepare_request(content_type string,
 
 	header.SetMethod(method)
 	header.SetRequestURI(uri)
+	header.SetHost(host)
 
 	for k, v := range header_args {
 		header.Set(k, v)
@@ -74,21 +78,27 @@ type worker struct {
 	error_count         uint32
 	is_tls_client       bool
 	base_uri            string
-	client              *fasthttp.HostClient
+	br                  *bufio.Reader
+	bw                  *bufio.Writer
+	ch_duration         chan time.Duration
+	ch_error            chan error
 }
 
-func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response) (error, time.Duration) {
+func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
+	response := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(response)
+
 	var (
 		code int
 	)
-	response.SetStatusCode(0)
-	err, duration := w.send(req, response)
+	err, duration := w.send(req, response, time.Second*60)
+
 	if err != nil || response.ConnectionClose() {
 		w.restart_connection()
 		if err != nil {
 			log.Println("[ERROR]", err.Error())
 		} else {
-			log.Println(fmt.Sprintf("Connection close, resonse status code %d", response.StatusCode()))
+			log.Println(fmt.Sprintf("Connection close, response status code %d", response.StatusCode()))
 		}
 	}
 	if err == nil {
@@ -111,10 +121,20 @@ func (w *worker) send_request(req *fasthttp.Request, response *fasthttp.Response
 }
 
 func (w *worker) open_connection() {
-	conf := &tls.Config{
-		InsecureSkipVerify: true,
+	conn, err := fasthttp.DialTimeout(w.host, DialTimeout)
+	if err != nil {
+		log.Printf("open connection error: %s\n", err)
 	}
-	w.client = &fasthttp.HostClient{Addr: w.host, IsTLS: w.is_tls_client, TLSConfig: conf}
+	if w.is_tls_client {
+		conf := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+		w.conn = tls.Client(conn, conf)
+	} else {
+		w.conn = conn
+	}
+	w.br = bufio.NewReaderSize(w.conn, 1024*1024)
+	w.bw = bufio.NewWriter(w.conn)
 }
 
 func (w *worker) close_connection() {
@@ -129,15 +149,37 @@ func (w *worker) restart_connection() {
 	w.connection_restarts++
 }
 
-func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response) (error, time.Duration) {
-	r := fasthttp.AcquireRequest()
-	defer fasthttp.ReleaseRequest(r)
-	req.CopyTo(r)
-	start := time.Now()
-	err := w.client.DoTimeout(r, resp, time.Duration(600*time.Second))
-	end := time.Now()
-	duration := end.Sub(start)
-	return err, duration
+func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
+	timeout time.Duration) (error, time.Duration) {
+	var err error
+	go func() {
+		start := time.Now()
+		if err = req.Write(w.bw); err != nil {
+			log.Printf("send write error: %s\n", err)
+			w.ch_error <- err
+		}
+		if err = w.bw.Flush(); err != nil {
+			log.Printf("send flush error: %s\n", err)
+			w.ch_error <- err
+		}
+		if err = resp.Read(w.br); err != nil {
+			log.Printf("send read error: %s\n", err)
+			w.ch_error <- err
+		}
+		end := time.Now()
+		w.ch_duration <- end.Sub(start)
+	}()
+	select {
+	case duration := <-w.ch_duration:
+		return nil, duration
+	case err := <-w.ch_error:
+		log.Printf("rerquest completed with error:%s url:%s", err.Error(), req.URI().String())
+		return err, timeout
+	case <-time.After(timeout):
+		log.Printf("Error: request didn't complete on timeout url:%s", req.URI().String())
+		return errors.New(fmt.Sprintf("request timedout url:%s", req.URI().String())), timeout
+	}
+	return nil, timeout
 }
 
 func (w *worker) gen_files_uri(file_index int, count int, random bool) chan string {
@@ -151,13 +193,11 @@ func (w *worker) gen_files_uri(file_index int, count int, random bool) chan stri
 		} else {
 			file_pref := file_index
 			for {
-
 				if file_pref == file_index+count {
 					file_pref = file_index
 				}
 				ch <- fmt.Sprintf("%s_%d", w.base_uri, file_pref)
 				file_pref += 1
-
 			}
 		}
 	}()
@@ -166,8 +206,6 @@ func (w *worker) gen_files_uri(file_index int, count int, random bool) chan stri
 
 func (w *worker) single_file_submitter(done chan struct{}, load *worker_load) {
 	request := clone_request(load.req)
-	response := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(response)
 LOOP:
 	for {
 		select {
@@ -175,21 +213,17 @@ LOOP:
 			break LOOP
 		default:
 			if w.results.count < load.req_count {
-				w.send_request(request, response)
+				w.send_request(request)
 			} else {
 				break LOOP
 			}
-
 		}
 	}
-
 }
 
 func (w *worker) multi_file_submitter(done chan struct{}, load *worker_load, file_index int, count int, random bool) {
 	ch_uri := w.gen_files_uri(file_index, count, random)
 	request := clone_request(load.req)
-	response := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseResponse(response)
 WLoop:
 	for {
 		select {
@@ -198,14 +232,12 @@ WLoop:
 		case uri := <-ch_uri:
 			if w.results.count < load.req_count {
 				request.SetRequestURI(uri)
-				w.send_request(request, response)
+				w.send_request(request)
 			} else {
 				break WLoop
 			}
-
 		}
 	}
-
 }
 
 func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup, file_index int, count int, random bool) {
@@ -233,5 +265,7 @@ func NewWorker(host string, tls_client bool, base_uri string) *worker {
 	worker := worker{host: host, is_tls_client: tls_client, base_uri: base_uri}
 	worker.results.codes = make(map[int]uint64)
 	worker.open_connection()
+	worker.ch_duration = make(chan time.Duration, 1)
+	worker.ch_error = make(chan error, 1)
 	return &worker
 }

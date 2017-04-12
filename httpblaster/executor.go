@@ -31,15 +31,16 @@ import (
 )
 
 type executor_result struct {
-	Total    uint64
-	Duration time.Duration
-	Min      time.Duration
-	Max      time.Duration
-	Avg      time.Duration
-	Iops     uint64
-	Latency  map[int]int64
-	Statuses map[int]uint64
-	Errors   map[string]int
+	Total       uint64
+	Duration    time.Duration
+	Min         time.Duration
+	Max         time.Duration
+	Avg         time.Duration
+	Iops        uint64
+	Latency     map[int]int64
+	Statuses    map[int]uint64
+	Errors      map[string]int
+	ErrorsCount uint32
 }
 
 type Executor struct {
@@ -102,7 +103,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		}
 		var contentType string = "text/html"
 		l.Prepare_request(contentType, self.Workload.Header, string(self.Workload.Type),
-			url, string(payload))
+			url, string(payload), self.Host)
 		server := fmt.Sprintf("%s:%s", self.Host, self.Port)
 		w := NewWorker(server, self.Tls_mode, base_uri)
 		self.workers = append(self.workers, w)
@@ -118,6 +119,8 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	self.results.Iops = 0
 
 	for _, w := range self.workers {
+		self.results.ErrorsCount += w.error_count
+
 		self.results.Total += w.results.count
 		if w.results.min < self.results.Min {
 			self.results.Min = w.results.min
@@ -125,15 +128,14 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		if w.results.max > self.results.Max {
 			self.results.Max = w.results.max
 		}
-	}
-	for _, w := range self.workers {
+
 		self.results.Avg +=
 			time.Duration(float64(w.results.count) / float64(self.results.Total) * float64(w.results.avg))
 		for k, v := range w.results.codes {
 			self.results.Statuses[k] += v
 		}
-
 	}
+
 	seconds := uint64(self.results.Duration.Seconds())
 	if seconds == 0 {
 		seconds = 1
@@ -164,6 +166,7 @@ func (self *Executor) Report() (executor_result, error) {
 	log.Println("Min: ", self.results.Min)
 	log.Println("Max: ", self.results.Max)
 	log.Println("Avg: ", self.results.Avg)
+	log.Println("Error Count: ", self.results.ErrorsCount)
 	log.Println("Statuses: ")
 	for k, v := range self.results.Statuses {
 		log.Println(fmt.Sprintf("%d - %d", k, v))
