@@ -243,6 +243,8 @@ func report() int {
 		overall_put_avg_lat = time.Duration(float64(overall_put_avg_lat) / float64(overall_put_requests))
 	}
 
+	report_executor_result(results_file)
+
 	log.Println("Duration: ", duration)
 	log.Println("Overall Results: ")
 	log.Println("Overall Requests: ", overall_requests)
@@ -258,7 +260,7 @@ func report() int {
 	log.Println("Overall GET IOPS: ", overall_get_iops)
 	log.Println("Overall PUT IOPS: ", overall_put_iops)
 
-	report_executor_result(results_file)
+
 	f, err := os.Create(results_file)
 	defer f.Close()
 	if err != nil {
