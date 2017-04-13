@@ -97,8 +97,6 @@ func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
 		w.restart_connection()
 		if err != nil {
 			log.Println("[ERROR]", err.Error())
-		} else {
-			log.Println(fmt.Sprintf("Connection close, response status code %d", response.StatusCode()))
 		}
 	}
 	if err == nil {
