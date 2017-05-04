@@ -20,12 +20,14 @@ such restriction.
 package httpblaster
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"github.com/v3io/http_blaster/httpblaster/config"
+	"github.com/v3io/http_blaster/httpblaster/request_generators"
+	"github.com/valyala/fasthttp"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -45,10 +47,10 @@ type executor_result struct {
 
 type Executor struct {
 	connections           int32
-	Workload              workload
+	Workload              config.Workload
 	Host                  string
 	Port                  string
-	Tls_mode              bool
+	TLS_mode              bool
 	results               executor_result
 	workers               []*worker
 	Start_time            time.Time
@@ -56,59 +58,39 @@ type Executor struct {
 	Data_bfr              []byte
 }
 
+func (self *Executor) load_request_generator() chan *fasthttp.Request {
+	var req_gen request_generators.Generator
+	gen_type := strings.ToLower(self.Workload.Generator)
+	switch gen_type {
+	case request_generators.PERFORMANCE:
+		req_gen = &request_generators.PerformanceGenerator{}
+		break
+	case request_generators.CSV2STREAM:
+		req_gen = &request_generators.Csv2StreamGenerator{}
+		break
+	case request_generators.CSV2KV:
+		req_gen = &request_generators.Csv2KV{}
+		break
+	default:
+		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
+	}
+	ch_req := req_gen.GenerateRequests(self.Workload, self.TLS_mode, self.Host)
+	return ch_req
+}
+
 func (self *Executor) run(wg *sync.WaitGroup) error {
 	defer wg.Done()
 	self.Start_time = time.Now()
 	workers_wg := sync.WaitGroup{}
-
-	var req_per_worker uint64 = ^uint64(0)
-	var req_remain uint64 = 0
-	if self.Workload.Count > 0 {
-		req_per_worker = self.Workload.Count / uint64(self.Workload.Workers)
-		req_remain = self.Workload.Count - req_per_worker*uint64(self.Workload.Workers)
-	}
-	if req_per_worker == 0 {
-		self.Workload.Workers = 1
-		req_per_worker = self.Workload.Count
-	}
 	workers_wg.Add(self.Workload.Workers)
-	worker_file_count := self.Workload.FilesCount / self.Workload.Workers
-	for i := 0; i < self.Workload.Workers; i++ {
-		var url string = " "
-		var base_uri string = ""
-		var request_count uint64 = req_per_worker
-		if self.Tls_mode {
-			base_uri = fmt.Sprintf("https://%s/%s/%s", self.Host, self.Workload.Bucket, self.Workload.File_path)
-		} else {
-			base_uri = fmt.Sprintf("http://%s/%s/%s", self.Host, self.Workload.Bucket, self.Workload.File_path)
-		}
-		url = base_uri
-		if i == 0 {
-			request_count += req_remain
-		}
-		l := worker_load{req_count: request_count, duration: self.Workload.Duration,
-			port: self.Port}
-		var payload []byte
-		var ferr error
-		if self.Workload.Payload != "" {
-			payload, ferr = ioutil.ReadFile(self.Workload.Payload)
-			if ferr != nil {
-				log.Fatal(ferr)
-			}
-		} else {
-			if self.Workload.Type == PUT || self.Workload.Type == POST {
-				payload = bytes.NewBuffer(self.Data_bfr).Bytes()
 
-			}
-		}
-		var contentType string = "text/html"
-		l.Prepare_request(contentType, self.Workload.Header, string(self.Workload.Type),
-			url, string(payload), self.Host)
+	ch_req := self.load_request_generator()
+
+	for i := 0; i < self.Workload.Workers; i++ {
 		server := fmt.Sprintf("%s:%s", self.Host, self.Port)
-		w := NewWorker(server, self.Tls_mode, base_uri)
+		w := NewWorker(server, self.TLS_mode)
 		self.workers = append(self.workers, w)
-		file_index := self.Workload.FileIndex + worker_file_count*i
-		go w.run_worker(&l, &workers_wg, file_index, worker_file_count, self.Workload.Random)
+		go w.run_worker(ch_req, &workers_wg)
 	}
 	workers_wg.Wait()
 	self.results.Duration = time.Now().Sub(self.Start_time)

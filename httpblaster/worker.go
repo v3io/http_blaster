@@ -20,27 +20,18 @@ such restriction.
 package httpblaster
 
 import (
+	"bufio"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"github.com/valyala/fasthttp"
 	"log"
-	"math/rand"
 	"net"
 	"sync"
 	"time"
-	//"os"
-	"bufio"
-	"errors"
 )
 
 const DialTimeout = 60 * time.Second
-
-type worker_load struct {
-	req       *fasthttp.Request
-	req_count uint64
-	duration  duration
-	port      string
-}
 
 type worker_results struct {
 	count uint64
@@ -52,24 +43,6 @@ type worker_results struct {
 	codes map[int]uint64
 }
 
-func (self *worker_load) Prepare_request(content_type string,
-	header_args map[string]string, method string, uri string, body string, host string) {
-
-	self.req = &fasthttp.Request{}
-	header := fasthttp.RequestHeader{}
-	header.SetContentType(content_type)
-
-	header.SetMethod(method)
-	header.SetRequestURI(uri)
-	header.SetHost(host)
-
-	for k, v := range header_args {
-		header.Set(k, v)
-	}
-	self.req.AppendBodyString(body)
-	header.CopyTo(&self.req.Header)
-}
-
 type worker struct {
 	host                string
 	conn                net.Conn
@@ -77,7 +50,6 @@ type worker struct {
 	connection_restarts uint32
 	error_count         uint32
 	is_tls_client       bool
-	base_uri            string
 	br                  *bufio.Reader
 	bw                  *bufio.Writer
 	ch_duration         chan time.Duration
@@ -180,87 +152,19 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	return nil, timeout
 }
 
-func (w *worker) gen_files_uri(file_index int, count int, random bool) chan string {
-	ch := make(chan string, 1000)
-	go func() {
-		if random {
-			for {
-				n := rand.Intn(count)
-				ch <- fmt.Sprintf("%s_%d", w.base_uri, n+file_index)
-			}
-		} else {
-			file_pref := file_index
-			for {
-				if file_pref == file_index+count {
-					file_pref = file_index
-				}
-				ch <- fmt.Sprintf("%s_%d", w.base_uri, file_pref)
-				file_pref += 1
-			}
-		}
-	}()
-	return ch
-}
-
-func (w *worker) single_file_submitter(done chan struct{}, load *worker_load) {
-	request := clone_request(load.req)
-LOOP:
-	for {
-		select {
-		case <-done:
-			break LOOP
-		default:
-			if w.results.count < load.req_count {
-				w.send_request(request)
-			} else {
-				break LOOP
-			}
-		}
-	}
-}
-
-func (w *worker) multi_file_submitter(done chan struct{}, load *worker_load, file_index int, count int, random bool) {
-	ch_uri := w.gen_files_uri(file_index, count, random)
-	request := clone_request(load.req)
-WLoop:
-	for {
-		select {
-		case <-done:
-			break WLoop
-		case uri := <-ch_uri:
-			if w.results.count < load.req_count {
-				request.SetRequestURI(uri)
-				w.send_request(request)
-			} else {
-				break WLoop
-			}
-		}
-	}
-}
-
-func (w *worker) run_worker(load *worker_load, wg *sync.WaitGroup, file_index int, count int, random bool) {
+func (w *worker) run_worker(ch_req chan *fasthttp.Request, wg *sync.WaitGroup) {
 	defer wg.Done()
-	w.results.min = time.Duration(10 * time.Second)
-	done := make(chan struct{})
-
-	go func() {
-		select {
-		case <-time.After(load.duration.Duration):
-			close(done)
-		}
-	}()
-	if file_index == 0 && count == 0 {
-		w.single_file_submitter(done, load)
-	} else {
-		w.multi_file_submitter(done, load, file_index, count, random)
+	for req := range ch_req {
+		w.send_request(req)
+		fasthttp.ReleaseRequest(req)
 	}
 }
 
-func NewWorker(host string, tls_client bool, base_uri string) *worker {
+func NewWorker(host string, tls_client bool) *worker {
 	if host == "" {
 		return nil
 	}
-	worker := worker{host: host, is_tls_client: tls_client, base_uri: base_uri}
+	worker := worker{host: host, is_tls_client: tls_client}
 	worker.results.codes = make(map[int]uint64)
 	worker.open_connection()
 	worker.ch_duration = make(chan time.Duration, 1)
