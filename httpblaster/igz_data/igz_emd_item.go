@@ -19,7 +19,7 @@ const (
 	T_TIME_STAMP         = "TS"
 	T_STRING             = "S"
 	T_STRING_SET         = "SS"
-	T_DOUBLE	     = "D"
+	T_DOUBLE             = "D"
 )
 
 type IgzEmdItem struct {

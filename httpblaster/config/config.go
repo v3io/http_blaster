@@ -39,7 +39,7 @@ type sep struct {
 	Rune rune
 }
 
-func (r *sep)UnmarshalText(text []byte) error {
+func (r *sep) UnmarshalText(text []byte) error {
 	data := int32(text[0])
 	r.Rune = data
 	return nil

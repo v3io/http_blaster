@@ -17,7 +17,6 @@ type PerformanceGenerator struct {
 	RequestCommon
 }
 
-
 func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
 
 }

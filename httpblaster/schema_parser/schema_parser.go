@@ -1,14 +1,14 @@
 package schema_parser
 
 import (
-	"os"
 	"encoding/csv"
+	"fmt"
+	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"io"
 	"log"
-	"fmt"
-	"strings"
+	"os"
 	"strconv"
-	"github.com/v3io/http_blaster/httpblaster/igz_data"
+	"strings"
 )
 
 type SchemaValue struct {
@@ -18,13 +18,13 @@ type SchemaValue struct {
 
 type SchemaParser struct {
 	Schema_file string
-	csv_map map[int]SchemaValue
+	csv_map     map[int]SchemaValue
 }
 
 func StringToKind(str string) igz_data.IgzType {
 	switch strings.TrimSpace(str) {
 	case "StringType":
-		return  igz_data.T_STRING
+		return igz_data.T_STRING
 	case "LongType":
 		return igz_data.T_DOUBLE
 	case "NoneType":
@@ -33,21 +33,21 @@ func StringToKind(str string) igz_data.IgzType {
 		return igz_data.T_NUMBER
 
 	}
-	panic(fmt.Sprintf("unknown value type %s",str))
+	panic(fmt.Sprintf("unknown value type %s", str))
 	return igz_data.T_NULL
-	
+
 }
 
-func (self *SchemaParser)LoadSchema(file_path string) error {
+func (self *SchemaParser) LoadSchema(file_path string) error {
 	f, e := os.Open(file_path)
 	self.csv_map = make(map[int]SchemaValue)
-	if e != nil{
+	if e != nil {
 		return e
 	}
 	defer f.Close()
 	r := csv.NewReader(f)
 	r.Comma = ','
-	for i:=0;;i++{
+	for i := 0; ; i++ {
 		schema_value, err := r.Read()
 		if err != nil {
 			if err == io.EOF {
@@ -56,37 +56,37 @@ func (self *SchemaParser)LoadSchema(file_path string) error {
 			panic(err)
 		}
 		log.Println(schema_value)
-		self.csv_map[i] = SchemaValue{Name:schema_value[0], Type:StringToKind(schema_value[1])}
+		self.csv_map[i] = SchemaValue{Name: schema_value[0], Type: StringToKind(schema_value[1])}
 	}
 	log.Println(self.csv_map)
 	return nil
 }
 
-func (self *SchemaParser)JsonFromCSVRecord(vals []string) string{
+func (self *SchemaParser) JsonFromCSVRecord(vals []string) string {
 	emd_item := igz_data.NewEmdItem()
-	for i,v:=range vals{
-		emd_item.InsertItemAttr(self.csv_map[i].Name,self.csv_map[i].Type, ConvertValue(self.csv_map[i].Type,v))
+	for i, v := range vals {
+		emd_item.InsertItemAttr(self.csv_map[i].Name, self.csv_map[i].Type, ConvertValue(self.csv_map[i].Type, v))
 	}
 	return string(emd_item.ToJsonString())
 }
 
-func ConvertValue(t igz_data.IgzType, v string) interface {}{
-	switch t{
+func ConvertValue(t igz_data.IgzType, v string) interface{} {
+	switch t {
 	case igz_data.T_STRING:
 		return v
 	case igz_data.T_NUMBER:
-		r, e:= strconv.Atoi(v)
-		if e != nil{
+		r, e := strconv.Atoi(v)
+		if e != nil {
 			panic(e)
 		}
 		return r
 	case igz_data.T_DOUBLE:
 		r, e := strconv.ParseFloat(v, 64)
-		if e != nil{
+		if e != nil {
 			panic(e)
 		}
 		return r
 	default:
-		panic(fmt.Sprintf("missing type conversion %v",t))
+		panic(fmt.Sprintf("missing type conversion %v", t))
 	}
 }

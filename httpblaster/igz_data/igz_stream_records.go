@@ -31,9 +31,9 @@ type StreamRecords struct {
 
 func NewStreamRecord(clientInfo string, data string, partition_key string, shard_id int) StreamRecord {
 	r := StreamRecord{
-		ClientInfo: 	clientInfo,
-		PartitionKey:	partition_key,
-		ShardId:    	shard_id,
+		ClientInfo:   clientInfo,
+		PartitionKey: partition_key,
+		ShardId:      shard_id,
 	}
 	r.SetData(data)
 	return r
