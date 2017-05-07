@@ -3,8 +3,8 @@ title = "Workload example"
 [global]
 block_size = 5
 Duration = "160s"
-server="127.0.0.1"
-port="8080"
+server="192.168.206.10"
+port="8081"
 TLSMode=false
  [global.StatusCodesAcceptance]
   200 = 100.0 # upto 100% return status of 200
@@ -15,15 +15,14 @@ TLSMode=false
    [workloads.get1]
    name="first"
    Generator="csv2stream"
-   bucket=""
-   file_path="test.html"
+   bucket="1"
+   file_path="test1"
    Duration = "30s"
    TYPE="PUT"
-   workers=20
-   count=1
+   workers=10
    payload="examples/payloads/order-book-sample.csv"
    separator='|'
-   schema="examples/schemas/emd_schema_test.txt"
+   schema="examples/schemas/order-book-sample.txt"
 
 
 

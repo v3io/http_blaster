@@ -26,7 +26,7 @@ func StringToKind(str string) igz_data.IgzType {
 	case "StringType":
 		return igz_data.T_STRING
 	case "LongType":
-		return igz_data.T_DOUBLE
+		return igz_data.T_NUMBER
 	case "NoneType":
 		return igz_data.T_NULL
 	case "IntType":
@@ -58,34 +58,38 @@ func (self *SchemaParser) LoadSchema(file_path string) error {
 		log.Println(schema_value)
 		self.csv_map[i] = SchemaValue{Name: schema_value[0], Type: StringToKind(schema_value[1])}
 	}
-	log.Println(self.csv_map)
+	//for k,v:= range self.csv_map{
+	//	log.Println(fmt.Sprintf("%v - %v",k,v))
+	//}
+
 	return nil
 }
 
 func (self *SchemaParser) JsonFromCSVRecord(vals []string) string {
 	emd_item := igz_data.NewEmdItem()
 	for i, v := range vals {
-		emd_item.InsertItemAttr(self.csv_map[i].Name, self.csv_map[i].Type, ConvertValue(self.csv_map[i].Type, v))
+		err, value := ConvertValue(self.csv_map[i].Type, v)
+		if err != nil{
+			panic(fmt.Sprintf("conversion error ", i, v, self.csv_map[i].Name, self.csv_map[i].Type))
+		}
+		emd_item.InsertItemAttr(self.csv_map[i].Name, self.csv_map[i].Type, value)
 	}
+	//panic(emd_item.ToJsonString())
 	return string(emd_item.ToJsonString())
 }
 
-func ConvertValue(t igz_data.IgzType, v string) interface{} {
+func ConvertValue(t igz_data.IgzType, v string) (error, interface{}) {
 	switch t {
 	case igz_data.T_STRING:
-		return v
+		return nil, v
 	case igz_data.T_NUMBER:
+		return nil, v
 		r, e := strconv.Atoi(v)
-		if e != nil {
-			panic(e)
-		}
-		return r
+		return e, r
 	case igz_data.T_DOUBLE:
+		return nil, v
 		r, e := strconv.ParseFloat(v, 64)
-		if e != nil {
-			panic(e)
-		}
-		return r
+		return e, r
 	default:
 		panic(fmt.Sprintf("missing type conversion %v", t))
 	}

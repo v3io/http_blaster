@@ -57,7 +57,8 @@ type worker struct {
 }
 
 func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
-	response := fasthttp.AcquireResponse()
+	response :=  fasthttp.AcquireResponse()
+	response.Reset()
 	defer fasthttp.ReleaseResponse(response)
 
 	var (
@@ -65,12 +66,7 @@ func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
 	)
 	err, duration := w.send(req, response, time.Second*60)
 
-	if err != nil || response.ConnectionClose() {
-		w.restart_connection()
-		if err != nil {
-			log.Println("[ERROR]", err.Error())
-		}
-	}
+
 	if err == nil {
 		code = response.StatusCode()
 		w.results.codes[code]++
@@ -85,14 +81,21 @@ func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
 		w.results.avg = w.results.avg + (duration-w.results.avg)/time.Duration(w.results.count)
 	} else {
 		w.error_count++
-	}
+		log.Println("[ERROR]", err.Error())
 
+	}
+	if response.ConnectionClose() {
+		w.restart_connection()
+	}
 	return err, duration
 }
 
 func (w *worker) open_connection() {
 	conn, err := fasthttp.DialTimeout(w.host, DialTimeout)
+	//conn.SetReadDeadline(time.Now().Add(time.Second*30))
+	//conn.SetWriteDeadline(time.Now().Add(time.Second*30))
 	if err != nil {
+		panic(err)
 		log.Printf("open connection error: %s\n", err)
 	}
 	if w.is_tls_client {
@@ -103,7 +106,7 @@ func (w *worker) open_connection() {
 	} else {
 		w.conn = conn
 	}
-	w.br = bufio.NewReaderSize(w.conn, 1024*1024)
+	w.br = bufio.NewReaderSize(w.conn, 1024*1024*100)
 	w.bw = bufio.NewWriter(w.conn)
 }
 
@@ -126,13 +129,12 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 		start := time.Now()
 		if err = req.Write(w.bw); err != nil {
 			log.Printf("send write error: %s\n", err)
+			log.Println(fmt.Sprintf("%+v",req))
 			w.ch_error <- err
-		}
-		if err = w.bw.Flush(); err != nil {
+		}else if err = w.bw.Flush(); err != nil {
 			log.Printf("send flush error: %s\n", err)
 			w.ch_error <- err
-		}
-		if err = resp.Read(w.br); err != nil {
+		}else if err = resp.Read(w.br); err != nil {
 			log.Printf("send read error: %s\n", err)
 			w.ch_error <- err
 		}
@@ -143,7 +145,7 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	case duration := <-w.ch_duration:
 		return nil, duration
 	case err := <-w.ch_error:
-		log.Printf("rerquest completed with error:%s url:%s", err.Error(), req.URI().String())
+		log.Printf("rerquest completed with error:%s", err.Error())
 		return err, timeout
 	case <-time.After(timeout):
 		log.Printf("Error: request didn't complete on timeout url:%s", req.URI().String())

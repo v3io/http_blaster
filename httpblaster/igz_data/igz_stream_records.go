@@ -1,6 +1,9 @@
 package igz_data
 
-import "encoding/base64"
+import (
+	"encoding/base64"
+	"encoding/json"
+)
 
 type StreamRecord struct {
 	ClientInfo   string
@@ -22,12 +25,22 @@ func (self *StreamRecord) SetData(data string) {
 }
 
 type StreamRecords struct {
-	NextLocation int
-	LagInBytes   int
-	LagInRecord  int
-	RecordsNum   int
+	//NextLocation int
+	//LagInBytes   int
+	//LagInRecord  int
+	//RecordsNum   int
 	Records      []StreamRecord
 }
+
+
+func (self *StreamRecords)ToJsonString() string {
+	body, err := json.Marshal(self)
+	if err != nil {
+		panic(err)
+	}
+	return string(body)
+}
+
 
 func NewStreamRecord(clientInfo string, data string, partition_key string, shard_id int) StreamRecord {
 	r := StreamRecord{
@@ -36,5 +49,12 @@ func NewStreamRecord(clientInfo string, data string, partition_key string, shard
 		ShardId:      shard_id,
 	}
 	r.SetData(data)
+	return r
+}
+
+
+func NewStreamRecords(record StreamRecord) StreamRecords {
+	r := StreamRecords{}
+	r.Records = append(r.Records, record)
 	return r
 }

@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"runtime"
+	"sync"
 )
 
 type Csv2KV struct {
@@ -21,7 +22,9 @@ func (self *Csv2KV) UseCommon(c RequestCommon) {
 
 }
 
-func (self *Csv2KV) generate_request(ch_records chan []string, ch_req chan *fasthttp.Request, host string) {
+func (self *Csv2KV) generate_request(ch_records chan []string, ch_req chan *fasthttp.Request, host string,
+					 wg *sync.WaitGroup) {
+	defer wg.Done()
 	parser := schema_parser.SchemaParser{}
 	var contentType string = "text/html"
 	e := parser.LoadSchema(self.workload.Schema)
@@ -39,8 +42,8 @@ func (self *Csv2KV) generate_request(ch_records chan []string, ch_req chan *fast
 func (self *Csv2KV) generate(ch_req chan *fasthttp.Request, payload string, host string) {
 	defer close(ch_req)
 	var ch_records chan []string = make(chan []string)
-	defer close(ch_records)
 
+	wg := sync.WaitGroup{}
 	f, err := os.Open(self.workload.Payload)
 	if err != nil {
 		panic(err)
@@ -49,9 +52,9 @@ func (self *Csv2KV) generate(ch_req chan *fasthttp.Request, payload string, host
 
 	r := csv.NewReader(f)
 	r.Comma = self.workload.Separator.Rune
-
+	wg.Add(runtime.NumCPU())
 	for c := 0; c < runtime.NumCPU(); c++ {
-		go self.generate_request(ch_records, ch_req, host)
+		go self.generate_request(ch_records, ch_req, host, &wg)
 	}
 
 	for {
@@ -64,10 +67,15 @@ func (self *Csv2KV) generate(ch_req chan *fasthttp.Request, payload string, host
 		}
 		ch_records <- record
 	}
+	close(ch_records)
+	wg.Wait()
 }
 
 func (self *Csv2KV) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
+	if self.workload.Header == nil{
+		self.workload.Header = make(map[string]string)
+	}
 	self.workload.Header["X-v3io-function"] = "PutItem"
 
 	if tls_mode {

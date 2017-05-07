@@ -2,13 +2,16 @@ package request_generators
 
 import (
 	"bufio"
-	"dft/igz_data"
+	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"fmt"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/schema_parser"
 	"github.com/valyala/fasthttp"
 	"os"
 	"runtime"
+	"sync"
+	"log"
+	"github.com/nu7hatch/gouuid"
 )
 
 type Csv2StreamGenerator struct {
@@ -21,44 +24,57 @@ func (self *Csv2StreamGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *Csv2StreamGenerator) generate_request(ch_records chan string, ch_req chan *fasthttp.Request, host string) {
+func (self *Csv2StreamGenerator) generate_request(ch_records chan string,
+						ch_req chan *fasthttp.Request,
+						host string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	p := schema_parser.SchemaParser{}
-	var contentType string = "text/html"
+	var contentType string = "application/json"
 	e := p.LoadSchema(self.workload.Schema)
 	if e != nil {
 		panic(e)
 	}
+	u,e:= uuid.NewV4()
 	for r := range ch_records {
-		sr := igz_data.NewStreamRecord("client", r, "", 0)
-		req := self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
-			self.base_uri, sr.GetData(), host)
+		sr := igz_data.NewStreamRecord("client", r,u.String(), 0)
+		r:= igz_data.NewStreamRecords(sr)
+		req := self.PrepareRequest(contentType, self.workload.Header, self.workload.Type,
+			self.base_uri, r.ToJsonString(), host)
 		ch_req <- req
 	}
+	log.Println("generate_request Done")
 }
 
 func (self *Csv2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload string, host string) {
 	defer close(ch_req)
 	var ch_records chan string = make(chan string)
-	defer close(ch_records)
-
+	wg := sync.WaitGroup{}
 	if file, err := os.Open(self.workload.Payload); err == nil {
 		scanner := bufio.NewScanner(file)
-
+		wg.Add(runtime.NumCPU())
 		for c := 0; c < runtime.NumCPU(); c++ {
-			go self.generate_request(ch_records, ch_req, host)
+			go self.generate_request(ch_records, ch_req, host, &wg)
 		}
 
 		for scanner.Scan() {
 			ch_records <- scanner.Text()
 		}
+		log.Println("Finish file scaning")
 	} else {
 		panic(err)
 	}
+	close(ch_records)
+	log.Println("Waiting for generators to finish")
+	wg.Wait()
+	log.Println("generators done")
 }
 
 func (self *Csv2StreamGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
-	self.workload.Header["X-v3io-function"] = "PUtRecords"
+	if self.workload.Header == nil{
+		self.workload.Header = make(map[string]string)
+	}
+	self.workload.Header["X-v3io-function"] = "PutRecords"
 
 	if tls_mode {
 		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.File_path)

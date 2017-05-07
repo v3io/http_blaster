@@ -2,7 +2,6 @@
 "Origin", LongType,  nullable = true
 "Time_Sequence", LongType,  nullable = true
 "Exchange_Transaction_ID", LongType,  nullable = true
-"System_Time", StringType,  nullable = true
 "Status_Flag", StringType,  nullable = true
 "Instrument_ID", StringType,  nullable = true
 "Order_Book_ID", StringType,  nullable = true
@@ -14,7 +13,7 @@
 "CAC_Orders", LongType,  nullable = true
 "Total_New_Order_Value", StringType,  nullable = true
 "Total_New_Order_Volume", StringType,  nullable = true
-"Action", LongType,  nullable = true
+"Action", StringType,  nullable = true
 "Transact_Time", StringType,  nullable = true
 "Hard_Limit_Price", StringType,  nullable = true
 "Active_Status", StringType,  nullable = true
@@ -39,3 +38,4 @@
 "TIF", StringType,  nullable = true
 "Execution_Min_Size", LongType,  nullable = true
 "OAC_Order_Size", LongType,  nullable = true
+
