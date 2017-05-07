@@ -56,7 +56,7 @@ type worker struct {
 	ch_error            chan error
 }
 
-func (w *worker) send_regquest(req *fasthttp.Request) (error, time.Duration) {
+func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
 	response := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(response)
 
