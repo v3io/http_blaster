@@ -19,8 +19,9 @@ TLSMode=false
    file_path="test1"
    Duration = "30s"
    TYPE="PUT"
-   workers=10
-   payload="examples/payloads/order-book-sample.csv"
+   workers=3
+   #payload="examples/payloads/order-book-sample.csv"
+   payload="examples/payloads/recursive"
 
 
 

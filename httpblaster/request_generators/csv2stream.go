@@ -43,19 +43,23 @@ func (self *Csv2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload
 	defer close(ch_req)
 	var ch_records chan string = make(chan string)
 	wg := sync.WaitGroup{}
-	if file, err := os.Open(self.workload.Payload); err == nil {
-		scanner := bufio.NewScanner(file)
-		wg.Add(runtime.NumCPU())
-		for c := 0; c < runtime.NumCPU(); c++ {
-			go self.generate_request(ch_records, ch_req, host, &wg)
-		}
+	ch_files := self.FilesScan(self.workload.Payload)
 
-		for scanner.Scan() {
-			ch_records <- scanner.Text()
+	wg.Add(runtime.NumCPU())
+	for c := 0; c < runtime.NumCPU(); c++ {
+		go self.generate_request(ch_records, ch_req, host, &wg)
+	}
+
+	for f := range ch_files {
+		if file, err := os.Open(f); err == nil {
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				ch_records <- scanner.Text()
+			}
+			log.Println("Finish file scaning")
+		} else {
+			panic(err)
 		}
-		log.Println("Finish file scaning")
-	} else {
-		panic(err)
 	}
 	close(ch_records)
 	log.Println("Waiting for generators to finish")

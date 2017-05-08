@@ -44,29 +44,35 @@ func (self *Csv2KV) generate(ch_req chan *fasthttp.Request, payload string, host
 	var ch_records chan []string = make(chan []string)
 
 	wg := sync.WaitGroup{}
-	f, err := os.Open(self.workload.Payload)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	r := csv.NewReader(f)
-	r.Comma = self.workload.Separator.Rune
 	wg.Add(runtime.NumCPU())
 	for c := 0; c < runtime.NumCPU(); c++ {
 		go self.generate_request(ch_records, ch_req, host, &wg)
 	}
 
-	for {
-		record, err := r.Read()
+	ch_files := self.FilesScan(self.workload.Payload)
+
+	for f := range ch_files {
+		f, err := os.Open(f)
 		if err != nil {
-			if err == io.EOF {
-				break
-			}
 			panic(err)
 		}
-		ch_records <- record
+
+		r := csv.NewReader(f)
+		r.Comma = self.workload.Separator.Rune
+
+		for {
+			record, err := r.Read()
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				panic(err)
+			}
+			ch_records <- record
+		}
+		f.Close()
 	}
+
 	close(ch_records)
 	wg.Wait()
 }
