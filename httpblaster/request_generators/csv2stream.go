@@ -5,7 +5,6 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"fmt"
 	"github.com/v3io/http_blaster/httpblaster/config"
-	"github.com/v3io/http_blaster/httpblaster/schema_parser"
 	"github.com/valyala/fasthttp"
 	"os"
 	"runtime"
@@ -28,13 +27,8 @@ func (self *Csv2StreamGenerator) generate_request(ch_records chan string,
 						ch_req chan *fasthttp.Request,
 						host string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	p := schema_parser.SchemaParser{}
 	var contentType string = "application/json"
-	e := p.LoadSchema(self.workload.Schema)
-	if e != nil {
-		panic(e)
-	}
-	u,e:= uuid.NewV4()
+	u,_:= uuid.NewV4()
 	for r := range ch_records {
 		sr := igz_data.NewStreamRecord("client", r,u.String(), 0)
 		r:= igz_data.NewStreamRecords(sr)
