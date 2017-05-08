@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -29,7 +28,7 @@ func StringToKind(str string) igz_data.IgzType {
 	case "StringType":
 		return igz_data.T_STRING
 	case "LongType":
-		return igz_data.T_NUMBER
+		return igz_data.T_DOUBLE
 	case "NoneType":
 		return igz_data.T_NULL
 	case "IntType":
@@ -69,7 +68,7 @@ func (self *SchemaParser) LoadSchema(file_path string) error {
 			}
 			panic(err)
 		}
-		log.Println(schema_value)
+		//log.Println(schema_value)
 		self.csv_map[i] = SchemaValue{Name: schema_value[0], Type: StringToKind(schema_value[1])}
 		if len(schema_value)>2{
 			if self.IsKeyField(schema_value[2]){
@@ -78,42 +77,39 @@ func (self *SchemaParser) LoadSchema(file_path string) error {
 			}
 		}
 	}
-	//for k,v:= range self.csv_map{
-	//	log.Println(fmt.Sprintf("%v - %v",k,v))
-	//}
-
 	return nil
 }
 
 func (self *SchemaParser) JsonFromCSVRecord(vals []string) string {
 	emd_item := igz_data.NewEmdItem()
 	for i, v := range vals {
-		err, value := ConvertValue(self.csv_map[i].Type, v)
+		err, igz_type, value := ConvertValue(self.csv_map[i].Type, v)
 		if err != nil{
 			panic(fmt.Sprintf("conversion error ", i, v, self.csv_map[i].Name, self.csv_map[i].Type))
 		}
 		if self.schema_key_index == i{
-			emd_item.InsertKey( self.csv_map[i].Name,self.csv_map[i].Type,value)
+			emd_item.InsertKey( self.csv_map[i].Name,igz_type, value)
 		}else {
-			emd_item.InsertItemAttr(self.csv_map[i].Name, self.csv_map[i].Type, value)
+			emd_item.InsertItemAttr(self.csv_map[i].Name, igz_type, value)
 		}
 	}
 	//panic(emd_item.ToJsonString())
 	return string(emd_item.ToJsonString())
 }
 
-func ConvertValue(t igz_data.IgzType, v string) (error, interface{}) {
+func ConvertValue(t igz_data.IgzType, v string) (error, igz_data.IgzType, interface{}) {
 	switch t {
 	case igz_data.T_STRING:
-		return nil, v
+		return nil, igz_data.T_STRING, v
 	case igz_data.T_NUMBER:
-		return nil, v
-		r, e := strconv.Atoi(v)
-		return e, r
+		return nil, igz_data.T_NUMBER, v
 	case igz_data.T_DOUBLE:
-		return nil, v
 		r, e := strconv.ParseFloat(v, 64)
-		return e, r
+		if e != nil{
+			panic(e)
+		}
+		val := fmt.Sprintf("%.1f", r)
+		return e, igz_data.T_NUMBER, val
 	default:
 		panic(fmt.Sprintf("missing type conversion %v", t))
 	}
