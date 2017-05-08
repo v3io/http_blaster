@@ -25,7 +25,7 @@ const (
 type IgzEmdItem struct {
 	//TableName           string
 	//ConditionExpression string
-	//Key                 map[string]map[string]interface{}
+	Key                 map[string]map[string]interface{}
 	Item                map[string]map[string]interface{}
 }
 
@@ -33,15 +33,15 @@ func (self *IgzEmdItem) ToJsonString() string {
 	body, _ := json.Marshal(self)
 	return string(body)
 }
-//
-//func (self *IgzEmdItem) InsertKey(key string, value_type IgzType, value interface{}) error {
-//	if _, ok := self.Key[key]; ok {
-//		return log4go.Error("Key %s Override existing key %v", key, self.Key)
-//	}
-//	self.Key[key] = make(map[string]interface{})
-//	self.Key[key][string(value_type)] = value
-//	return nil
-//}
+
+func (self *IgzEmdItem) InsertKey(key string, value_type IgzType, value interface{}) error {
+	if _, ok := self.Key[key]; ok {
+		return log4go.Error("Key %s Override existing key %v", key, self.Key)
+	}
+	self.Key[key] = make(map[string]interface{})
+	self.Key[key][string(value_type)] = value
+	return nil
+}
 
 func (self *IgzEmdItem) InsertItemAttr(attr_name string, value_type IgzType, value interface{}) error {
 	if _, ok := self.Item[attr_name]; ok {
@@ -54,7 +54,7 @@ func (self *IgzEmdItem) InsertItemAttr(attr_name string, value_type IgzType, val
 
 func NewEmdItem() *IgzEmdItem {
 	i := &IgzEmdItem{}
-	//i.Key = make(map[string]map[string]interface{})
+	i.Key = make(map[string]map[string]interface{})
 	i.Item = make(map[string]map[string]interface{})
 	return i
 }

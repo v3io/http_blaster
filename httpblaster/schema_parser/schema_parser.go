@@ -17,8 +17,11 @@ type SchemaValue struct {
 }
 
 type SchemaParser struct {
-	Schema_file string
-	csv_map     map[int]SchemaValue
+	Schema_file 	string
+	csv_map   	map[int]SchemaValue
+	schema_key_index 	int
+	schema_key_name 	string
+
 }
 
 func StringToKind(str string) igz_data.IgzType {
@@ -35,6 +38,17 @@ func StringToKind(str string) igz_data.IgzType {
 	}
 	panic(fmt.Sprintf("unknown value type %s", str))
 	return igz_data.T_NULL
+
+}
+
+func (self *SchemaParser)IsKeyField(v string)  bool{
+	v_list := strings.Split(v, "=")
+	if len(v_list) > 1{
+		if strings.TrimSpace(v_list[0]) == "key" && strings.TrimSpace(v_list[1]) == "true"{
+			return true
+		}
+	}
+	return false
 
 }
 
@@ -57,6 +71,12 @@ func (self *SchemaParser) LoadSchema(file_path string) error {
 		}
 		log.Println(schema_value)
 		self.csv_map[i] = SchemaValue{Name: schema_value[0], Type: StringToKind(schema_value[1])}
+		if len(schema_value)>2{
+			if self.IsKeyField(schema_value[2]){
+				self.schema_key_name = schema_value[0]
+				self.schema_key_index = i
+			}
+		}
 	}
 	//for k,v:= range self.csv_map{
 	//	log.Println(fmt.Sprintf("%v - %v",k,v))
@@ -72,7 +92,11 @@ func (self *SchemaParser) JsonFromCSVRecord(vals []string) string {
 		if err != nil{
 			panic(fmt.Sprintf("conversion error ", i, v, self.csv_map[i].Name, self.csv_map[i].Type))
 		}
-		emd_item.InsertItemAttr(self.csv_map[i].Name, self.csv_map[i].Type, value)
+		if self.schema_key_index == i{
+			emd_item.InsertKey( self.csv_map[i].Name,self.csv_map[i].Type,value)
+		}else {
+			emd_item.InsertItemAttr(self.csv_map[i].Name, self.csv_map[i].Type, value)
+		}
 	}
 	//panic(emd_item.ToJsonString())
 	return string(emd_item.ToJsonString())

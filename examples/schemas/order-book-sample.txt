@@ -1,4 +1,4 @@
-"Routing_Seq", StringType,  nullable = true
+"Routing_Seq", StringType,  key=true
 "Origin", LongType,  nullable = true
 "Time_Sequence", LongType,  nullable = true
 "Exchange_Transaction_ID", LongType,  nullable = true
