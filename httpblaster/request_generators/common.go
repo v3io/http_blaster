@@ -6,7 +6,6 @@ import (
 	"log"
 	"fmt"
 	"path/filepath"
-	"time"
 )
 
 const (
@@ -62,7 +61,6 @@ func (self *RequestCommon) FilesScan(path string) chan string{
 		if err != nil {
 			log.Fatal(err)
 		}
-		time.Sleep(time.Second*3)
 		close(self.ch_files)
 	}()
 	return self.ch_files

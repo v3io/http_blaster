@@ -4,7 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"github.com/v3io/http_blaster/httpblaster/config"
-	"github.com/v3io/http_blaster/httpblaster/schema_parser"
+	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"github.com/valyala/fasthttp"
 	"io"
 	"os"
@@ -25,7 +25,7 @@ func (self *Csv2KV) UseCommon(c RequestCommon) {
 func (self *Csv2KV) generate_request(ch_records chan []string, ch_req chan *fasthttp.Request, host string,
 					 wg *sync.WaitGroup) {
 	defer wg.Done()
-	parser := schema_parser.SchemaParser{}
+	parser := igz_data.EmdSchemaParser{}
 	var contentType string = "text/html"
 	e := parser.LoadSchema(self.workload.Schema)
 	if e != nil {
@@ -85,9 +85,9 @@ func (self *Csv2KV) GenerateRequests(wl config.Workload, tls_mode bool, host str
 	self.workload.Header["X-v3io-function"] = "PutItem"
 
 	if tls_mode {
-		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.File_path)
+		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
 	} else {
-		self.base_uri = fmt.Sprintf("http://%s/%s/%s", host, self.workload.Bucket, self.workload.File_path)
+		self.base_uri = fmt.Sprintf("http://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
 	}
 	ch_req := make(chan *fasthttp.Request, 1000)
 

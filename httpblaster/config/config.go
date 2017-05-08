@@ -63,7 +63,7 @@ type global struct {
 type Workload struct {
 	Name       string
 	Bucket     string
-	File_path  string
+	Target     string
 	Type       string
 	Duration   duration
 	Count      int

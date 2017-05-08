@@ -10,7 +10,7 @@ import (
 )
 
 func Test_Schema_Parser(t *testing.T) {
-	p := schema_parser.SchemaParser{}
+	p := schema_parser.EmdSchemaParser{}
 	e := p.LoadSchema("../example/order-book-sample.txt")
 	if e != nil {
 		t.Error(e)

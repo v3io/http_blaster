@@ -75,9 +75,9 @@ func (self *Csv2StreamGenerator) GenerateRequests(wl config.Workload, tls_mode b
 	self.workload.Header["X-v3io-function"] = "PutRecords"
 
 	if tls_mode {
-		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.File_path)
+		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
 	} else {
-		self.base_uri = fmt.Sprintf("http://%s/%s/%s", host, self.workload.Bucket, self.workload.File_path)
+		self.base_uri = fmt.Sprintf("http://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
 	}
 	ch_req := make(chan *fasthttp.Request, 1000)
 

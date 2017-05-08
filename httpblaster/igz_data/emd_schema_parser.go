@@ -1,9 +1,8 @@
-package schema_parser
+package igz_data
 
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"io"
 	"os"
 	"strconv"
@@ -12,10 +11,12 @@ import (
 
 type SchemaValue struct {
 	Name string
-	Type igz_data.IgzType
+	Type IgzType
+	Nullable bool
+	Key bool
 }
 
-type SchemaParser struct {
+type EmdSchemaParser struct {
 	Schema_file 	string
 	csv_map   	map[int]SchemaValue
 	schema_key_index 	int
@@ -23,24 +24,24 @@ type SchemaParser struct {
 
 }
 
-func StringToKind(str string) igz_data.IgzType {
+func StringToKind(str string) IgzType {
 	switch strings.TrimSpace(str) {
 	case "StringType":
-		return igz_data.T_STRING
+		return T_STRING
 	case "LongType":
-		return igz_data.T_DOUBLE
+		return T_DOUBLE
 	case "NoneType":
-		return igz_data.T_NULL
+		return T_NULL
 	case "IntType":
-		return igz_data.T_NUMBER
+		return T_NUMBER
 
 	}
 	panic(fmt.Sprintf("unknown value type %s", str))
-	return igz_data.T_NULL
+	return T_NULL
 
 }
 
-func (self *SchemaParser)IsKeyField(v string)  bool{
+func (self *EmdSchemaParser)IsKeyField(v string)  bool{
 	v_list := strings.Split(v, "=")
 	if len(v_list) > 1{
 		if strings.TrimSpace(v_list[0]) == "key" && strings.TrimSpace(v_list[1]) == "true"{
@@ -51,7 +52,7 @@ func (self *SchemaParser)IsKeyField(v string)  bool{
 
 }
 
-func (self *SchemaParser) LoadSchema(file_path string) error {
+func (self *EmdSchemaParser) LoadSchema(file_path string) error {
 	f, e := os.Open(file_path)
 	self.csv_map = make(map[int]SchemaValue)
 	if e != nil {
@@ -80,8 +81,8 @@ func (self *SchemaParser) LoadSchema(file_path string) error {
 	return nil
 }
 
-func (self *SchemaParser) JsonFromCSVRecord(vals []string) string {
-	emd_item := igz_data.NewEmdItem()
+func (self *EmdSchemaParser) JsonFromCSVRecord(vals []string) string {
+	emd_item := NewEmdItem()
 	for i, v := range vals {
 		err, igz_type, value := ConvertValue(self.csv_map[i].Type, v)
 		if err != nil{
@@ -97,19 +98,19 @@ func (self *SchemaParser) JsonFromCSVRecord(vals []string) string {
 	return string(emd_item.ToJsonString())
 }
 
-func ConvertValue(t igz_data.IgzType, v string) (error, igz_data.IgzType, interface{}) {
+func ConvertValue(t IgzType, v string) (error, IgzType, interface{}) {
 	switch t {
-	case igz_data.T_STRING:
-		return nil, igz_data.T_STRING, v
-	case igz_data.T_NUMBER:
-		return nil, igz_data.T_NUMBER, v
-	case igz_data.T_DOUBLE:
+	case T_STRING:
+		return nil, T_STRING, v
+	case T_NUMBER:
+		return nil, T_NUMBER, v
+	case T_DOUBLE:
 		r, e := strconv.ParseFloat(v, 64)
 		if e != nil{
 			panic(e)
 		}
 		val := fmt.Sprintf("%.1f", r)
-		return e, igz_data.T_NUMBER, val
+		return e, T_NUMBER, val
 	default:
 		panic(fmt.Sprintf("missing type conversion %v", t))
 	}

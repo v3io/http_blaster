@@ -16,12 +16,12 @@ TLSMode=false
    name="first"
    Generator="csv2stream"
    bucket="1"
-   file_path="test1"
+   Target="test1"
    Duration = "30s"
    TYPE="PUT"
-   workers=3
-   #payload="examples/payloads/order-book-sample.csv"
-   payload="examples/payloads/recursive"
+   workers=100
+   payload="examples/payloads/order-book-sample.csv"
+   #payload="examples/payloads/recursive"
 
 
 

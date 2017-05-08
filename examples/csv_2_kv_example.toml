@@ -12,16 +12,16 @@ TLSMode=false
   205 = 100.0
 
 [workloads]
-   [workloads.get1]
-   name="first"
+   [workloads.golan]
+   name="test 1"
    Generator="csv2kv"
    bucket="1"
-   file_path="test_emd1/"
+   Target="test_emd1/"
    Duration = "30s"
    TYPE="PUT"
    workers=10
-   #payload="examples/payloads/order-book-sample.csv"
-   payload="examples/payloads/recursive"
+   payload="examples/payloads/order-book-sample.csv"
+   #payload="examples/payloads/recursive"
    separator='|'
    schema="examples/schemas/order-book-sample.txt"
 
