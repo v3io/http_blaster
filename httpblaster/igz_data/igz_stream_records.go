@@ -29,18 +29,16 @@ type StreamRecords struct {
 	//LagInBytes   int
 	//LagInRecord  int
 	//RecordsNum   int
-	Records      []StreamRecord
+	Records []StreamRecord
 }
 
-
-func (self *StreamRecords)ToJsonString() string {
+func (self *StreamRecords) ToJsonString() string {
 	body, err := json.Marshal(self)
 	if err != nil {
 		panic(err)
 	}
 	return string(body)
 }
-
 
 func NewStreamRecord(clientInfo string, data string, partition_key string, shard_id int) StreamRecord {
 	r := StreamRecord{
@@ -51,7 +49,6 @@ func NewStreamRecord(clientInfo string, data string, partition_key string, shard
 	r.SetData(data)
 	return r
 }
-
 
 func NewStreamRecords(record StreamRecord) StreamRecords {
 	r := StreamRecords{}

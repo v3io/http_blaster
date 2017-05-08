@@ -2,15 +2,15 @@ package request_generators
 
 import (
 	"bufio"
-	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"fmt"
+	"github.com/nu7hatch/gouuid"
 	"github.com/v3io/http_blaster/httpblaster/config"
+	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"github.com/valyala/fasthttp"
+	"log"
 	"os"
 	"runtime"
 	"sync"
-	"log"
-	"github.com/nu7hatch/gouuid"
 )
 
 type Csv2StreamGenerator struct {
@@ -24,14 +24,14 @@ func (self *Csv2StreamGenerator) UseCommon(c RequestCommon) {
 }
 
 func (self *Csv2StreamGenerator) generate_request(ch_records chan string,
-						ch_req chan *fasthttp.Request,
-						host string, wg *sync.WaitGroup) {
+	ch_req chan *fasthttp.Request,
+	host string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var contentType string = "application/json"
-	u,_:= uuid.NewV4()
+	u, _ := uuid.NewV4()
 	for r := range ch_records {
-		sr := igz_data.NewStreamRecord("client", r,u.String(), 0)
-		r:= igz_data.NewStreamRecords(sr)
+		sr := igz_data.NewStreamRecord("client", r, u.String(), 0)
+		r := igz_data.NewStreamRecords(sr)
 		req := self.PrepareRequest(contentType, self.workload.Header, self.workload.Type,
 			self.base_uri, r.ToJsonString(), host)
 		ch_req <- req
@@ -69,7 +69,7 @@ func (self *Csv2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload
 
 func (self *Csv2StreamGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
-	if self.workload.Header == nil{
+	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
 	}
 	self.workload.Header["X-v3io-function"] = "PutRecords"

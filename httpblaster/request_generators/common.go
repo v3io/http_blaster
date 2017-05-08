@@ -1,10 +1,10 @@
 package request_generators
 
 import (
-	"github.com/valyala/fasthttp"
-	"os"
-	"log"
 	"fmt"
+	"github.com/valyala/fasthttp"
+	"log"
+	"os"
 	"path/filepath"
 )
 
@@ -39,22 +39,20 @@ func (self *RequestCommon) PrepareRequest(content_type string,
 	return req
 }
 
-
-
-func (self *RequestCommon)SubmitFiles(path string, info os.FileInfo, err error) error {
+func (self *RequestCommon) SubmitFiles(path string, info os.FileInfo, err error) error {
 	log.Print(path)
 	if err != nil {
 		log.Print(err)
 		return nil
 	}
-	if !info.IsDir(){
+	if !info.IsDir() {
 		self.ch_files <- path
 	}
 	fmt.Println(path)
 	return nil
 }
 
-func (self *RequestCommon) FilesScan(path string) chan string{
+func (self *RequestCommon) FilesScan(path string) chan string {
 	self.ch_files = make(chan string)
 	go func() {
 		err := filepath.Walk(path, self.SubmitFiles)

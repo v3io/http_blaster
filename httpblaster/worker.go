@@ -57,7 +57,7 @@ type worker struct {
 }
 
 func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
-	response :=  fasthttp.AcquireResponse()
+	response := fasthttp.AcquireResponse()
 	response.Reset()
 	defer fasthttp.ReleaseResponse(response)
 
@@ -65,7 +65,6 @@ func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
 		code int
 	)
 	err, duration := w.send(req, response, time.Second*60)
-
 
 	if err == nil {
 		code = response.StatusCode()
@@ -129,12 +128,12 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 		start := time.Now()
 		if err = req.Write(w.bw); err != nil {
 			log.Printf("send write error: %s\n", err)
-			log.Println(fmt.Sprintf("%+v",req))
+			log.Println(fmt.Sprintf("%+v", req))
 			w.ch_error <- err
-		}else if err = w.bw.Flush(); err != nil {
+		} else if err = w.bw.Flush(); err != nil {
 			log.Printf("send flush error: %s\n", err)
 			w.ch_error <- err
-		}else if err = resp.Read(w.br); err != nil {
+		} else if err = resp.Read(w.br); err != nil {
 			log.Printf("send read error: %s\n", err)
 			w.ch_error <- err
 		}

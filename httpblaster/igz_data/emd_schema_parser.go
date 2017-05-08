@@ -10,18 +10,17 @@ import (
 )
 
 type SchemaValue struct {
-	Name string
-	Type IgzType
+	Name     string
+	Type     IgzType
 	Nullable bool
-	Key bool
+	Key      bool
 }
 
 type EmdSchemaParser struct {
-	Schema_file 	string
-	csv_map   	map[int]SchemaValue
-	schema_key_index 	int
-	schema_key_name 	string
-
+	Schema_file      string
+	csv_map          map[int]SchemaValue
+	schema_key_index int
+	schema_key_name  string
 }
 
 func StringToKind(str string) IgzType {
@@ -41,10 +40,10 @@ func StringToKind(str string) IgzType {
 
 }
 
-func (self *EmdSchemaParser)IsKeyField(v string)  bool{
+func (self *EmdSchemaParser) IsKeyField(v string) bool {
 	v_list := strings.Split(v, "=")
-	if len(v_list) > 1{
-		if strings.TrimSpace(v_list[0]) == "key" && strings.TrimSpace(v_list[1]) == "true"{
+	if len(v_list) > 1 {
+		if strings.TrimSpace(v_list[0]) == "key" && strings.TrimSpace(v_list[1]) == "true" {
 			return true
 		}
 	}
@@ -71,8 +70,8 @@ func (self *EmdSchemaParser) LoadSchema(file_path string) error {
 		}
 		//log.Println(schema_value)
 		self.csv_map[i] = SchemaValue{Name: schema_value[0], Type: StringToKind(schema_value[1])}
-		if len(schema_value)>2{
-			if self.IsKeyField(schema_value[2]){
+		if len(schema_value) > 2 {
+			if self.IsKeyField(schema_value[2]) {
 				self.schema_key_name = schema_value[0]
 				self.schema_key_index = i
 			}
@@ -85,12 +84,12 @@ func (self *EmdSchemaParser) JsonFromCSVRecord(vals []string) string {
 	emd_item := NewEmdItem()
 	for i, v := range vals {
 		err, igz_type, value := ConvertValue(self.csv_map[i].Type, v)
-		if err != nil{
+		if err != nil {
 			panic(fmt.Sprintf("conversion error ", i, v, self.csv_map[i].Name, self.csv_map[i].Type))
 		}
-		if self.schema_key_index == i{
-			emd_item.InsertKey( self.csv_map[i].Name,igz_type, value)
-		}else {
+		if self.schema_key_index == i {
+			emd_item.InsertKey(self.csv_map[i].Name, igz_type, value)
+		} else {
 			emd_item.InsertItemAttr(self.csv_map[i].Name, igz_type, value)
 		}
 	}
@@ -106,7 +105,7 @@ func ConvertValue(t IgzType, v string) (error, IgzType, interface{}) {
 		return nil, T_NUMBER, v
 	case T_DOUBLE:
 		r, e := strconv.ParseFloat(v, 64)
-		if e != nil{
+		if e != nil {
 			panic(e)
 		}
 		val := fmt.Sprintf("%.1f", r)

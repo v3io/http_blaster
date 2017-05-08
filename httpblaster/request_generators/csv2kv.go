@@ -23,7 +23,7 @@ func (self *Csv2KV) UseCommon(c RequestCommon) {
 }
 
 func (self *Csv2KV) generate_request(ch_records chan []string, ch_req chan *fasthttp.Request, host string,
-					 wg *sync.WaitGroup) {
+	wg *sync.WaitGroup) {
 	defer wg.Done()
 	parser := igz_data.EmdSchemaParser{}
 	var contentType string = "text/html"
@@ -79,7 +79,7 @@ func (self *Csv2KV) generate(ch_req chan *fasthttp.Request, payload string, host
 
 func (self *Csv2KV) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
-	if self.workload.Header == nil{
+	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
 	}
 	self.workload.Header["X-v3io-function"] = "PutItem"

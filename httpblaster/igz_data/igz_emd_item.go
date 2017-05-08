@@ -25,8 +25,8 @@ const (
 type IgzEmdItem struct {
 	//TableName           string
 	//ConditionExpression string
-	Key                 map[string]map[string]interface{}
-	Item                map[string]map[string]interface{}
+	Key  map[string]map[string]interface{}
+	Item map[string]map[string]interface{}
 }
 
 func (self *IgzEmdItem) ToJsonString() string {
