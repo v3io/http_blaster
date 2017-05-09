@@ -105,7 +105,7 @@ func (self *EmdSchemaParser) KeyFromCSVRecord(vals []string) string {
 
 func (self *EmdSchemaParser) JsonFromCSVRecord(vals []string) string {
 	emd_item := NewEmdItem()
-	k:= self.KeyFromCSVRecord(vals)
+	//k:= self.KeyFromCSVRecord(vals)
 	//panic(k)
 	emd_item.InsertKey("key", T_STRING, self.KeyFromCSVRecord(vals))
 	for i, v := range vals {
