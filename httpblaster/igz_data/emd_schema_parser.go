@@ -91,10 +91,16 @@ func (self *EmdSchemaParser) GetKeyIndexes() {
 }
 
 func (self *EmdSchemaParser) KeyFromCSVRecord(vals []string) string {
+	//when no keys, generate random
 	if len(self.schema_key_indexs)== 0 {
 		u, _ := uuid.NewV4()
 		return u.String()
 	}
+	//when 1 key, return the key
+	if len(self.schema_key_indexs) == 1{
+		return vals[0]
+	}
+	//when more the one key, generate formatted key
 	var keys [] interface{}
 	for _,i := range self.schema_key_indexs{
 		keys = append(keys, vals[i])
@@ -105,8 +111,6 @@ func (self *EmdSchemaParser) KeyFromCSVRecord(vals []string) string {
 
 func (self *EmdSchemaParser) JsonFromCSVRecord(vals []string) string {
 	emd_item := NewEmdItem()
-	//k:= self.KeyFromCSVRecord(vals)
-	//panic(k)
 	emd_item.InsertKey("key", T_STRING, self.KeyFromCSVRecord(vals))
 	for i, v := range vals {
 		err, igz_type, value := ConvertValue(self.csv_map[i].Type, v)

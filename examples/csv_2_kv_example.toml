@@ -26,6 +26,7 @@ TLSMode=false
    schema="examples/schemas/order-book-sample.txt"
    KeyFormat="%v---%v._"
    KeyFields="Routing_Seq,Instrument_ID"
+   #KeyFields="Routing_Seq"
 
 
 
