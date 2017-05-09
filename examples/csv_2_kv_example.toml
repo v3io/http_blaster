@@ -24,6 +24,8 @@ TLSMode=false
    #payload="examples/payloads/recursive"
    separator='|'
    schema="examples/schemas/order-book-sample.txt"
+   KeyFormat="%v---%v._"
+   KeyFields="Routing_Seq,Instrument_ID"
 
 
 

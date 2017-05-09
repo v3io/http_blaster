@@ -7,8 +7,10 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"github.com/valyala/fasthttp"
 	"io"
+	"log"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 )
 
@@ -27,7 +29,7 @@ func (self *Csv2KV) generate_request(ch_records chan []string, ch_req chan *fast
 	defer wg.Done()
 	parser := igz_data.EmdSchemaParser{}
 	var contentType string = "text/html"
-	e := parser.LoadSchema(self.workload.Schema)
+	e := parser.LoadSchema(self.workload.Schema, self.workload.KeyFields, self.workload.KeyFormat)
 	if e != nil {
 		panic(e)
 	}
@@ -68,7 +70,12 @@ func (self *Csv2KV) generate(ch_req chan *fasthttp.Request, payload string, host
 				}
 				panic(err)
 			}
-			ch_records <- record
+
+			if strings.HasPrefix(record[0], "#") {
+				log.Println("Skipping scv header ", strings.Join(record[:], ","))
+			} else {
+				ch_records <- record
+			}
 		}
 		f.Close()
 	}
@@ -79,6 +86,7 @@ func (self *Csv2KV) generate(ch_req chan *fasthttp.Request, payload string, host
 
 func (self *Csv2KV) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
+	//panic(fmt.Sprintf("workload key [%s] workload key sep [%s]", wl.KeyFormat, string(wl.KeyFormatSep.Rune)))
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
 	}
