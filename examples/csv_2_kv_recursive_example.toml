@@ -12,8 +12,8 @@ TLSMode=false
   205 = 100.0
 
 [workloads]
-   [workloads.golan]
-   name="test 1"
+   [workloads.csv2kv_recursive_example]
+   name="test csv2kv_example"
    Generator="csv2kv"
    bucket="1"
    Target="test_emd1/"

@@ -12,8 +12,8 @@ TLSMode=false
   205 = 100.0
 
 [workloads]
-   [workloads.get1]
-   name="first"
+   [workloads.stream_recursive_example]
+   name="csv2stream recursive example"
    Generator="csv2stream"
    bucket="1"
    Target="test1"
