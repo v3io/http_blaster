@@ -10,8 +10,9 @@ import (
 
 const (
 	PERFORMANCE = "performance"
-	CSV2STREAM  = "csv2stream"
+	LINE2STREAM = "line2stream"
 	CSV2KV      = "csv2kv"
+	JSON2KV     = "json2kv"
 )
 
 type RequestCommon struct {

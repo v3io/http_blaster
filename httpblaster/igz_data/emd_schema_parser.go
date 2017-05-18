@@ -2,9 +2,12 @@ package igz_data
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"github.com/nu7hatch/gouuid"
+	"github.com/nytlabs/gojee"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -13,16 +16,18 @@ import (
 type SchemaValue struct {
 	Name     string
 	Type     IgzType
+	Index    int
+	Source   string
+	Target   string
 	Nullable bool
-	Key      bool
 }
 
 type EmdSchemaParser struct {
-	Schema_file       string
-	csv_map           map[int]SchemaValue
-	schema_key_indexs []int
-	schema_key_format string
-	schema_key_fields string
+	Schema_file          string
+	csv_map              map[int]SchemaValue
+	schema_key_indexs    []int
+	schema_key_format    string
+	schema_key_fields    string
 	schema_key_seperator string
 }
 
@@ -81,7 +86,7 @@ func (self *EmdSchemaParser) LoadSchema(file_path string, key_fields string, key
 }
 func (self *EmdSchemaParser) GetKeyIndexes() {
 	keys := strings.Split(self.schema_key_fields, ",")
-	for _,key := range keys {
+	for _, key := range keys {
 		for i, v := range self.csv_map {
 			if v.Name == key {
 				self.schema_key_indexs = append(self.schema_key_indexs, i)
@@ -92,24 +97,24 @@ func (self *EmdSchemaParser) GetKeyIndexes() {
 
 func (self *EmdSchemaParser) KeyFromCSVRecord(vals []string) string {
 	//when no keys, generate random
-	if len(self.schema_key_indexs)== 0 {
+	if len(self.schema_key_indexs) == 0 {
 		u, _ := uuid.NewV4()
 		return u.String()
 	}
 	//when 1 key, return the key
-	if len(self.schema_key_indexs) == 1{
+	if len(self.schema_key_indexs) == 1 {
 		return vals[0]
 	}
 	//when more the one key, generate formatted key
-	var keys [] interface{}
-	for _,i := range self.schema_key_indexs{
+	var keys []interface{}
+	for _, i := range self.schema_key_indexs {
 		keys = append(keys, vals[i])
 	}
 	key := fmt.Sprintf(self.schema_key_format, keys...)
 	return key
 }
 
-func (self *EmdSchemaParser) JsonFromCSVRecord(vals []string) string {
+func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 	emd_item := NewEmdItem()
 	emd_item.InsertKey("key", T_STRING, self.KeyFromCSVRecord(vals))
 	for i, v := range vals {
@@ -120,6 +125,46 @@ func (self *EmdSchemaParser) JsonFromCSVRecord(vals []string) string {
 		emd_item.InsertItemAttr(self.csv_map[i].Name, igz_type, value)
 	}
 	//panic(emd_item.ToJsonString())
+	return string(emd_item.ToJsonString())
+}
+
+func (self *EmdSchemaParser) EmdFromJsonRecord(json_obj string) string {
+	emd_item := NewEmdItem()
+	var result map[string]interface{}
+	err := json.Unmarshal([]byte(json_obj), &result)
+	if err != nil {
+		panic(err)
+	}
+	//json_obj = "{\"a\": 3, \"b\": 4}"
+	l, err := jee.Lexer(".GPS[].LAT")
+	if err != nil {
+		panic(err)
+	}
+
+	tree, err := jee.Parser(l)
+	if err != nil {
+		log.Println(json_obj)
+		panic(err)
+	}
+
+	r, err := jee.Eval(tree, result)
+
+	if err != nil {
+		panic(err)
+	}
+	log.Println(fmt.Sprintf("%+v", result))
+
+	panic(fmt.Sprintf("%+v", r))
+
+	//emd_item.InsertKey("key", T_STRING, self.KeyFromCSVRecord(vals))
+	//for i, v := range vals {
+	//	err, igz_type, value := ConvertValue(self.csv_map[i].Type, v)
+	//	if err != nil {
+	//		panic(fmt.Sprintf("conversion error ", i, v, self.csv_map[i].Name, self.csv_map[i].Type))
+	//	}
+	//	emd_item.InsertItemAttr(self.csv_map[i].Name, igz_type, value)
+	//}
+	////panic(emd_item.ToJsonString())
 	return string(emd_item.ToJsonString())
 }
 
