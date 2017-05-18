@@ -5,23 +5,39 @@ import (
 	"encoding/json"
 )
 
-type StreamRecord struct {
-	ClientInfo   string
-	Data         string
-	PartitionKey string
-	ShardId      int
+const (
+	ClientInfo   = "ClientInfo"
+	DATA         = "Data"
+	PartitionKey = "PartitionKey"
+	ShardId      = "ShardId"
+)
+
+type StreamRecord map[string]interface {
+
 }
 
-func (self *StreamRecord) GetData() string {
-	data, err := base64.StdEncoding.DecodeString(self.Data)
+func (self StreamRecord) GetData() string {
+	data, err := base64.StdEncoding.DecodeString(self[DATA].(string))
 	if err != nil {
 		panic(err)
 	}
 	return string(data)
 }
 
-func (self *StreamRecord) SetData(data string) {
-	self.Data = base64.StdEncoding.EncodeToString([]byte(data))
+func (self StreamRecord) SetData(data string) {
+	self[DATA] = base64.StdEncoding.EncodeToString([]byte(data))
+}
+
+func (self StreamRecord) SetClientInfo(clinet_info string) {
+	self[ClientInfo] = clinet_info
+}
+
+func (self StreamRecord) SetPartitionKey(partition_key string) {
+	self[PartitionKey] = partition_key
+}
+
+func (self StreamRecord) SetShardId(shard_id int) {
+	self[ShardId] = shard_id
 }
 
 type StreamRecords struct {
@@ -40,11 +56,15 @@ func (self *StreamRecords) ToJsonString() string {
 	return string(body)
 }
 
-func NewStreamRecord(clientInfo string, data string, partition_key string, shard_id int) StreamRecord {
-	r := StreamRecord{
-		ClientInfo:   clientInfo,
-		PartitionKey: partition_key,
-		ShardId:      shard_id,
+func NewStreamRecord(clientInfo string, data string, partition_key string,
+	shard_id int, shard_round_robbing bool) StreamRecord {
+
+	r := StreamRecord{}
+	r = make(map[string]interface{})
+	r.SetClientInfo(clientInfo)
+	if shard_round_robbing == false {
+		r.SetShardId(shard_id)
+		r.SetPartitionKey(partition_key)
 	}
 	r.SetData(data)
 	return r
