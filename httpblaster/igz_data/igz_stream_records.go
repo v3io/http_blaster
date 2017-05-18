@@ -57,12 +57,12 @@ func (self *StreamRecords) ToJsonString() string {
 }
 
 func NewStreamRecord(clientInfo string, data string, partition_key string,
-	shard_id int, shard_round_robbing bool) StreamRecord {
+	shard_id int, shard_round_robin bool) StreamRecord {
 
 	r := StreamRecord{}
 	r = make(map[string]interface{})
 	r.SetClientInfo(clientInfo)
-	if shard_round_robbing == false {
+	if shard_round_robin == false {
 		r.SetShardId(shard_id)
 		r.SetPartitionKey(partition_key)
 	}
