@@ -14,7 +14,7 @@ TLSMode=false
 [workloads]
    [workloads.stream_recursive_example]
    name="csv2stream recursive example"
-   Generator="csv2stream"
+   Generator="line2stream"
    bucket="1"
    Target="test1"
    Duration = "30s"

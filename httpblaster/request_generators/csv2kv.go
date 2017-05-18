@@ -34,7 +34,7 @@ func (self *Csv2KV) generate_request(ch_records chan []string, ch_req chan *fast
 		panic(e)
 	}
 	for r := range ch_records {
-		json_payload := parser.JsonFromCSVRecord(r)
+		json_payload := parser.EmdFromCSVRecord(r)
 		req := self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
 			self.base_uri, json_payload, host)
 		ch_req <- req

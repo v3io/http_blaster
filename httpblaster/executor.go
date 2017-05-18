@@ -65,11 +65,14 @@ func (self *Executor) load_request_generator() chan *fasthttp.Request {
 	case request_generators.PERFORMANCE:
 		req_gen = &request_generators.PerformanceGenerator{}
 		break
-	case request_generators.CSV2STREAM:
-		req_gen = &request_generators.Csv2StreamGenerator{}
+	case request_generators.LINE2STREAM:
+		req_gen = &request_generators.Line2StreamGenerator{}
 		break
 	case request_generators.CSV2KV:
 		req_gen = &request_generators.Csv2KV{}
+		break
+	case request_generators.JSON2KV:
+		req_gen = &request_generators.Json2KV{}
 		break
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
@@ -88,7 +91,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 
 	for i := 0; i < self.Workload.Workers; i++ {
 		server := fmt.Sprintf("%s:%s", self.Host, self.Port)
-		w := NewWorker(server, self.TLS_mode)
+		w := NewWorker(server, self.TLS_mode, self.Workload.Lazy)
 		self.workers = append(self.workers, w)
 		go w.run_worker(ch_req, &workers_wg)
 	}

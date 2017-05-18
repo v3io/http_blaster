@@ -3,7 +3,7 @@ title = "Workload example"
 [global]
 block_size = 5
 Duration = "160s"
-server="192.168.206.10"
+server="10.90.1.41"
 port="8081"
 TLSMode=false
  [global.StatusCodesAcceptance]
@@ -14,12 +14,13 @@ TLSMode=false
 [workloads]
    [workloads.stream_example]
    name="csv2stream example"
-   Generator="csv2stream"
+   Generator="line2stream"
    bucket="1"
    Target="test1"
    Duration = "30s"
    TYPE="PUT"
    workers=100
+   lazy=10
    payload="examples/payloads/order-book-sample.csv"
    #payload="examples/payloads/recursive"
 

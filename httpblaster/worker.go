@@ -54,6 +54,7 @@ type worker struct {
 	bw                  *bufio.Writer
 	ch_duration         chan time.Duration
 	ch_error            chan error
+	lazy_sleep          time.Duration
 }
 
 func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
@@ -64,6 +65,9 @@ func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
 	var (
 		code int
 	)
+	if w.lazy_sleep > 0 {
+		time.Sleep(w.lazy_sleep)
+	}
 	err, duration := w.send(req, response, time.Second*60)
 
 	if err == nil {
@@ -161,7 +165,7 @@ func (w *worker) run_worker(ch_req chan *fasthttp.Request, wg *sync.WaitGroup) {
 	}
 }
 
-func NewWorker(host string, tls_client bool) *worker {
+func NewWorker(host string, tls_client bool, lazy int) *worker {
 	if host == "" {
 		return nil
 	}
@@ -170,5 +174,6 @@ func NewWorker(host string, tls_client bool) *worker {
 	worker.open_connection()
 	worker.ch_duration = make(chan time.Duration, 1)
 	worker.ch_error = make(chan error, 1)
+	worker.lazy_sleep = time.Duration(lazy) * time.Millisecond
 	return &worker
 }

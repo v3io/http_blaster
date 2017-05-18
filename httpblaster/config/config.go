@@ -61,24 +61,25 @@ type global struct {
 }
 
 type Workload struct {
-	Name         string
-	Bucket       string
-	Target       string
-	Type         string
-	Duration     duration
-	Count        int
-	Workers      int
-	Id           int32
-	Header       map[string]string
-	Payload      string
-	FileIndex    int
-	FilesCount   int
-	Random       bool
-	Generator    string
-	Separator    sep
-	Schema       string
-	KeyFields    string
-	KeyFormat    string
+	Name       string
+	Bucket     string
+	Target     string
+	Type       string
+	Duration   duration
+	Count      int
+	Workers    int
+	Id         int32
+	Header     map[string]string
+	Payload    string
+	FileIndex  int
+	FilesCount int
+	Random     bool
+	Generator  string
+	Separator  sep
+	Schema     string
+	KeyFields  string
+	KeyFormat  string
+	Lazy       int
 }
 
 func LoadConfig(file_path string) (TomlConfig, error) {
