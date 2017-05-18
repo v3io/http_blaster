@@ -7,23 +7,24 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"github.com/valyala/fasthttp"
+	"io"
 	"log"
 	"os"
 	"runtime"
 	"sync"
 )
 
-type Csv2StreamGenerator struct {
+type Line2StreamGenerator struct {
 	RequestCommon
 	workload config.Workload
 	base_uri string
 }
 
-func (self *Csv2StreamGenerator) UseCommon(c RequestCommon) {
+func (self *Line2StreamGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *Csv2StreamGenerator) generate_request(ch_records chan string,
+func (self *Line2StreamGenerator) generate_request(ch_records chan string,
 	ch_req chan *fasthttp.Request,
 	host string, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -39,7 +40,7 @@ func (self *Csv2StreamGenerator) generate_request(ch_records chan string,
 	log.Println("generate_request Done")
 }
 
-func (self *Csv2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload string, host string) {
+func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload string, host string) {
 	defer close(ch_req)
 	var ch_records chan string = make(chan string)
 	wg := sync.WaitGroup{}
@@ -52,11 +53,21 @@ func (self *Csv2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload
 
 	for f := range ch_files {
 		if file, err := os.Open(f); err == nil {
-			scanner := bufio.NewScanner(file)
-			for scanner.Scan() {
-				ch_records <- scanner.Text()
+			reader := bufio.NewReader(file)
+			var i int = 0
+			for {
+				line, _, err := reader.ReadLine()
+				if err == nil {
+					ch_records <- string(line)
+					i++
+				} else if err == io.EOF {
+					break
+				} else {
+					log.Fatal(err)
+				}
 			}
-			log.Println("Finish file scaning")
+
+			log.Println(fmt.Sprintf("Finish file scaning, generated %d records", i))
 		} else {
 			panic(err)
 		}
@@ -67,7 +78,7 @@ func (self *Csv2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload
 	log.Println("generators done")
 }
 
-func (self *Csv2StreamGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
+func (self *Line2StreamGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
