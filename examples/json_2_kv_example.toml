@@ -22,10 +22,10 @@ TLSMode=false
    workers=10
    payload="examples/payloads/json_sample.txt"
    separator='|'
-   schema="examples/schemas/order-book-sample.txt"
-   #KeyFormat="%v---%v._"
+   schema="examples/schemas/schema_parse_json_example.json"
+   KeyFormat="%v---%v._"
    #KeyFields="Routing_Seq,Instrument_ID"
-   KeyFields="Routing_Seq"
+   KeyFields="UID,SID"
 
 
 

@@ -13,7 +13,6 @@ const (
 )
 
 type StreamRecord map[string]interface {
-
 }
 
 func (self StreamRecord) GetData() string {
