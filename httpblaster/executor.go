@@ -93,7 +93,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		server := fmt.Sprintf("%s:%s", self.Host, self.Port)
 		w := NewWorker(server, self.TLS_mode, self.Workload.Lazy)
 		self.workers = append(self.workers, w)
-		go w.run_worker(ch_req, &workers_wg)
+		go w.run_worker(nil, ch_req, &workers_wg)
 	}
 	workers_wg.Wait()
 	self.results.Duration = time.Now().Sub(self.Start_time)

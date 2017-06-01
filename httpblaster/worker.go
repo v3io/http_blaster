@@ -57,11 +57,10 @@ type worker struct {
 	lazy_sleep          time.Duration
 }
 
-func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
+func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration, *fasthttp.Response) {
 	response := fasthttp.AcquireResponse()
 	response.Reset()
-	defer fasthttp.ReleaseResponse(response)
-
+	//defer fasthttp.ReleaseResponse(response)
 	var (
 		code int
 	)
@@ -90,7 +89,8 @@ func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
 	if response.ConnectionClose() {
 		w.restart_connection()
 	}
-	return err, duration
+
+	return err, duration, response
 }
 
 func (w *worker) open_connection() {
@@ -157,10 +157,15 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	return nil, timeout
 }
 
-func (w *worker) run_worker(ch_req chan *fasthttp.Request, wg *sync.WaitGroup) {
+func (w *worker) run_worker(ch_resp chan *fasthttp.Response, ch_req chan *fasthttp.Request, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for req := range ch_req {
-		w.send_request(req)
+		_, _, resp := w.send_request(req)
+		if ch_resp != nil{
+			ch_resp <- resp
+		}else{
+			fasthttp.ReleaseResponse(resp)
+		}
 		fasthttp.ReleaseRequest(req)
 	}
 }
