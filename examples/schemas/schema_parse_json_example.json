@@ -1,0 +1,67 @@
+{
+  "COLUMNS": [{
+      "Index": 0,
+      "Type": "StringType",
+      "Name": "UID",
+      "Source": "UID",
+      "Nullable": true,
+      "Default": "test"
+    },
+    {
+      "Index": 1,
+      "Type": "LongType",
+      "Name": "VIN",
+      "Source": "VIN",
+      "Nullable": true
+    },
+    {
+      "Index": 2,
+      "Type": "LongType",
+      "Name": "GPS.SPEED",
+      "Source": "GPS[0].SPEED",
+      "Nullable": true
+    },
+    {
+      "Index": 3,
+      "Type": "StringType",
+      "Name": "GPS.HEAD",
+      "Source": "GPS[0].HEAD",
+      "Nullable": true
+    },
+    {
+      "Index": 4,
+      "Type": "StringType",
+      "Name": "GPS.T",
+      "Source": "GPS[0].T",
+      "Nullable": true
+    },
+    {
+      "Index": 5,
+      "Type": "StringType",
+      "Name": "GPS.ALT",
+      "Source": "GPS[0].ALT",
+      "Nullable": true
+    },
+    {
+      "Index": 6,
+      "Type": "StringType",
+      "Name": "GPS.LAT",
+      "Source": "GPS[0].LAT",
+      "Nullable": false
+    },
+    {
+      "Index": 7,
+      "Type": "StringType",
+      "Name": "GPS.LONG",
+      "Source": "GPS[0].LONG",
+      "Nullable": true
+    },
+    {
+      "Index": 8,
+      "Type": "LongType",
+      "Name": "SID",
+      "Source": "SID",
+      "Nullable": true
+    }
+  ]
+}

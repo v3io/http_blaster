@@ -42,7 +42,7 @@ TLSMode=false
 for (( i=$PUT_LOAD_START; i<=$PUT_LOAD_END; i++ )) do echo "[workloads.$i]
     name=\"PUT-$i\"
     bucket=\"$BUCKET\"
-    file_path=\"$i/$FILE_NAME\"
+    Target=\"$i/$FILE_NAME\"
     Duration = \"$PUT_DURATION\"
     TYPE=\"PUT\"
     workers=$PUT_LOAD_WORKERS
@@ -71,7 +71,7 @@ TLSMode=false
 for (( i=$GET_LOAD_START; i<=$GET_LOAD_END; i++ )) do echo "[workloads.$i]
     name=\"GET-$i\"
     bucket=\"$BUCKET\"
-    file_path=\"$i/$FILE_NAME\"
+    Target=\"$i/$FILE_NAME\"
     Duration = \"$GET_DURATION\"
     TYPE=\"GET\"
     workers=$GET_LOAD_WORKERS

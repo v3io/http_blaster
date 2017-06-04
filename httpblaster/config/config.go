@@ -18,7 +18,7 @@ under the Apache 2.0 license is conditioned upon your compliance with
 such restriction.
 */
 
-package httpblaster
+package config
 
 import (
 	"github.com/BurntSushi/toml"
@@ -29,24 +29,28 @@ type duration struct {
 	time.Duration
 }
 
-type CommandType string
-
-const (
-	GET  CommandType = "GET"
-	PUT              = "PUT"
-	POST             = "POST"
-)
-
 func (d *duration) UnmarshalText(text []byte) error {
 	var err error
 	d.Duration, err = time.ParseDuration(string(text))
 	return err
 }
 
+type sep struct {
+	Rune rune
+}
+
+func (r *sep) UnmarshalText(text []byte) error {
+	if len(text) > 0 {
+		data := int32(text[0])
+		r.Rune = data
+	}
+	return nil
+}
+
 type TomlConfig struct {
 	Title     string
 	Global    global
-	Workloads map[string]workload
+	Workloads map[string]Workload
 }
 
 type global struct {
@@ -58,13 +62,13 @@ type global struct {
 	StatusCodesAcceptance map[string]float64
 }
 
-type workload struct {
+type Workload struct {
 	Name       string
 	Bucket     string
-	File_path  string
-	Type       CommandType
+	Target     string
+	Type       string
 	Duration   duration
-	Count      uint64
+	Count      int
 	Workers    int
 	Id         int32
 	Header     map[string]string
@@ -72,6 +76,12 @@ type workload struct {
 	FileIndex  int
 	FilesCount int
 	Random     bool
+	Generator  string
+	Separator  sep
+	Schema     string
+	KeyFields  string
+	KeyFormat  string
+	Lazy       int
 }
 
 func LoadConfig(file_path string) (TomlConfig, error) {

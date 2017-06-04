@@ -15,7 +15,7 @@ TLSMode=false
    # [workloads.get1]
    # name="first"
    # bucket=""
-   # file_path="test.html"
+   # Target="test.html"
    # Duration = "30s"
    # TYPE="PUT"
    # workers=20
@@ -28,7 +28,7 @@ TLSMode=false
    [workloads.get2]
     name="multi get from 20 workers"
     bucket=""
-    file_path="test.html"
+    Target="test.html"
     Duration = "10s"
     TYPE="GET"
     count=0
@@ -38,7 +38,7 @@ TLSMode=false
  [workloads.get1]
     name="multi get1 from 20 workers"
     bucket=""
-    file_path="test.html"
+    Target="test.html"
     Duration = "10s"
     TYPE="GET"
     count=0
@@ -49,7 +49,7 @@ TLSMode=false
 #    [workloads.put]
 #    name="third"
 #    bucket=""
-#    file_path="test.html"
+#    Target="test.html"
 #    Duration = "10s"
 #    TYPE="PUT"
 #    workers=2
@@ -60,7 +60,7 @@ TLSMode=false
 #    [workloads.put]
 #    name="put"
 #    bucket=""
-#    file_path="test.html"
+#    Target="test.html"
 #    Duration = "60s"
 #    TYPE="PUT"
 #    executors=2
@@ -68,7 +68,7 @@ TLSMode=false
  #   [workloads.putappend2]
  #   name="putappend2"
  #   bucket="1"
- #   file_path="test_file7"
+ #   Target="test_file7"
  #   duration = "16s"
  #   type="PUTAPPEND"
  #   executors=6
@@ -76,7 +76,7 @@ TLSMode=false
  #   [workloads.putappend1]
  #   name="putappend"
  #   bucket="1"
- #   file_path="test_file1"
+ #   Target="test_file1"
  #   Duration = "10s"
  #   TYPE="PUTAPPEND"
  #   executors=3
@@ -84,7 +84,7 @@ TLSMode=false
   #  [workloads.putappend4]
   #  name="putappend"
   #  bucket="1"
-  #  file_path="test_file2"
+  #  Target="test_file2"
   #  Duration = "10s"
   #  TYPE="PUTAPPEND"
   #  executors=3
@@ -92,7 +92,7 @@ TLSMode=false
   # [workloads.putappend3]
   # name="putappend"
   # bucket="1"
-  # file_path="test_file3"
+  # Target="test_file3"
   # Duration = "10s"
   # TYPE="PUTAPPEND"
   # executors=3

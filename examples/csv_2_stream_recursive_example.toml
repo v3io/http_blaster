@@ -1,0 +1,29 @@
+title = "Workload example"
+
+[global]
+block_size = 5
+Duration = "160s"
+server="192.168.206.10"
+port="8081"
+TLSMode=false
+ [global.StatusCodesAcceptance]
+  200 = 100.0 # upto 100% return status of 200
+  204 = 100.0
+  205 = 100.0
+
+[workloads]
+   [workloads.stream_recursive_example]
+   name="csv2stream recursive example"
+   Generator="line2stream"
+   bucket="1"
+   Target="test1"
+   Duration = "30s"
+   TYPE="PUT"
+   workers=10
+   payload="examples/payloads/recursive"
+
+
+
+
+
+

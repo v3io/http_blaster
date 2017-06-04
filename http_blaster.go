@@ -24,6 +24,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/v3io/http_blaster/httpblaster"
+	"github.com/v3io/http_blaster/httpblaster/config"
 	"io"
 	"log"
 	"math/rand"
@@ -44,7 +45,7 @@ var (
 	dataBfr      []byte
 	cpu_profile  = false
 	mem_profile  = false
-	config       httpblaster.TomlConfig
+	cfg          config.TomlConfig
 	executors    []*httpblaster.Executor
 	ex_group     sync.WaitGroup
 	enable_log   bool
@@ -116,15 +117,15 @@ func parse_cmd_line_args() {
 
 func load_test_Config() {
 	var err error
-	config, err = httpblaster.LoadConfig(conf_file)
+	cfg, err = config.LoadConfig(conf_file)
 	if err != nil {
 		log.Println(err)
 		log.Fatalln("Failed to parse config file")
 	}
 	log.Printf("Running test on %s:%s, tls mode=%v, block size=%d, test timeout %v",
-		config.Global.Server, config.Global.Port, config.Global.TLSMode,
-		config.Global.Block_size, config.Global.Duration)
-	dataBfr = make([]byte, config.Global.Block_size, config.Global.Block_size)
+		cfg.Global.Server, cfg.Global.Port, cfg.Global.TLSMode,
+		cfg.Global.Block_size, cfg.Global.Duration)
+	dataBfr = make([]byte, cfg.Global.Block_size, cfg.Global.Block_size)
 	for i, _ := range dataBfr {
 		dataBfr[i] = byte(rand.Int())
 	}
@@ -132,12 +133,12 @@ func load_test_Config() {
 }
 
 func generate_executors() {
-	for Name, workload := range config.Workloads {
+	for Name, workload := range cfg.Workloads {
 		log.Println("Adding executor for ", Name)
 		workload.Id = get_workload_id()
-		e := &httpblaster.Executor{Workload: workload, Host: config.Global.Server,
-			Port: config.Global.Port, Tls_mode: config.Global.TLSMode,
-			StatusCodesAcceptance: config.Global.StatusCodesAcceptance, Data_bfr: dataBfr}
+		e := &httpblaster.Executor{Workload: workload, Host: cfg.Global.Server,
+			Port: cfg.Global.Port, TLS_mode: cfg.Global.TLSMode,
+			StatusCodesAcceptance: cfg.Global.StatusCodesAcceptance, Data_bfr: dataBfr}
 		executors = append(executors, e)
 	}
 }
@@ -259,7 +260,6 @@ func report() int {
 	log.Println("Overall IOPS: ", overall_iops)
 	log.Println("Overall GET IOPS: ", overall_get_iops)
 	log.Println("Overall PUT IOPS: ", overall_put_iops)
-
 
 	f, err := os.Create(results_file)
 	defer f.Close()

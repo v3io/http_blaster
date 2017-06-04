@@ -15,7 +15,7 @@ TLSMode=false
    [workloads.get]
     name="multi get from 20 workers"
     bucket=""
-    file_path="test.html"
+    Target="test.html"
     Duration = "10s"
     TYPE="GET"
     count=0

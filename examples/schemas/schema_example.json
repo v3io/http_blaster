@@ -1,0 +1,243 @@
+{
+  "COLUMNS": [{
+    "Index": 0,
+    "Type": "StringType",
+    "Name": "Routing_Seq",
+    "Nullable": true
+  },
+    {
+      "Index": 1,
+      "Type": "LongType",
+      "Name": "Origin",
+      "Nullable": true
+    },
+    {
+      "Index": 2,
+      "Type": "LongType",
+      "Name": "Time_Sequence",
+      "Nullable": true
+    },
+    {
+      "Index": 3,
+      "Type": "LongType",
+      "Name": "Exchange_Transaction_ID",
+      "Nullable": true
+    },
+    {
+      "Index": 4,
+      "Type": "StringType",
+      "Name": "Status_Flag",
+      "Nullable": true
+    },
+    {
+      "Index": 5,
+      "Type": "StringType",
+      "Name": "Instrument_ID",
+      "Nullable": true
+    },
+    {
+      "Index": 6,
+      "Type": "StringType",
+      "Name": "Order_Book_ID",
+      "Nullable": true
+    },
+    {
+      "Index": 7,
+      "Type": "StringType",
+      "Name": "Order_ID",
+      "Nullable": true
+    },
+    {
+      "Index": 8,
+      "Type": "StringType",
+      "Name": "Order_Book_Priority",
+      "Nullable": true
+    },
+    {
+      "Index": 9,
+      "Type": "LongType",
+      "Name": "OAC_Orders",
+      "Nullable": true
+    },
+    {
+      "Index": 10,
+      "Type": "StringType",
+      "Name": "Total_Orders",
+      "Nullable": true
+    },
+    {
+      "Index": 11,
+      "Type": "StringType",
+      "Name": "Msg_Position",
+      "Nullable": true
+    },
+    {
+      "Index": 12,
+      "Type": "LongType",
+      "Name": "CAC_Orders",
+      "Nullable": true
+    },
+    {
+      "Index": 13,
+      "Type": "StringType",
+      "Name": "Total_New_Order_Value",
+      "Nullable": true
+    },
+    {
+      "Index": 14,
+      "Type": "StringType",
+      "Name": "Total_New_Order_Volume",
+      "Nullable": true
+    },
+    {
+      "Index": 15,
+      "Type": "StringType",
+      "Name": "Action",
+      "Nullable": true
+    },
+    {
+      "Index": 16,
+      "Type": "StringType",
+      "Name": "Transact_Time",
+      "Nullable": true
+    },
+    {
+      "Index": 17,
+      "Type": "StringType",
+      "Name": "Hard_Limit_Price",
+      "Nullable": true
+    },
+    {
+      "Index": 18,
+      "Type": "StringType",
+      "Name": "Active_Status",
+      "Nullable": true
+    },
+    {
+      "Index": 19,
+      "Type": "StringType",
+      "Name": "Order_Type",
+      "Nullable": true
+    },
+    {
+      "Index": 20,
+      "Type": "LongType",
+      "Name": "Total_New_Orders",
+      "Nullable": true
+    },
+    {
+      "Index": 21,
+      "Type": "StringType",
+      "Name": "Unique_ID",
+      "Nullable": true
+    },
+    {
+      "Index": 22,
+      "Type": "StringType",
+      "Name": "Visible_Size",
+      "Nullable": true
+    },
+    {
+      "Index": 23,
+      "Type": "LongType",
+      "Name": "Value",
+      "Nullable": true
+    },
+    {
+      "Index": 24,
+      "Type": "LongType",
+      "Name": "PassiveOnlyOrder",
+      "Nullable": true
+    },
+    {
+      "Index": 25,
+      "Type": "StringType",
+      "Name": "PriceDifferential",
+      "Nullable": true
+    },
+    {
+      "Index": 26,
+      "Type": "LongType",
+      "Name": "Total_Qty",
+      "Nullable": true
+    },
+    {
+      "Index": 27,
+      "Type": "StringType",
+      "Name": "Transaction_ID",
+      "Nullable": true
+    },
+    {
+      "Index": 28,
+      "Type": "StringType",
+      "Name": "Total_Limit_Orders",
+      "Nullable": true
+    },
+    {
+      "Index": 29,
+      "Type": "StringType",
+      "Name": "Total_Small_Orders",
+      "Nullable": true
+    },
+    {
+      "Index": 30,
+      "Type": "StringType",
+      "Name": "Public_Order_ID",
+      "Nullable": true
+    },
+    {
+      "Index": 31,
+      "Type": "StringType",
+      "Name": "Trader_ID",
+      "Nullable": true
+    },
+    {
+      "Index": 32,
+      "Type": "StringType",
+      "Name": "Order_Sub_Type",
+      "Nullable": true
+    },
+    {
+      "Index": 33,
+      "Type": "StringType",
+      "Name": "Side",
+      "Nullable": true
+    },
+    {
+      "Index": 34,
+      "Type": "StringType",
+      "Name": "Broker_ID",
+      "Nullable": true
+    },
+    {
+      "Index": 35,
+      "Type": "StringType",
+      "Name": "Container",
+      "Nullable": true
+    },
+    {
+      "Index": 36,
+      "Type": "LongType",
+      "Name": "CAC_Order_Size",
+      "Nullable": true
+    },
+    {
+      "Index": 37,
+      "Type": "StringType",
+      "Name": "TIF",
+      "Nullable": true
+    },
+    {
+      "Index": 38,
+      "Type": "LongType",
+      "Name": "Execution_Min_Size",
+      "Nullable": true
+    },
+    {
+      "Index": 39,
+      "Type": "LongType",
+      "Name": "OAC_Order_Size",
+      "Nullable": true
+    }
+  ]
+}
