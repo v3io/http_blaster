@@ -40,8 +40,10 @@ type sep struct {
 }
 
 func (r *sep) UnmarshalText(text []byte) error {
-	data := int32(text[0])
-	r.Rune = data
+	if len(text) > 0 {
+		data := int32(text[0])
+		r.Rune = data
+	}
 	return nil
 }
 
