@@ -58,7 +58,7 @@ type Executor struct {
 	Data_bfr              []byte
 }
 
-func (self *Executor) load_request_generator() chan *fasthttp.Request {
+func (self *Executor) load_request_generator() chan request_generators.Request {
 	var req_gen request_generators.Generator
 	gen_type := strings.ToLower(self.Workload.Generator)
 	switch gen_type {

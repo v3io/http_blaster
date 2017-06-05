@@ -64,3 +64,15 @@ func (self *RequestCommon) FilesScan(path string) chan string {
 	}()
 	return self.ch_files
 }
+
+type Request struct {
+	Cookie  interface{}
+	Id      int64
+	Request *fasthttp.Request
+}
+
+type Response struct {
+	Cookie   interface{}
+	Id       int64
+	Response *fasthttp.Response
+}
