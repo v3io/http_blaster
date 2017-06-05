@@ -68,6 +68,7 @@ func (self *PerformanceGenerator) single_file_submitter(ch_req chan *fasthttp.Re
 	for i := 0; i < self.workload.Count; i++ {
 		ch_req <- request
 	}
+	close(ch_req)
 }
 
 func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, random bool) chan string {
@@ -100,4 +101,5 @@ func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *fasthttp.Req
 		request.SetRequestURI(uri)
 		ch_req <- request
 	}
+	close(ch_req)
 }
