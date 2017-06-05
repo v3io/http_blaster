@@ -109,7 +109,7 @@ func (w *worker) open_connection() {
 	} else {
 		w.conn = conn
 	}
-	w.br = bufio.NewReaderSize(w.conn, 1024*1024*100)
+	w.br = bufio.NewReaderSize(w.conn, 1024*1024)
 	w.bw = bufio.NewWriter(w.conn)
 }
 
