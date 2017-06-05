@@ -1,0 +1,8 @@
+#unignore all go files
+!**/*.go 
+#ignore intellij idea files
+.idea
+#ignore bin
+http_blaster
+#ignore iml
+http_blaster.iml
