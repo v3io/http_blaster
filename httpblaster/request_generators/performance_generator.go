@@ -93,9 +93,9 @@ func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, rando
 }
 
 func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request) {
-	request := self.clone_request(req)
 	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.Count, self.workload.Random)
 	for i := 0; i < self.workload.Count; i++ {
+		request := self.clone_request(req)
 		uri := <-ch_uri
 		request.SetRequestURI(uri)
 		ch_req <- request
