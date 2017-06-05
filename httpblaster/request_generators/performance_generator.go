@@ -47,7 +47,7 @@ func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode 
 		self.base_uri, string(payload), host)
 	ch_req := make(chan *fasthttp.Request, 1000)
 	go func() {
-		if self.workload.FileIndex == 0 && self.workload.Count == 0 {
+		if self.workload.FileIndex == 0 && self.workload.FilesCount == 0 {
 			self.single_file_submitter(ch_req, req)
 		} else {
 			self.multi_file_submitter(ch_req, req)
@@ -64,8 +64,8 @@ func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *fasthttp
 }
 
 func (self *PerformanceGenerator) single_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request) {
-	request := self.clone_request(req)
 	for i := 0; i < self.workload.Count; i++ {
+		request := self.clone_request(req)
 		ch_req <- request
 	}
 }
