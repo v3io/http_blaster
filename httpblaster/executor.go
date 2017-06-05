@@ -58,12 +58,14 @@ type Executor struct {
 	Data_bfr              []byte
 }
 
-func (self *Executor) load_request_generator() chan *fasthttp.Request {
+func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
 	var req_gen request_generators.Generator
+	var release_req bool = true
 	gen_type := strings.ToLower(self.Workload.Generator)
 	switch gen_type {
 	case request_generators.PERFORMANCE:
 		req_gen = &request_generators.PerformanceGenerator{}
+		release_req = false
 		break
 	case request_generators.LINE2STREAM:
 		req_gen = &request_generators.Line2StreamGenerator{}
@@ -78,7 +80,7 @@ func (self *Executor) load_request_generator() chan *fasthttp.Request {
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
 	ch_req := req_gen.GenerateRequests(self.Workload, self.TLS_mode, self.Host)
-	return ch_req
+	return ch_req, release_req
 }
 
 func (self *Executor) run(wg *sync.WaitGroup) error {
@@ -87,13 +89,13 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	workers_wg := sync.WaitGroup{}
 	workers_wg.Add(self.Workload.Workers)
 
-	ch_req := self.load_request_generator()
+	ch_req, release_req_flag := self.load_request_generator()
 
 	for i := 0; i < self.Workload.Workers; i++ {
 		server := fmt.Sprintf("%s:%s", self.Host, self.Port)
 		w := NewWorker(server, self.TLS_mode, self.Workload.Lazy)
 		self.workers = append(self.workers, w)
-		go w.run_worker(ch_req, &workers_wg)
+		go w.run_worker(ch_req, &workers_wg, release_req_flag)
 	}
 	workers_wg.Wait()
 	self.results.Duration = time.Now().Sub(self.Start_time)

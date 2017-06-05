@@ -157,11 +157,13 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	return nil, timeout
 }
 
-func (w *worker) run_worker(ch_req chan *fasthttp.Request, wg *sync.WaitGroup) {
+func (w *worker) run_worker(ch_req chan *fasthttp.Request, wg *sync.WaitGroup, release_req bool) {
 	defer wg.Done()
 	for req := range ch_req {
 		w.send_request(req)
-		fasthttp.ReleaseRequest(req)
+		if release_req {
+			fasthttp.ReleaseRequest(req)
+		}
 	}
 }
 
