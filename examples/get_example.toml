@@ -13,6 +13,7 @@ TLSMode=false
 
 [workloads]
    [workloads.get]
+    generator="performance"
     name="multi get from 20 workers"
     bucket=""
     Target="test.html"

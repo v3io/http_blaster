@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"time"
 )
 
 type PerformanceGenerator struct {
@@ -45,12 +46,20 @@ func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode 
 	}
 	req := self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
 		self.base_uri, string(payload), host)
+	done := make(chan struct{})
+	go func() {
+		select {
+		case <-time.After(self.workload.Duration.Duration):
+			close(done)
+		}
+	}()
+
 	ch_req := make(chan *fasthttp.Request, 1000)
 	go func() {
 		if self.workload.FileIndex == 0 && self.workload.FilesCount == 0 {
-			self.single_file_submitter(ch_req, req)
+			self.single_file_submitter(ch_req, req, done)
 		} else {
-			self.multi_file_submitter(ch_req, req)
+			self.multi_file_submitter(ch_req, req, done)
 		}
 	}()
 	return ch_req
@@ -63,10 +72,26 @@ func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *fasthttp
 	return new_req
 }
 
-func (self *PerformanceGenerator) single_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request) {
+func (self *PerformanceGenerator) single_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request, done chan struct{}) {
+
 	request := self.clone_request(req)
-	for i := 0; i < self.workload.Count; i++ {
-		ch_req <- request
+	var generated int = 0
+	LOOP:
+	for {
+		select {
+		case <-done:
+			break LOOP
+		default:
+			if self.workload.Count == 0 {
+				ch_req <- request
+				generated += 1
+			} else if generated < self.workload.Count {
+				ch_req <- request
+				generated += 1
+			} else {
+				break LOOP
+			}
+		}
 	}
 	close(ch_req)
 }
@@ -93,13 +118,29 @@ func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, rando
 	return ch
 }
 
-func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request) {
+func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request, done chan struct{}) {
+
 	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.Count, self.workload.Random)
 	request := self.clone_request(req)
-	for i := 0; i < self.workload.Count; i++ {
-		uri := <-ch_uri
-		request.SetRequestURI(uri)
-		ch_req <- request
+	var generated int = 0
+	LOOP:
+	for{
+		select {
+		case <- done:
+			break LOOP
+		default:
+			uri := <-ch_uri
+			request.SetRequestURI(uri)
+			if self.workload.Count == 0{
+				ch_req <- request
+				generated += 1
+			}else if generated < self.workload.Count{
+				ch_req <- request
+				generated += 1
+			}else{
+				break LOOP
+			}
+		}
 	}
 	close(ch_req)
 }

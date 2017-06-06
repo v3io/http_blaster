@@ -13,6 +13,7 @@ TLSMode=false
 
 [workloads]
    [workloads.putappend]
+   generator="performance"
    name="10 seconds putappend from 5 workers"
    bucket=""
    Target="test.html"

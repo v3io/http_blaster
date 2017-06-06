@@ -26,6 +26,7 @@ TLSMode=false
 
 
    [workloads.get2]
+    generator="performance"
     name="multi get from 20 workers"
     bucket=""
     Target="test.html"
@@ -36,6 +37,7 @@ TLSMode=false
     #payload="payload.dat"
 
  [workloads.get1]
+    generator="performance"
     name="multi get1 from 20 workers"
     bucket=""
     Target="test.html"
