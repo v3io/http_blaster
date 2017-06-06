@@ -21,7 +21,7 @@ func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
+func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan Request {
 	self.workload = wl
 	if tls_mode {
 		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
@@ -45,7 +45,7 @@ func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode 
 	}
 	req := self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
 		self.base_uri, string(payload), host)
-	ch_req := make(chan *fasthttp.Request, 1000)
+	ch_req := make(chan Request, 1000)
 	go func() {
 		if self.workload.FileIndex == 0 && self.workload.FilesCount == 0 {
 			self.single_file_submitter(ch_req, req)
@@ -63,10 +63,11 @@ func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *fasthttp
 	return new_req
 }
 
-func (self *PerformanceGenerator) single_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request) {
+func (self *PerformanceGenerator) single_file_submitter(ch_req chan Request, req *fasthttp.Request) {
 	request := self.clone_request(req)
 	for i := 0; i < self.workload.Count; i++ {
-		ch_req <- request
+		r := Request{Request: request}
+		ch_req <- r
 	}
 	close(ch_req)
 }
@@ -93,13 +94,14 @@ func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, rando
 	return ch
 }
 
-func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request) {
+func (self *PerformanceGenerator) multi_file_submitter(ch_req chan Request, req *fasthttp.Request) {
 	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.Count, self.workload.Random)
 	request := self.clone_request(req)
 	for i := 0; i < self.workload.Count; i++ {
 		uri := <-ch_uri
 		request.SetRequestURI(uri)
-		ch_req <- request
+		r := Request{Request: request}
+		ch_req <- r
 	}
 	close(ch_req)
 }

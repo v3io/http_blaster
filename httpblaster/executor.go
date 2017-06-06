@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/request_generators"
-	"github.com/valyala/fasthttp"
 	"log"
 	"strconv"
 	"strings"
@@ -58,7 +57,7 @@ type Executor struct {
 	Data_bfr              []byte
 }
 
-func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
+func (self *Executor) load_request_generator() (chan request_generators.Request, bool) {
 	var req_gen request_generators.Generator
 	var release_req bool = true
 	gen_type := strings.ToLower(self.Workload.Generator)

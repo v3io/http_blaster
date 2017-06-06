@@ -24,6 +24,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/v3io/http_blaster/httpblaster/request_generators"
 	"github.com/valyala/fasthttp"
 	"log"
 	"net"
@@ -157,17 +158,18 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	return nil, timeout
 }
 
-func (w *worker) run_worker(ch_resp chan *fasthttp.Response, ch_req chan *fasthttp.Request, wg *sync.WaitGroup, release_req bool) {
+func (w *worker) run_worker(ch_resp chan request_generators.Response, ch_req chan request_generators.Request, wg *sync.WaitGroup, release_req bool) {
 	defer wg.Done()
 	for req := range ch_req {
-		_, _, resp := w.send_request(req)
+		_, _, resp := w.send_request(req.Request)
 		if ch_resp != nil {
-			ch_resp <- resp
+			submit_response := request_generators.Response{Response: resp, Id: req.Id, Cookie: req.Cookie}
+			ch_resp <- submit_response
 		} else {
 			fasthttp.ReleaseResponse(resp)
 		}
 		if release_req {
-			fasthttp.ReleaseRequest(req)
+			fasthttp.ReleaseRequest(req.Request)
 		}
 	}
 }
