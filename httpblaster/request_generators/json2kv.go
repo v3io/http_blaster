@@ -92,7 +92,9 @@ func (self *Json2KV) GenerateRequests(wl config.Workload, tls_mode bool, host st
 	} else {
 		self.base_uri = fmt.Sprintf("http://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
 	}
+
 	ch_req := make(chan *Request, 1000)
+
 
 	go self.generate(ch_req, self.workload.Payload, host)
 

@@ -58,7 +58,7 @@ type worker struct {
 	lazy_sleep          time.Duration
 }
 
-//func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration, *fasthttp.Response) {
+
 func (w *worker) send_request(req *request_generators.Request) (error, time.Duration, *request_generators.Response) {
 	response := request_generators.AcquireResponse()
 	var (
@@ -156,6 +156,7 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	}
 	return nil, timeout
 }
+
 
 func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request, wg *sync.WaitGroup, release_req bool) {
 	defer wg.Done()

@@ -57,6 +57,7 @@ type Executor struct {
 	Data_bfr              []byte
 }
 
+
 func (self *Executor) load_request_generator() (chan *request_generators.Request, bool) {
 	var req_gen request_generators.Generator
 	var release_req bool = true
