@@ -21,7 +21,7 @@ func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan Request {
+func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *Request {
 	self.workload = wl
 	if tls_mode {
 		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
@@ -43,31 +43,33 @@ func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode 
 
 		}
 	}
-	req := self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
-		self.base_uri, string(payload), host)
-	ch_req := make(chan Request, 1000)
+	req:=AcquireRequest()
+	self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
+		self.base_uri, string(payload), host, req.Request)
+	ch_req := make(chan *Request, 1000)
 	go func() {
 		if self.workload.FileIndex == 0 && self.workload.FilesCount == 0 {
-			self.single_file_submitter(ch_req, req)
+			self.single_file_submitter(ch_req, req.Request)
 		} else {
-			self.multi_file_submitter(ch_req, req)
+			self.multi_file_submitter(ch_req, req.Request)
 		}
 	}()
 	return ch_req
 }
 
-func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *fasthttp.Request {
-	new_req := fasthttp.AcquireRequest()
-	req.Header.CopyTo(&new_req.Header)
-	new_req.AppendBody(req.Body())
+func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *Request {
+	new_req := AcquireRequest()
+
+	//new_req := fasthttp.AcquireRequest()
+	req.Header.CopyTo(&new_req.Request.Header)
+	new_req.Request.AppendBody(req.Body())
 	return new_req
 }
 
-func (self *PerformanceGenerator) single_file_submitter(ch_req chan Request, req *fasthttp.Request) {
+func (self *PerformanceGenerator) single_file_submitter(ch_req chan *Request, req *fasthttp.Request) {
 	request := self.clone_request(req)
 	for i := 0; i < self.workload.Count; i++ {
-		r := Request{Request: request}
-		ch_req <- r
+		ch_req <- request
 	}
 	close(ch_req)
 }
@@ -94,14 +96,13 @@ func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, rando
 	return ch
 }
 
-func (self *PerformanceGenerator) multi_file_submitter(ch_req chan Request, req *fasthttp.Request) {
+func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *Request, req *fasthttp.Request) {
 	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.Count, self.workload.Random)
-	request := self.clone_request(req)
 	for i := 0; i < self.workload.Count; i++ {
 		uri := <-ch_uri
-		request.SetRequestURI(uri)
-		r := Request{Request: request}
-		ch_req <- r
+		request := self.clone_request(req)
+		request.Request.SetRequestURI(uri)
+		ch_req <- request
 	}
 	close(ch_req)
 }

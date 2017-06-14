@@ -22,8 +22,8 @@ type RequestCommon struct {
 func (self *RequestCommon) PrepareRequest(content_type string,
 	header_args map[string]string,
 	method string, uri string,
-	body string, host string) *fasthttp.Request {
-	req := fasthttp.AcquireRequest()
+	body string, host string,req *fasthttp.Request){
+	//req := fasthttp.AcquireRequest()
 
 	header := fasthttp.RequestHeader{}
 	header.SetContentType(content_type)
@@ -37,7 +37,7 @@ func (self *RequestCommon) PrepareRequest(content_type string,
 	}
 	req.AppendBodyString(body)
 	header.CopyTo(&req.Header)
-	return req
+	//return req
 }
 
 func (self *RequestCommon) SubmitFiles(path string, info os.FileInfo, err error) error {

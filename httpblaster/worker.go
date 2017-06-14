@@ -58,20 +58,19 @@ type worker struct {
 	lazy_sleep          time.Duration
 }
 
-func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration, *fasthttp.Response) {
-	response := fasthttp.AcquireResponse()
-	response.Reset()
-	//defer fasthttp.ReleaseResponse(response)
+//func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration, *fasthttp.Response) {
+func (w *worker) send_request(req *request_generators.Request) (error, time.Duration, *request_generators.Response) {
+	response := request_generators.AcquireResponse()
 	var (
 		code int
 	)
 	if w.lazy_sleep > 0 {
 		time.Sleep(w.lazy_sleep)
 	}
-	err, duration := w.send(req, response, time.Second*60)
+	err, duration := w.send(req.Request, response.Response, time.Second*60)
 
 	if err == nil {
-		code = response.StatusCode()
+		code = response.Response.StatusCode()
 		w.results.codes[code]++
 
 		w.results.count++
@@ -87,7 +86,7 @@ func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration, *fas
 		log.Println("[ERROR]", err.Error())
 
 	}
-	if response.ConnectionClose() {
+	if response.Response.ConnectionClose() {
 		w.restart_connection()
 	}
 
@@ -158,18 +157,17 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	return nil, timeout
 }
 
-func (w *worker) run_worker(ch_resp chan request_generators.Response, ch_req chan request_generators.Request, wg *sync.WaitGroup, release_req bool) {
+func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request, wg *sync.WaitGroup, release_req bool) {
 	defer wg.Done()
 	for req := range ch_req {
-		_, _, resp := w.send_request(req.Request)
+		_, _, resp := w.send_request(req)
 		if ch_resp != nil {
-			submit_response := request_generators.Response{Response: resp, Id: req.Id, Cookie: req.Cookie}
-			ch_resp <- submit_response
+			ch_resp <- resp
 		} else {
-			fasthttp.ReleaseResponse(resp)
+			request_generators.ReleaseResponse(resp)
 		}
 		if release_req {
-			fasthttp.ReleaseRequest(req.Request)
+			request_generators.ReleaseRequest(req)
 		}
 	}
 }
