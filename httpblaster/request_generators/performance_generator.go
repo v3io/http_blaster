@@ -10,7 +10,6 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
-	"github.com/aws/aws-sdk-go/aws/request"
 )
 
 type PerformanceGenerator struct {
