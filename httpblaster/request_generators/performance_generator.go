@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+	"github.com/aws/aws-sdk-go/aws/request"
 )
 
 type PerformanceGenerator struct {
@@ -119,9 +120,7 @@ func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, rando
 }
 
 func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request, done chan struct{}) {
-
 	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.Count, self.workload.Random)
-	request := self.clone_request(req)
 	var generated int = 0
 	LOOP:
 	for{
@@ -130,6 +129,7 @@ func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *fasthttp.Req
 			break LOOP
 		default:
 			uri := <-ch_uri
+			request := self.clone_request(req)
 			request.SetRequestURI(uri)
 			if self.workload.Count == 0{
 				ch_req <- request
