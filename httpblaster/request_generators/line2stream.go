@@ -56,8 +56,9 @@ func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payloa
 			reader := bufio.NewReader(file)
 			var i int = 0
 			for {
-				line, _, err := reader.ReadLine()
+				line, err := reader.ReadString('\n')
 				if err == nil {
+					log.Println(fmt.Sprintf("line %d = %s\n\n\n",i,string(line)))
 					ch_records <- string(line)
 					i++
 				} else if err == io.EOF {

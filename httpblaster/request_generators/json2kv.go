@@ -59,7 +59,7 @@ func (self *Json2KV) generate(ch_req chan *fasthttp.Request, payload string, hos
 			reader := bufio.NewReader(file)
 			var i int = 0
 			for {
-				line, _, err := reader.ReadLine()
+				line, err := reader.ReadBytes('\n')
 				if err == nil {
 					ch_records <- line
 					i++
