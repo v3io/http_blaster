@@ -12,6 +12,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"strings"
 )
 
 type Line2StreamGenerator struct {
@@ -58,7 +59,7 @@ func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payloa
 			for {
 				line, err := reader.ReadString('\n')
 				if err == nil {
-					ch_records <- string(line)
+					ch_records <- strings.TrimSpace(line)
 					i++
 				} else if err == io.EOF {
 					break
