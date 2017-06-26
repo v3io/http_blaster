@@ -15,17 +15,11 @@ TLSMode=false
    [workloads.json2kv_example]
    name="test json2kv"
    Generator="json2kv"
-   bucket="1"
+   container="1"
    Target="test_emd1/"
-   Duration = "30s"
-   TYPE="PUT"
    workers=10
    payload="examples/payloads/json_sample.txt"
-   separator='|'
    schema="examples/schemas/schema_parse_json_example.json"
-   KeyFormat="%v---%v._"
-   #KeyFields="Routing_Seq,Instrument_ID"
-   KeyFields="UID,SID"
 
 
 

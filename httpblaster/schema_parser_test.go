@@ -2,7 +2,7 @@ package httpblaster
 
 import (
 	"encoding/csv"
-	"github.com/v3io/http_blaster/httpblaster/schema_parser"
+	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"io"
 	"log"
 	"os"
@@ -10,8 +10,8 @@ import (
 )
 
 func Test_Schema_Parser(t *testing.T) {
-	p := schema_parser.EmdSchemaParser{}
-	e := p.LoadSchema("../example/order-book-sample.txt")
+	p := igz_data.EmdSchemaParser{}
+	e := p.LoadSchema("../example/schema_example.json")
 	if e != nil {
 		t.Error(e)
 	}
@@ -34,7 +34,7 @@ func Test_Schema_Parser(t *testing.T) {
 		}
 		log.Println(record)
 
-		j := p.JsonFromCSVRecord(record)
+		j := p.EmdFromCSVRecord()
 		log.Println(j)
 
 	}

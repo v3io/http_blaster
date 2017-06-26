@@ -1,7 +1,13 @@
 {
+  "SETTINGS": {
+    "Format": "json",
+    "Separator": ",",
+    "KeyFields": "UID,SID",
+    "KeyFormat": "%v.%v"
+  },
   "COLUMNS": [{
       "Index": 0,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "UID",
       "Source": "UID",
       "Nullable": true,
@@ -9,56 +15,56 @@
     },
     {
       "Index": 1,
-      "Type": "LongType",
+      "Type": "N",
       "Name": "VIN",
       "Source": "VIN",
       "Nullable": true
     },
     {
       "Index": 2,
-      "Type": "LongType",
-      "Name": "GPS.SPEED",
+      "Type": "D",
+      "Name": "GPS_SPEED",
       "Source": "GPS[0].SPEED",
       "Nullable": true
     },
     {
       "Index": 3,
-      "Type": "StringType",
-      "Name": "GPS.HEAD",
+      "Type": "D",
+      "Name": "GPS_HEAD",
       "Source": "GPS[0].HEAD",
       "Nullable": true
     },
     {
       "Index": 4,
-      "Type": "StringType",
-      "Name": "GPS.T",
+      "Type": "S",
+      "Name": "GPS_T",
       "Source": "GPS[0].T",
       "Nullable": true
     },
     {
       "Index": 5,
-      "Type": "StringType",
-      "Name": "GPS.ALT",
+      "Type": "S",
+      "Name": "GPS_ALT",
       "Source": "GPS[0].ALT",
       "Nullable": true
     },
     {
       "Index": 6,
-      "Type": "StringType",
-      "Name": "GPS.LAT",
+      "Type": "S",
+      "Name": "GPS_LAT",
       "Source": "GPS[0].LAT",
       "Nullable": false
     },
     {
       "Index": 7,
-      "Type": "StringType",
-      "Name": "GPS.LONG",
+      "Type": "S",
+      "Name": "GPS_LONG",
       "Source": "GPS[0].LONG",
       "Nullable": true
     },
     {
       "Index": 8,
-      "Type": "LongType",
+      "Type": "N",
       "Name": "SID",
       "Source": "SID",
       "Nullable": true

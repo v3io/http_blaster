@@ -11,13 +11,14 @@ TLSMode=true
 [workloads]
 
 	[workloads.load0]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load0"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload0"
 	[workloads.load0.Header]
@@ -27,13 +28,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load1]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load1"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload1"
 	[workloads.load1.Header]
@@ -43,13 +45,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load2]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load2"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload2"
 	[workloads.load2.Header]
@@ -59,13 +62,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load3]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load3"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload3"
 	[workloads.load3.Header]
@@ -75,13 +79,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load4]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load4"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload4"
 	[workloads.load4.Header]
@@ -91,13 +96,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load5]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load5"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload5"
 	[workloads.load5.Header]
@@ -107,13 +113,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load6]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load6"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload6"
 	[workloads.load6.Header]
@@ -123,13 +130,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load7]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load7"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload7"
 	[workloads.load7.Header]
@@ -139,13 +147,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load8]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load8"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload8"
 	[workloads.load8.Header]
@@ -155,13 +164,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load9]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load9"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload9"
 	[workloads.load9.Header]
@@ -171,13 +181,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load10]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load10"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload10"
 	[workloads.load10.Header]
@@ -187,13 +198,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load11]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load11"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload11"
 	[workloads.load11.Header]
@@ -203,13 +215,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load12]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load12"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload12"
 	[workloads.load12.Header]
@@ -219,13 +232,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load13]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load13"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload13"
 	[workloads.load13.Header]
@@ -235,13 +249,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load14]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load14"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload14"
 	[workloads.load14.Header]
@@ -251,13 +266,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load15]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load15"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload15"
 	[workloads.load15.Header]
@@ -267,13 +283,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load16]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load16"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload16"
 	[workloads.load16.Header]
@@ -283,13 +300,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load17]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load17"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload17"
 	[workloads.load17.Header]
@@ -299,13 +317,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load18]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load18"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload18"
 	[workloads.load18.Header]
@@ -315,13 +334,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load19]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load19"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload19"
 	[workloads.load19.Header]
@@ -331,13 +351,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load20]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load20"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload20"
 	[workloads.load20.Header]
@@ -347,13 +368,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load21]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load21"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload21"
 	[workloads.load21.Header]
@@ -363,13 +385,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load22]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load22"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload22"
 	[workloads.load22.Header]
@@ -379,13 +402,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load23]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load23"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload23"
 	[workloads.load23.Header]
@@ -395,13 +419,14 @@ TLSMode=true
 	x-amz-target="DynamoDB_20120810.GetItem"
 
 	[workloads.load24]
+	generator="performance"
 	count=0
 	header="{}"
 	name="load24"
 	duration="20s"
 	type="POST"
 	workers=3
-	bucket=""
+	container=""
 	Target=""
 	payload="examples/payloads/payload24"
 	[workloads.load24.Header]

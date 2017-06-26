@@ -11,14 +11,13 @@ import (
 	"log"
 	"os"
 	"runtime"
-	"sync"
 	"strings"
+	"sync"
 )
 
 type Line2StreamGenerator struct {
 	RequestCommon
 	workload config.Workload
-	base_uri string
 }
 
 func (self *Line2StreamGenerator) UseCommon(c RequestCommon) {
@@ -86,11 +85,8 @@ func (self *Line2StreamGenerator) GenerateRequests(wl config.Workload, tls_mode 
 	}
 	self.workload.Header["X-v3io-function"] = "PutRecords"
 
-	if tls_mode {
-		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
-	} else {
-		self.base_uri = fmt.Sprintf("http://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
-	}
+	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
+
 	ch_req := make(chan *fasthttp.Request, 1000)
 
 	go self.generate(ch_req, self.workload.Payload, host)

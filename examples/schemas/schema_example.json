@@ -1,241 +1,247 @@
 {
+  "SETTINGS": {
+    "Format": "csv",
+    "Separator": "|",
+    "KeyFields": "Routing_Seq",
+    "KeyFormat": "%v"
+  },
   "COLUMNS": [{
     "Index": 0,
-    "Type": "StringType",
+    "Type": "S",
     "Name": "Routing_Seq",
     "Nullable": true
-  },
+    },
     {
       "Index": 1,
-      "Type": "LongType",
+      "Type": "N",
       "Name": "Origin",
       "Nullable": true
     },
     {
       "Index": 2,
-      "Type": "LongType",
+      "Type": "S",
       "Name": "Time_Sequence",
       "Nullable": true
     },
     {
       "Index": 3,
-      "Type": "LongType",
+      "Type": "N",
       "Name": "Exchange_Transaction_ID",
       "Nullable": true
     },
     {
       "Index": 4,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Status_Flag",
       "Nullable": true
     },
     {
       "Index": 5,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Instrument_ID",
       "Nullable": true
     },
     {
       "Index": 6,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Order_Book_ID",
       "Nullable": true
     },
     {
       "Index": 7,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Order_ID",
       "Nullable": true
     },
     {
       "Index": 8,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Order_Book_Priority",
       "Nullable": true
     },
     {
       "Index": 9,
-      "Type": "LongType",
+      "Type": "N",
       "Name": "OAC_Orders",
       "Nullable": true
     },
     {
       "Index": 10,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Total_Orders",
       "Nullable": true
     },
     {
       "Index": 11,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Msg_Position",
       "Nullable": true
     },
     {
       "Index": 12,
-      "Type": "LongType",
+      "Type": "D",
       "Name": "CAC_Orders",
       "Nullable": true
     },
     {
       "Index": 13,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Total_New_Order_Value",
       "Nullable": true
     },
     {
       "Index": 14,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Total_New_Order_Volume",
       "Nullable": true
     },
     {
       "Index": 15,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Action",
       "Nullable": true
     },
     {
       "Index": 16,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Transact_Time",
       "Nullable": true
     },
     {
       "Index": 17,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Hard_Limit_Price",
       "Nullable": true
     },
     {
       "Index": 18,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Active_Status",
       "Nullable": true
     },
     {
       "Index": 19,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Order_Type",
       "Nullable": true
     },
     {
       "Index": 20,
-      "Type": "LongType",
+      "Type": "N",
       "Name": "Total_New_Orders",
       "Nullable": true
     },
     {
       "Index": 21,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Unique_ID",
       "Nullable": true
     },
     {
       "Index": 22,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Visible_Size",
       "Nullable": true
     },
     {
       "Index": 23,
-      "Type": "LongType",
+      "Type": "N",
       "Name": "Value",
       "Nullable": true
     },
     {
       "Index": 24,
-      "Type": "LongType",
+      "Type": "N",
       "Name": "PassiveOnlyOrder",
       "Nullable": true
     },
     {
       "Index": 25,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "PriceDifferential",
       "Nullable": true
     },
     {
       "Index": 26,
-      "Type": "LongType",
+      "Type": "N",
       "Name": "Total_Qty",
       "Nullable": true
     },
     {
       "Index": 27,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Transaction_ID",
       "Nullable": true
     },
     {
       "Index": 28,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Total_Limit_Orders",
       "Nullable": true
     },
     {
       "Index": 29,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Total_Small_Orders",
       "Nullable": true
     },
     {
       "Index": 30,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Public_Order_ID",
       "Nullable": true
     },
     {
       "Index": 31,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Trader_ID",
       "Nullable": true
     },
     {
       "Index": 32,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Order_Sub_Type",
       "Nullable": true
     },
     {
       "Index": 33,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Side",
       "Nullable": true
     },
     {
       "Index": 34,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Broker_ID",
       "Nullable": true
     },
     {
       "Index": 35,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "Container",
       "Nullable": true
     },
     {
       "Index": 36,
-      "Type": "LongType",
+      "Type": "D",
       "Name": "CAC_Order_Size",
       "Nullable": true
     },
     {
       "Index": 37,
-      "Type": "StringType",
+      "Type": "S",
       "Name": "TIF",
       "Nullable": true
     },
     {
       "Index": 38,
-      "Type": "LongType",
+      "Type": "D",
       "Name": "Execution_Min_Size",
       "Nullable": true
     },
     {
       "Index": 39,
-      "Type": "LongType",
+      "Type": "N",
       "Name": "OAC_Order_Size",
       "Nullable": true
     }
