@@ -6,11 +6,11 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"github.com/valyala/fasthttp"
+	"io"
 	"log"
 	"os"
 	"runtime"
 	"sync"
-	"io"
 )
 
 type Json2KV struct {
@@ -33,7 +33,7 @@ func (self *Json2KV) generate_request(ch_records chan []byte, ch_req chan *fasth
 	}
 	for r := range ch_records {
 		json_payload, err := parser.EmdFromJsonRecord(r)
-		if err != nil{
+		if err != nil {
 			panic(err)
 		}
 		req := self.PrepareRequest(contentType, self.workload.Header, "PUT",

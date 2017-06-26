@@ -2,23 +2,23 @@ package igz_data
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/nu7hatch/gouuid"
 	"github.com/buger/jsonparser"
+	"github.com/nu7hatch/gouuid"
+	"github.com/v3io/http_blaster/httpblaster/config"
+	"io/ioutil"
 	"strconv"
 	"strings"
-	"io/ioutil"
-	"errors"
-	"github.com/v3io/http_blaster/httpblaster/config"
 )
 
 type Schema struct {
 	Settings SchemaSettings
-	Columns []SchemaValue
+	Columns  []SchemaValue
 }
 
 type SchemaSettings struct {
-	Format string
+	Format    string
 	Separator config.Sep
 	KeyFields string
 	KeyFormat string
@@ -35,31 +35,29 @@ type SchemaValue struct {
 }
 
 type EmdSchemaParser struct {
-	Schema_file          string
-	values_map           map[int]SchemaValue
-	schema_key_indexs    []int
-	schema_key_format    string
-	schema_key_fields    string
-	JsonSchema	     Schema
-
+	Schema_file       string
+	values_map        map[int]SchemaValue
+	schema_key_indexs []int
+	schema_key_format string
+	schema_key_fields string
+	JsonSchema        Schema
 }
-
 
 func (self *EmdSchemaParser) LoadSchema(file_path string) error {
 
 	self.values_map = make(map[int]SchemaValue)
 	plan, _ := ioutil.ReadFile(file_path)
 	err := json.Unmarshal(plan, &self.JsonSchema)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
-	columns:= self.JsonSchema.Columns
-	settings:= self.JsonSchema.Settings
+	columns := self.JsonSchema.Columns
+	settings := self.JsonSchema.Settings
 
 	self.schema_key_format = settings.KeyFormat
 	self.schema_key_fields = settings.KeyFields
 
-	for _,v := range columns{
+	for _, v := range columns {
 		self.values_map[v.Index] = v
 	}
 	self.GetKeyIndexes()
@@ -109,36 +107,34 @@ func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 	return string(emd_item.ToJsonString())
 }
 
-
-func (self *EmdSchemaParser) HandleJsonSource(source string) []string{
+func (self *EmdSchemaParser) HandleJsonSource(source string) []string {
 	var out []string
-	arr:= strings.Split(source,".")
-	for _,a:= range arr{
+	arr := strings.Split(source, ".")
+	for _, a := range arr {
 		out = append(out, handle_offset(a)...)
 	}
 	return out
 }
 
-func handle_offset(str string)[]string{
-	var res [] string
-	vls := strings.Split(str,"]")
-	if len(vls)==1 && !strings.HasSuffix(str,"]"){
+func handle_offset(str string) []string {
+	var res []string
+	vls := strings.Split(str, "]")
+	if len(vls) == 1 && !strings.HasSuffix(str, "]") {
 		res = append(res, vls...)
 	}
-	for _, k := range vls{
-		if strings.HasPrefix(k,"["){
+	for _, k := range vls {
+		if strings.HasPrefix(k, "[") {
 			res = append(res, k+"]")
-		}else{
-			vl := strings.Split(k,"[")
-			if len(vl)==2{
+		} else {
+			vl := strings.Split(k, "[")
+			if len(vl) == 2 {
 				res = append(res, vl[0])
-				res = append(res, "[" + vl[1] + "]")
+				res = append(res, "["+vl[1]+"]")
 			}
 		}
 	}
 	return res
 }
-
 
 func (self *EmdSchemaParser) KeyFromJsonRecord(json_obj []byte) string {
 	//when no keys, generate random
@@ -149,9 +145,9 @@ func (self *EmdSchemaParser) KeyFromJsonRecord(json_obj []byte) string {
 	//when 1 key, return the key
 	if len(self.schema_key_indexs) == 1 {
 		source_arr := self.HandleJsonSource(self.values_map[self.schema_key_indexs[0]].Source)
-		s,_,_,e:= jsonparser.Get(json_obj,source_arr...)
-		if e != nil{
-			panic(fmt.Sprintf("%v, %+v",e,source_arr))
+		s, _, _, e := jsonparser.Get(json_obj, source_arr...)
+		if e != nil {
+			panic(fmt.Sprintf("%v, %+v", e, source_arr))
 		}
 		return string(s)
 	}
@@ -160,17 +156,16 @@ func (self *EmdSchemaParser) KeyFromJsonRecord(json_obj []byte) string {
 	for _, i := range self.schema_key_indexs {
 		//fmt.Println("indexes ",i, len(self.values_map))
 		source_arr := self.HandleJsonSource(self.values_map[i].Source)
-		s,_,_,e:= jsonparser.Get(json_obj,source_arr...)
-		if e != nil{
+		s, _, _, e := jsonparser.Get(json_obj, source_arr...)
+		if e != nil {
 			panic(e)
-		}else{
+		} else {
 			keys = append(keys, string(s))
 		}
 	}
 	key := fmt.Sprintf(self.schema_key_format, keys...)
 	return key
 }
-
 
 func (self *EmdSchemaParser) EmdFromJsonRecord(json_obj []byte) (string, error) {
 	emd_item := NewEmdItem()
@@ -179,23 +174,23 @@ func (self *EmdSchemaParser) EmdFromJsonRecord(json_obj []byte) (string, error) 
 		source_arr := self.HandleJsonSource(v.Source)
 		var str []byte
 		var e error
-		str,_,_,e = jsonparser.Get(json_obj,source_arr...)
-		if e != nil{
-			if e==jsonparser.KeyPathNotFoundError{
-				if v.Nullable{
+		str, _, _, e = jsonparser.Get(json_obj, source_arr...)
+		if e != nil {
+			if e == jsonparser.KeyPathNotFoundError {
+				if v.Nullable {
 					continue
-				}else if v.Default !=""{
+				} else if v.Default != "" {
 					str = []byte(v.Default)
-				}else{
-					return "", errors.New(fmt.Sprintf("%v, %+v",e,v.Source))
+				} else {
+					return "", errors.New(fmt.Sprintf("%v, %+v", e, v.Source))
 				}
-			}else{
-				return "", errors.New(fmt.Sprintf("%v, %+v",e,v.Source))
+			} else {
+				return "", errors.New(fmt.Sprintf("%v, %+v", e, v.Source))
 			}
 		}
 		err, igz_type, value := ConvertValue(v.Type, string(str))
 		if err != nil {
-			return "",errors.New(fmt.Sprintf("%v, %+v", err, v.Source))
+			return "", errors.New(fmt.Sprintf("%v, %+v", err, v.Source))
 		}
 		emd_item.InsertItemAttr(v.Name, igz_type, value)
 	}

@@ -66,10 +66,10 @@ func (self *RequestCommon) FilesScan(path string) chan string {
 	return self.ch_files
 }
 
-func (self *RequestCommon)SetBaseUri(tls_mode bool, host string, container string, target string)  {
-	http:="http"
-	if tls_mode{
-		http +="s"
+func (self *RequestCommon) SetBaseUri(tls_mode bool, host string, container string, target string) {
+	http := "http"
+	if tls_mode {
+		http += "s"
 	}
-	self.base_uri = fmt.Sprintf("%s://%s/%s/%s",http, host, container, target)
+	self.base_uri = fmt.Sprintf("%s://%s/%s/%s", http, host, container, target)
 }

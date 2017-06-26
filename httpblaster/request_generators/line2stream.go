@@ -11,8 +11,8 @@ import (
 	"log"
 	"os"
 	"runtime"
-	"sync"
 	"strings"
+	"sync"
 )
 
 type Line2StreamGenerator struct {

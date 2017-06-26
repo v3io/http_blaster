@@ -71,7 +71,7 @@ func (self *PerformanceGenerator) single_file_submitter(ch_req chan *fasthttp.Re
 
 	request := self.clone_request(req)
 	var generated int = 0
-	LOOP:
+LOOP:
 	for {
 		select {
 		case <-done:
@@ -116,22 +116,22 @@ func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, rando
 func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request, done chan struct{}) {
 	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.Count, self.workload.Random)
 	var generated int = 0
-	LOOP:
-	for{
+LOOP:
+	for {
 		select {
-		case <- done:
+		case <-done:
 			break LOOP
 		default:
 			uri := <-ch_uri
 			request := self.clone_request(req)
 			request.SetRequestURI(uri)
-			if self.workload.Count == 0{
+			if self.workload.Count == 0 {
 				ch_req <- request
 				generated += 1
-			}else if generated < self.workload.Count{
+			} else if generated < self.workload.Count {
 				ch_req <- request
 				generated += 1
-			}else{
+			} else {
 				break LOOP
 			}
 		}

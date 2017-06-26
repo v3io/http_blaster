@@ -10,7 +10,7 @@ import (
 )
 
 func Test_Schema_Parser(t *testing.T) {
-	p:=  igz_data.EmdSchemaParser{}
+	p := igz_data.EmdSchemaParser{}
 	e := p.LoadSchema("../example/schema_example.json")
 	if e != nil {
 		t.Error(e)
