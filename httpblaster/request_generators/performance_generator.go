@@ -114,7 +114,7 @@ func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, rando
 }
 
 func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request, done chan struct{}) {
-	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.Count, self.workload.Random)
+	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.FilesCount, self.workload.Random)
 	var generated int = 0
 LOOP:
 	for {
