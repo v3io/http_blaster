@@ -14,7 +14,6 @@ import (
 
 type PerformanceGenerator struct {
 	workload config.Workload
-	base_uri string
 	RequestCommon
 }
 
@@ -24,11 +23,7 @@ func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
 
 func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
-	if tls_mode {
-		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
-	} else {
-		self.base_uri = fmt.Sprintf("http://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
-	}
+	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
 	var contentType string = "text/html"
 	var payload []byte
 	var Data_bfr []byte

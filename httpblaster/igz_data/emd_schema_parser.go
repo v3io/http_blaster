@@ -9,6 +9,7 @@ import (
 	"strings"
 	"io/ioutil"
 	"errors"
+	"github.com/v3io/http_blaster/httpblaster/config"
 )
 
 type Schema struct {
@@ -18,7 +19,7 @@ type Schema struct {
 
 type SchemaSettings struct {
 	Format string
-	Separator string
+	Separator config.Sep
 	KeyFields string
 	KeyFormat string
 }
@@ -39,21 +40,21 @@ type EmdSchemaParser struct {
 	schema_key_indexs    []int
 	schema_key_format    string
 	schema_key_fields    string
-	schema_key_separator string
+	JsonSchema	     Schema
+
 }
 
 
-func (self *EmdSchemaParser) LoadSchema(file_path string, key_fields string, key_format string) error {
+func (self *EmdSchemaParser) LoadSchema(file_path string) error {
 
 	self.values_map = make(map[int]SchemaValue)
 	plan, _ := ioutil.ReadFile(file_path)
-	var data Schema
-	err := json.Unmarshal(plan, &data)
+	err := json.Unmarshal(plan, &self.JsonSchema)
 	if err != nil{
 		panic(err)
 	}
-	columns:= data.Columns
-	settings:=data.Settings
+	columns:= self.JsonSchema.Columns
+	settings:= self.JsonSchema.Settings
 
 	self.schema_key_format = settings.KeyFormat
 	self.schema_key_fields = settings.KeyFields

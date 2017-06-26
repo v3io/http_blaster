@@ -64,7 +64,7 @@ type global struct {
 
 type Workload struct {
 	Name       string
-	Bucket     string
+	Container  string
 	Target     string
 	Type       string
 	Duration   duration
@@ -77,10 +77,7 @@ type Workload struct {
 	FilesCount int
 	Random     bool
 	Generator  string
-	Separator  Sep
 	Schema     string
-	KeyFields  string
-	KeyFormat  string
 	Lazy       int
 }
 
