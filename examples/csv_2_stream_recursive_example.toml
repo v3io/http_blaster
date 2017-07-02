@@ -15,10 +15,8 @@ TLSMode=false
    [workloads.stream_recursive_example]
    name="csv2stream recursive example"
    Generator="line2stream"
-   bucket="1"
+   Container="1"
    Target="test1"
-   Duration = "30s"
-   TYPE="PUT"
    workers=10
    payload="examples/payloads/recursive"
 

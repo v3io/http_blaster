@@ -14,7 +14,7 @@ TLSMode=false
 [workloads]
    # [workloads.get1]
    # name="first"
-   # bucket=""
+   # container=""
    # Target="test.html"
    # Duration = "30s"
    # TYPE="PUT"
@@ -26,8 +26,9 @@ TLSMode=false
 
 
    [workloads.get2]
+    generator="performance"
     name="multi get from 20 workers"
-    bucket=""
+    container=""
     Target="test.html"
     Duration = "10s"
     TYPE="GET"
@@ -36,8 +37,9 @@ TLSMode=false
     #payload="payload.dat"
 
  [workloads.get1]
+    generator="performance"
     name="multi get1 from 20 workers"
-    bucket=""
+    container=""
     Target="test.html"
     Duration = "10s"
     TYPE="GET"
@@ -48,7 +50,7 @@ TLSMode=false
 
 #    [workloads.put]
 #    name="third"
-#    bucket=""
+#    container=""
 #    Target="test.html"
 #    Duration = "10s"
 #    TYPE="PUT"
@@ -59,7 +61,7 @@ TLSMode=false
 
 #    [workloads.put]
 #    name="put"
-#    bucket=""
+#    container=""
 #    Target="test.html"
 #    Duration = "60s"
 #    TYPE="PUT"
@@ -67,7 +69,7 @@ TLSMode=false
 
  #   [workloads.putappend2]
  #   name="putappend2"
- #   bucket="1"
+ #   container="1"
  #   Target="test_file7"
  #   duration = "16s"
  #   type="PUTAPPEND"
@@ -75,7 +77,7 @@ TLSMode=false
 
  #   [workloads.putappend1]
  #   name="putappend"
- #   bucket="1"
+ #   container="1"
  #   Target="test_file1"
  #   Duration = "10s"
  #   TYPE="PUTAPPEND"
@@ -83,7 +85,7 @@ TLSMode=false
 
   #  [workloads.putappend4]
   #  name="putappend"
-  #  bucket="1"
+  #  container="1"
   #  Target="test_file2"
   #  Duration = "10s"
   #  TYPE="PUTAPPEND"
@@ -91,7 +93,7 @@ TLSMode=false
 
   # [workloads.putappend3]
   # name="putappend"
-  # bucket="1"
+  # container="1"
   # Target="test_file3"
   # Duration = "10s"
   # TYPE="PUTAPPEND"

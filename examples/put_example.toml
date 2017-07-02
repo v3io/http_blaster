@@ -13,10 +13,11 @@ TLSMode=false
 
 [workloads]
    [workloads.put]
+    generator="performance"
     name="10 seconds put from 20 workers"
-    bucket=""
+    container=""
     Target="test.html"
     Duration = "10s"
     TYPE="PUT"
     workers=20
-    count=0
+    count=10

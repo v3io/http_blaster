@@ -1,0 +1,10 @@
+======================================
+Duration = 5.867186ms
+Iops = 13
+Statuses = map[204:13]
+Avg = 1.867785ms
+Max = 1.405339ms
+Min = 0s
+Latency = map[]
+Total = 13
+Errors = map[]

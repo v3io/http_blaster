@@ -1,19 +1,28 @@
 package igz_data
 
 import (
-	//"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/buger/jsonparser"
 	"github.com/nu7hatch/gouuid"
-	//"io"
-	"log"
-	//"os"
-	"errors"
+	"github.com/v3io/http_blaster/httpblaster/config"
 	"io/ioutil"
 	"strconv"
 	"strings"
 )
+
+type Schema struct {
+	Settings SchemaSettings
+	Columns  []SchemaValue
+}
+
+type SchemaSettings struct {
+	Format    string
+	Separator config.Sep
+	KeyFields string
+	KeyFormat string
+}
 
 type SchemaValue struct {
 	Name     string
@@ -26,109 +35,30 @@ type SchemaValue struct {
 }
 
 type EmdSchemaParser struct {
-	Schema_file          string
-	values_map           map[int]SchemaValue
-	schema_key_indexs    []int
-	schema_key_format    string
-	schema_key_fields    string
-	schema_key_seperator string
+	Schema_file       string
+	values_map        map[int]SchemaValue
+	schema_key_indexs []int
+	schema_key_format string
+	schema_key_fields string
+	JsonSchema        Schema
 }
 
-func StringToKind(str string) IgzType {
-	switch strings.TrimSpace(str) {
-	case "StringType":
-		return T_STRING
-	case "LongType":
-		return T_DOUBLE
-	case "NoneType":
-		return T_NULL
-	case "IntType":
-		return T_NUMBER
+func (self *EmdSchemaParser) LoadSchema(file_path string) error {
 
-	}
-	panic(fmt.Sprintf("unknown value type %s", str))
-	return T_NULL
-
-}
-
-func (self *EmdSchemaParser) IsNullable(v string) bool {
-	v_list := strings.Split(v, "=")
-	if len(v_list) > 1 {
-		if strings.TrimSpace(v_list[0]) == "nullable" && strings.TrimSpace(v_list[1]) == "true" {
-			return true
-		}
-	}
-	return false
-
-}
-
-//
-//func (self *EmdSchemaParser) LoadSchema(file_path string, key_fields string, key_format string) error {
-//	self.schema_key_format = key_format
-//	self.schema_key_fields = key_fields
-//	f, e := os.Open(file_path)
-//	self.csv_map = make(map[int]SchemaValue)
-//	if e != nil {
-//		return e
-//	}
-//	defer f.Close()
-//	r := csv.NewReader(f)
-//	r.Comma = ','
-//	for i := 0; ; i++ {
-//		schema_value, err := r.Read()
-//		if err != nil {
-//			if err == io.EOF {
-//				break
-//			}
-//			panic(err)
-//		}
-//		self.csv_map[i] = SchemaValue{Name: schema_value[0], Type: StringToKind(schema_value[1]),
-//			Nullable: self.IsNullable(schema_value[2])}
-//	}
-//	self.GetKeyIndexes()
-//	return nil
-//}
-
-func (self *EmdSchemaParser) LoadSchema(file_path string, key_fields string, key_format string) error {
-	self.schema_key_format = key_format
-	self.schema_key_fields = key_fields
 	self.values_map = make(map[int]SchemaValue)
 	plan, _ := ioutil.ReadFile(file_path)
-	var data map[string][]map[string]interface{}
-	err := json.Unmarshal(plan, &data)
+	err := json.Unmarshal(plan, &self.JsonSchema)
 	if err != nil {
 		panic(err)
 	}
-	columns := data["COLUMNS"]
-	for i, v := range columns {
-		var c_index int = i                    //default by order
-		var c_name string = v["Name"].(string) //mandatory
-		var c_type string = v["Type"].(string) //mandatory
-		var c_json_source string = ""          //default empty
-		var c_nullable bool = true             //default true
-		var c_default string = ""
+	columns := self.JsonSchema.Columns
+	settings := self.JsonSchema.Settings
 
-		if index, ok := v["Index"]; ok {
-			c_index = int(index.(float64))
-		}
-		if json_source, ok := v["Source"]; ok {
-			c_json_source = json_source.(string)
-		}
-		if json_default, ok := v["Default"]; ok {
-			c_default = json_default.(string)
-		}
-		if nullable, ok := v["Nullable"]; ok {
-			c_nullable = nullable.(bool)
-		}
-		self.values_map[c_index] =
-			SchemaValue{
-				Name:     c_name,
-				Index:    c_index,
-				Type:     StringToKind(c_type),
-				Nullable: c_nullable,
-				Source:   c_json_source,
-				Default:  c_default}
-		log.Println(fmt.Sprintf("%+v", self.values_map[c_index]))
+	self.schema_key_format = settings.KeyFormat
+	self.schema_key_fields = settings.KeyFields
+
+	for _, v := range columns {
+		self.values_map[v.Index] = v
 	}
 	self.GetKeyIndexes()
 	return nil
@@ -174,7 +104,6 @@ func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 		}
 		emd_item.InsertItemAttr(self.values_map[i].Name, igz_type, value)
 	}
-	//panic(emd_item.ToJsonString())
 	return string(emd_item.ToJsonString())
 }
 
@@ -225,7 +154,7 @@ func (self *EmdSchemaParser) KeyFromJsonRecord(json_obj []byte) string {
 	//when more the one key, generate formatted key
 	var keys []interface{}
 	for _, i := range self.schema_key_indexs {
-		fmt.Println("indexes ", i, len(self.values_map))
+		//fmt.Println("indexes ",i, len(self.values_map))
 		source_arr := self.HandleJsonSource(self.values_map[i].Source)
 		s, _, _, e := jsonparser.Get(json_obj, source_arr...)
 		if e != nil {

@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
+	"sync"
+	"runtime"
+	"os"
 	"io"
 	"log"
-	"os"
-	"runtime"
-	"sync"
 )
 
 type Json2KV struct {
 	workload config.Workload
-	base_uri string
 	RequestCommon
 }
 
@@ -27,7 +26,7 @@ func (self *Json2KV) generate_request(ch_records chan []byte, ch_req chan *Reque
 	defer wg.Done()
 	parser := igz_data.EmdSchemaParser{}
 	var contentType string = "text/html"
-	e := parser.LoadSchema(self.workload.Schema, self.workload.KeyFields, self.workload.KeyFormat)
+	e := parser.LoadSchema(self.workload.Schema)
 	if e != nil {
 		panic(e)
 	}
@@ -59,7 +58,7 @@ func (self *Json2KV) generate(ch_req chan *Request, payload string, host string)
 			reader := bufio.NewReader(file)
 			var i int = 0
 			for {
-				line, _, err := reader.ReadLine()
+				line, err := reader.ReadBytes('\n')
 				if err == nil {
 					ch_records <- line
 					i++
@@ -87,14 +86,9 @@ func (self *Json2KV) GenerateRequests(wl config.Workload, tls_mode bool, host st
 	}
 	self.workload.Header["X-v3io-function"] = "PutItem"
 
-	if tls_mode {
-		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
-	} else {
-		self.base_uri = fmt.Sprintf("http://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
-	}
-
 	ch_req := make(chan *Request, 1000)
 
+	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
 
 	go self.generate(ch_req, self.workload.Payload, host)
 

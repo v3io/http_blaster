@@ -35,11 +35,11 @@ func (d *duration) UnmarshalText(text []byte) error {
 	return err
 }
 
-type sep struct {
+type Sep struct {
 	Rune rune
 }
 
-func (r *sep) UnmarshalText(text []byte) error {
+func (r *Sep) UnmarshalText(text []byte) error {
 	if len(text) > 0 {
 		data := int32(text[0])
 		r.Rune = data
@@ -64,7 +64,7 @@ type global struct {
 
 type Workload struct {
 	Name       string
-	Bucket     string
+	Container  string
 	Target     string
 	Type       string
 	Duration   duration
@@ -77,10 +77,7 @@ type Workload struct {
 	FilesCount int
 	Random     bool
 	Generator  string
-	Separator  sep
 	Schema     string
-	KeyFields  string
-	KeyFormat  string
 	Lazy       int
 }
 

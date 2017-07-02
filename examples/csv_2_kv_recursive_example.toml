@@ -13,18 +13,13 @@ TLSMode=false
 
 [workloads]
    [workloads.csv2kv_recursive_example]
-   name="test csv2kv_example"
-   Generator="csv2kv"
-   bucket="1"
-   Target="test_emd1/"
-   Duration = "30s"
-   TYPE="PUT"
-   workers=10
-   payload="examples/payloads/recursive"
-   separator='|'
-   schema="examples/schemas/order-book-sample.txt"
-   KeyFormat="%v---%v._"
-   KeyFields="Routing_Seq,Instrument_ID"
+        name="test csv2kv_example"
+        generator="csv2kv"
+        container="1"
+        target="test_emd1/"
+        workers=10
+        payload="examples/payloads/recursive"
+        schema="examples/schemas/order-book-sample.txt"
 
 
 

@@ -23,8 +23,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/v3io/http_blaster/httpblaster"
-	"github.com/v3io/http_blaster/httpblaster/config"
 	"io"
 	"log"
 	"math/rand"
@@ -33,12 +31,15 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/v3io/http_blaster/httpblaster"
+	"github.com/v3io/http_blaster/httpblaster/config"
 )
 
 var (
 	start_time   time.Time
 	end_time     time.Time
-	wl_id        int32 = 0
+	wl_id        int32 = -1
 	conf_file    string
 	results_file string
 	showVersion  bool
@@ -73,8 +74,7 @@ func init() {
 }
 
 func get_workload_id() int32 {
-	defer atomic.AddInt32(&wl_id, 1)
-	return wl_id
+	return atomic.AddInt32(&wl_id, 1)
 }
 
 func start_cpu_profile() {
@@ -85,7 +85,6 @@ func start_cpu_profile() {
 			log.Fatal(err)
 		}
 		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
 	}
 }
 

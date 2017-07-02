@@ -9,11 +9,11 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"time"
 )
 
 type PerformanceGenerator struct {
 	workload config.Workload
-	base_uri string
 	RequestCommon
 }
 
@@ -23,11 +23,7 @@ func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
 
 func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *Request {
 	self.workload = wl
-	if tls_mode {
-		self.base_uri = fmt.Sprintf("https://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
-	} else {
-		self.base_uri = fmt.Sprintf("http://%s/%s/%s", host, self.workload.Bucket, self.workload.Target)
-	}
+	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
 	var contentType string = "text/html"
 	var payload []byte
 	var Data_bfr []byte
@@ -46,12 +42,22 @@ func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode 
 	req:=AcquireRequest()
 	self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
 		self.base_uri, string(payload), host, req.Request)
+
+	done := make(chan struct{})
+	go func() {
+		select {
+		case <-time.After(self.workload.Duration.Duration):
+			close(done)
+		}
+	}()
+
 	ch_req := make(chan *Request, 1000)
+
 	go func() {
 		if self.workload.FileIndex == 0 && self.workload.FilesCount == 0 {
-			self.single_file_submitter(ch_req, req.Request)
+			self.single_file_submitter(ch_req, req.Request, done)
 		} else {
-			self.multi_file_submitter(ch_req, req.Request)
+			self.multi_file_submitter(ch_req, req.Request, done)
 		}
 	}()
 	return ch_req
@@ -66,10 +72,26 @@ func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *Request 
 	return new_req
 }
 
-func (self *PerformanceGenerator) single_file_submitter(ch_req chan *Request, req *fasthttp.Request) {
+func (self *PerformanceGenerator) single_file_submitter(ch_req chan *Request, req *fasthttp.Request, done chan struct{}){
+
 	request := self.clone_request(req)
-	for i := 0; i < self.workload.Count; i++ {
-		ch_req <- request
+	var generated int = 0
+LOOP:
+	for {
+		select {
+		case <-done:
+			break LOOP
+		default:
+			if self.workload.Count == 0 {
+				ch_req <- request
+				generated += 1
+			} else if generated < self.workload.Count {
+				ch_req <- request
+				generated += 1
+			} else {
+				break LOOP
+			}
+		}
 	}
 	close(ch_req)
 }
@@ -96,13 +118,28 @@ func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, rando
 	return ch
 }
 
-func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *Request, req *fasthttp.Request) {
-	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.Count, self.workload.Random)
-	for i := 0; i < self.workload.Count; i++ {
-		uri := <-ch_uri
-		request := self.clone_request(req)
-		request.Request.SetRequestURI(uri)
-		ch_req <- request
+func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *Request, req *fasthttp.Request, done chan struct{}) {
+	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.FilesCount, self.workload.Random)
+	var generated int = 0
+LOOP:
+	for {
+		select {
+		case <-done:
+			break LOOP
+		default:
+			uri := <-ch_uri
+			request := self.clone_request(req)
+			request.Request.SetRequestURI(uri)
+			if self.workload.Count == 0 {
+				ch_req <- request
+				generated += 1
+			} else if generated < self.workload.Count {
+				ch_req <- request
+				generated += 1
+			} else {
+				break LOOP
+			}
+		}
 	}
 	close(ch_req)
 }
