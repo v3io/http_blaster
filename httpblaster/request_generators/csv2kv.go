@@ -33,7 +33,7 @@ func (self *Csv2KV) generate_request(ch_records chan []string, ch_req chan *Requ
 	for r := range ch_records {
 		json_payload := parser.EmdFromCSVRecord(r)
 		req := AcquireRequest()
-		self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
+		self.PrepareRequest(contentType, self.workload.Header, "PUT",
 			self.base_uri, json_payload, host, req.Request)
 		ch_req <- req
 	}

@@ -137,7 +137,10 @@ func generate_executors() {
 		workload.Id = get_workload_id()
 		e := &httpblaster.Executor{Workload: workload, Host: cfg.Global.Server,
 			Port: cfg.Global.Port, TLS_mode: cfg.Global.TLSMode,
-			StatusCodesAcceptance: cfg.Global.StatusCodesAcceptance, Data_bfr: dataBfr}
+			StatusCodesAcceptance: cfg.Global.StatusCodesAcceptance,
+			Data_bfr: dataBfr,
+			Config:cfg,
+		}
 		executors = append(executors, e)
 	}
 }

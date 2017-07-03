@@ -56,6 +56,8 @@ type worker struct {
 	ch_duration         chan time.Duration
 	ch_error            chan error
 	lazy_sleep          time.Duration
+	retry_codes 	    map[int]interface{}
+	retry_count 	    int
 }
 
 
@@ -63,11 +65,14 @@ func (w *worker) send_request(req *request_generators.Request) (error, time.Dura
 	response := request_generators.AcquireResponse()
 	var (
 		code int
+		err error
+		duration time.Duration
 	)
 	if w.lazy_sleep > 0 {
 		time.Sleep(w.lazy_sleep)
 	}
-	err, duration := w.send(req.Request, response.Response, time.Second*60)
+
+	err, duration = w.send(req.Request, response.Response, time.Second * 60)
 
 	if err == nil {
 		code = response.Response.StatusCode()
@@ -80,7 +85,7 @@ func (w *worker) send_request(req *request_generators.Request) (error, time.Dura
 		if duration > w.results.max {
 			w.results.max = duration
 		}
-		w.results.avg = w.results.avg + (duration-w.results.avg)/time.Duration(w.results.count)
+		w.results.avg = w.results.avg + (duration - w.results.avg) / time.Duration(w.results.count)
 	} else {
 		w.error_count++
 		log.Println("[ERROR]", err.Error())
@@ -161,11 +166,32 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request, wg *sync.WaitGroup, release_req bool) {
 	defer wg.Done()
 	for req := range ch_req {
-		_, _, resp := w.send_request(req)
+
+		var response *request_generators.Response
+		var err error
+		LOOP:
+		for i := 0; i < w.retry_count; i++ {
+			log.Println(fmt.Sprintf("send with retry %v out of %v", i+1, w.retry_count))
+			err, _, response = w.send_request(req)
+			if err != nil {
+				//retry on error
+				request_generators.ReleaseResponse(response)
+				continue
+			} else if _, ok := w.retry_codes[response.Response.StatusCode()]; !ok {
+				//not subject to retry
+				//log.Println("break, not in the map")
+				//log.Printf("%+v ---- \n code %v", w.retry_codes, response.Response.StatusCode())
+				break LOOP
+			} else if i + 1 < w.retry_count {
+				//not the last loop
+				//log.Println("continue < retry count ")
+				request_generators.ReleaseResponse(response)
+			}
+		}
 		if ch_resp != nil {
-			ch_resp <- resp
+			ch_resp <- response
 		} else {
-			request_generators.ReleaseResponse(resp)
+			request_generators.ReleaseResponse(response)
 		}
 		if release_req {
 			request_generators.ReleaseRequest(req)
@@ -173,11 +199,20 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 	}
 }
 
-func NewWorker(host string, tls_client bool, lazy int) *worker {
+func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retury_count int) *worker {
 	if host == "" {
 		return nil
 	}
-	worker := worker{host: host, is_tls_client: tls_client}
+	retry_codes_map := make(map[int]interface{})
+	for _,c := range retry_codes{
+		retry_codes_map[c]=true
+
+	}
+	if retury_count == 0 {
+		retury_count = 1
+	}
+	worker := worker{host: host, is_tls_client: tls_client, retry_codes:retry_codes_map,
+		retry_count:retury_count}
 	worker.results.codes = make(map[int]uint64)
 	worker.open_connection()
 	worker.ch_duration = make(chan time.Duration, 1)

@@ -60,6 +60,8 @@ type global struct {
 	Port                  string
 	TLSMode               bool
 	StatusCodesAcceptance map[string]float64
+	RetryOnStatusCodes    []int
+	RetryCount 	      int
 }
 
 type Workload struct {

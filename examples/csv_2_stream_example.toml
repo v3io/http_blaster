@@ -1,25 +1,28 @@
 title = "Workload example"
 
 [global]
-block_size = 5
-Duration = "160s"
-server="10.90.1.41"
-port="8081"
-TLSMode=false
- [global.StatusCodesAcceptance]
-  200 = 100.0 # upto 100% return status of 200
-  204 = 100.0
-  205 = 100.0
+    block_size = 5
+    Duration = "160s"
+    server="192.168.206.10"
+    port="8081"
+    TLSMode=false
+    RetryOnStatusCodes=[400, 405]
+    RetryCount=3
+
+[global.StatusCodesAcceptance]
+    200 = 100.0 # upto 100% return status of 200
+    204 = 100.0
+    205 = 100.0
 
 [workloads]
    [workloads.stream_example]
-   name="csv2stream example"
-   Generator="line2stream"
-   Container="1"
-   Target="test1"
-   workers=100
-   lazy=10
-   payload="examples/payloads/order-book-sample.csv"
+        name="csv2stream example"
+        Generator="line2stream"
+        Container="1"
+        Target="test1"
+        workers=100
+        lazy=10
+        payload="examples/payloads/order-book-sample.csv"
 
 
 

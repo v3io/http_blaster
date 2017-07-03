@@ -36,7 +36,7 @@ func (self *Json2KV) generate_request(ch_records chan []byte, ch_req chan *Reque
 			panic(err)
 		}
 		req := AcquireRequest()
-		self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
+		self.PrepareRequest(contentType, self.workload.Header, "PUT",
 			self.base_uri, json_payload, host, req.Request)
 		ch_req <- req
 	}

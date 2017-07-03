@@ -47,6 +47,7 @@ type executor_result struct {
 type Executor struct {
 	connections           int32
 	Workload              config.Workload
+	Config	 	      config.TomlConfig
 	Host                  string
 	Port                  string
 	TLS_mode              bool
@@ -93,7 +94,8 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 
 	for i := 0; i < self.Workload.Workers; i++ {
 		server := fmt.Sprintf("%s:%s", self.Host, self.Port)
-		w := NewWorker(server, self.TLS_mode, self.Workload.Lazy)
+		w := NewWorker(server, self.TLS_mode, self.Workload.Lazy, self.Config.Global.RetryOnStatusCodes,
+		self.Config.Global.RetryCount)
 		self.workers = append(self.workers, w)
 		go w.run_worker(nil, ch_req, &workers_wg, release_req_flag)
 	}
