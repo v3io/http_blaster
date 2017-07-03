@@ -47,14 +47,14 @@ type executor_result struct {
 type Executor struct {
 	connections           int32
 	Workload              config.Workload
-	Config	 	      config.TomlConfig
-	Host                  string
-	Port                  string
-	TLS_mode              bool
+	Globals               config.Global
+	host                  string
+	port                  string
+	tls_mode              bool
 	results               executor_result
 	workers               []*worker
 	Start_time            time.Time
-	StatusCodesAcceptance map[string]float64
+	statusCodesAcceptance map[string]float64
 	Data_bfr              []byte
 }
 
@@ -80,7 +80,7 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
-	ch_req := req_gen.GenerateRequests(self.Workload, self.TLS_mode, self.Host)
+	ch_req := req_gen.GenerateRequests(self.Workload, self.tls_mode, self.host)
 	return ch_req, release_req
 }
 
@@ -93,9 +93,9 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	ch_req, release_req_flag := self.load_request_generator()
 
 	for i := 0; i < self.Workload.Workers; i++ {
-		server := fmt.Sprintf("%s:%s", self.Host, self.Port)
-		w := NewWorker(server, self.TLS_mode, self.Workload.Lazy, self.Config.Global.RetryOnStatusCodes,
-		self.Config.Global.RetryCount)
+		server := fmt.Sprintf("%s:%s", self.host, self.port)
+		w := NewWorker(server, self.tls_mode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
+		self.Globals.RetryCount)
 		self.workers = append(self.workers, w)
 		go w.run_worker(nil, ch_req, &workers_wg, release_req_flag)
 	}
@@ -138,6 +138,10 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 
 func (self *Executor) Start(wg *sync.WaitGroup) error {
 	self.results.Statuses = make(map[int]uint64)
+	self.host = self.Globals.Server
+	self.port = self.Globals.Port
+	self.tls_mode = self.Globals.TLSMode
+	self.statusCodesAcceptance = self.Globals.StatusCodesAcceptance
 	log.Println("at executor start ", self.Workload)
 	go func() {
 		self.run(wg)
@@ -163,7 +167,7 @@ func (self *Executor) Report() (executor_result, error) {
 
 	log.Println("iops: ", self.results.Iops)
 	for err_code, err_count := range self.results.Statuses {
-		if max_errors, ok := self.StatusCodesAcceptance[strconv.Itoa(err_code)]; ok {
+		if max_errors, ok := self.statusCodesAcceptance[strconv.Itoa(err_code)]; ok {
 			if self.results.Total > 0 && err_count > 0 {
 				err_percent := (float64(err_count) * float64(100)) / float64(self.results.Total)
 				log.Printf("status code %d occured %f%% during the test \"%s\"",

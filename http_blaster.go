@@ -135,11 +135,9 @@ func generate_executors() {
 	for Name, workload := range cfg.Workloads {
 		log.Println("Adding executor for ", Name)
 		workload.Id = get_workload_id()
-		e := &httpblaster.Executor{Workload: workload, Host: cfg.Global.Server,
-			Port: cfg.Global.Port, TLS_mode: cfg.Global.TLSMode,
-			StatusCodesAcceptance: cfg.Global.StatusCodesAcceptance,
+		e := &httpblaster.Executor{Workload: workload,
 			Data_bfr: dataBfr,
-			Config:cfg,
+			Globals:cfg.Global,
 		}
 		executors = append(executors, e)
 	}
