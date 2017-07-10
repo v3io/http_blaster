@@ -33,7 +33,7 @@ func (self *Line2StreamGenerator) generate_request(ch_records chan string,
 	for r := range ch_records {
 		sr := igz_data.NewStreamRecord("client", r, u.String(), 0, true)
 		r := igz_data.NewStreamRecords(sr)
-		req := self.PrepareRequest(contentType, self.workload.Header, self.workload.Type,
+		req := self.PrepareRequest(contentType, self.workload.Header, "PUT",
 			self.base_uri, r.ToJsonString(), host)
 		ch_req <- req
 	}
