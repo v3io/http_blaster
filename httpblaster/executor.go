@@ -59,9 +59,11 @@ type Executor struct {
 }
 
 
-func (self *Executor) load_request_generator() (chan *request_generators.Request, bool) {
+func (self *Executor) load_request_generator() (chan *request_generators.Request, bool, chan *request_generators.Response) {
 	var req_gen request_generators.Generator
 	var release_req bool = true
+	var ch_response chan *request_generators.Response = nil
+
 	gen_type := strings.ToLower(self.Workload.Generator)
 	switch gen_type {
 	case request_generators.PERFORMANCE:
@@ -77,11 +79,14 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	case request_generators.JSON2KV:
 		req_gen = &request_generators.Json2KV{}
 		break
+	case request_generators.STREAM_GET:
+		req_gen = &request_generators.StreamGetGenerator{}
+		ch_response = make(chan *request_generators.Response)
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
-	ch_req := req_gen.GenerateRequests(self.Workload, self.tls_mode, self.host)
-	return ch_req, release_req
+	ch_req := req_gen.GenerateRequests(self.Workload, self.tls_mode, self.host, nil)
+	return ch_req, release_req, ch_response
 }
 
 func (self *Executor) run(wg *sync.WaitGroup) error {
@@ -90,14 +95,14 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	workers_wg := sync.WaitGroup{}
 	workers_wg.Add(self.Workload.Workers)
 
-	ch_req, release_req_flag := self.load_request_generator()
+	ch_req, release_req_flag, ch_response := self.load_request_generator()
 
 	for i := 0; i < self.Workload.Workers; i++ {
 		server := fmt.Sprintf("%s:%s", self.host, self.port)
 		w := NewWorker(server, self.tls_mode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
 		self.Globals.RetryCount)
 		self.workers = append(self.workers, w)
-		go w.run_worker(nil, ch_req, &workers_wg, release_req_flag)
+		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag)
 	}
 	workers_wg.Wait()
 	self.results.Duration = time.Now().Sub(self.Start_time)

@@ -171,7 +171,6 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 		var err error
 		LOOP:
 		for i := 0; i < w.retry_count; i++ {
-			//log.Println(fmt.Sprintf("send with retry %v out of %v", i+1, w.retry_count))
 			err, _, response = w.send_request(req)
 			if err != nil {
 				//retry on error
@@ -179,12 +178,9 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 				continue
 			} else if _, ok := w.retry_codes[response.Response.StatusCode()]; !ok {
 				//not subject to retry
-				//log.Println("break, not in the map")
-				//log.Printf("%+v ---- \n code %v", w.retry_codes, response.Response.StatusCode())
 				break LOOP
 			} else if i + 1 < w.retry_count {
 				//not the last loop
-				//log.Println("continue < retry count ")
 				request_generators.ReleaseResponse(response)
 			}
 		}

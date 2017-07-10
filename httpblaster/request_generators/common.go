@@ -13,6 +13,7 @@ const (
 	LINE2STREAM = "line2stream"
 	CSV2KV      = "csv2kv"
 	JSON2KV     = "json2kv"
+	STREAM_GET  = "stream_get"
 )
 
 type RequestCommon struct {

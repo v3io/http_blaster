@@ -12,20 +12,21 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
-type Line2StreamGenerator struct {
+type StreamGetGenerator struct {
 	RequestCommon
 	workload config.Workload
 }
 
-func (self *Line2StreamGenerator) UseCommon(c RequestCommon) {
+func (self *StreamGetGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *Line2StreamGenerator) generate_request(ch_records chan string,
-	ch_req chan *Request,
-	host string, wg *sync.WaitGroup) {
+func (self *StreamGetGenerator) generate_request(ch_records chan string,
+ch_req chan *Request,
+host string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var contentType string = "application/json"
 	u, _ := uuid.NewV4()
@@ -40,7 +41,7 @@ func (self *Line2StreamGenerator) generate_request(ch_records chan string,
 	log.Println("generate_request Done")
 }
 
-func (self *Line2StreamGenerator) generate(ch_req chan *Request, payload string, host string) {
+func (self *StreamGetGenerator) generate(ch_req chan *Request, payload string, host string) {
 	defer close(ch_req)
 	var ch_records chan string = make(chan string)
 	wg := sync.WaitGroup{}
@@ -78,7 +79,28 @@ func (self *Line2StreamGenerator) generate(ch_req chan *Request, payload string,
 	log.Println("generators done")
 }
 
-func (self *Line2StreamGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
+func (self *StreamGetGenerator) NextLocationFromResponse (response *Response)interface {}{
+	return 0
+}
+
+func (self *StreamGetGenerator) Consumer(return_ch chan *Response) chan interface{}{
+	ch_location := make(chan interface{}, 1000)
+	go func() {
+		for {
+			select {
+			case response := <-return_ch:
+				loc := self.NextLocationFromResponse(response)
+				ch_location <- loc
+			case <-time.After(time.Second*30):
+				log.Println("didn't get location for more then 30 seconds, exit now")
+				return
+			}
+		}
+	}()
+	return ch_location
+}
+
+func (self *StreamGetGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
 	self.workload = wl
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)

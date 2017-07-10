@@ -21,7 +21,7 @@ func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *Request {
+func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
 	self.workload = wl
 	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
 	var contentType string = "text/html"

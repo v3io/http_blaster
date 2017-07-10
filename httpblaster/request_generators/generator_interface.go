@@ -6,5 +6,5 @@ import (
 
 type Generator interface {
 	UseCommon(c RequestCommon)
-	GenerateRequests(workload config.Workload, tls_mode bool, host string) chan *Request
+	GenerateRequests(workload config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request
 }

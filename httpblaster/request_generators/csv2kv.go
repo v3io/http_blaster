@@ -87,7 +87,7 @@ func (self *Csv2KV) generate(ch_req chan *Request, payload string, host string) 
 	wg.Wait()
 }
 
-func (self *Csv2KV) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *Request {
+func (self *Csv2KV) GenerateRequests(wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
 	self.workload = wl
 	//panic(fmt.Sprintf("workload key [%s] workload key sep [%s]", wl.KeyFormat, string(wl.KeyFormatSep.Rune)))
 	if self.workload.Header == nil {
