@@ -76,6 +76,9 @@ func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
 	case request_generators.JSON2KV:
 		req_gen = &request_generators.Json2KV{}
 		break
+	case request_generators.LINE2KV:{
+		req_gen = & request_generators.Line2KvGenerator{}
+	}
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
