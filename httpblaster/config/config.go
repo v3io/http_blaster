@@ -49,17 +49,18 @@ func (r *Sep) UnmarshalText(text []byte) error {
 
 type TomlConfig struct {
 	Title     string
-	Global    global
+	Global    Global
 	Workloads map[string]Workload
 }
 
-type global struct {
+type Global struct {
 	Duration              duration
 	Block_size            int32
 	Server                string
 	Port                  string
 	TLSMode               bool
 	StatusCodesAcceptance map[string]float64
+	IgnoreAttrs		[]string
 }
 
 type Workload struct {

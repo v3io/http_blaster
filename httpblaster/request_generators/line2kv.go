@@ -77,7 +77,7 @@ func (self *Line2KvGenerator) generate(ch_req chan *fasthttp.Request, payload st
 	log.Println("generators done")
 }
 
-func (self *Line2KvGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
+func (self *Line2KvGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)

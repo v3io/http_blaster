@@ -24,7 +24,7 @@ type RestoreGenerator struct {
 	re_name          *regexp.Regexp
 	re_collection_id *regexp.Regexp
 	re_remove_items  *regexp.Regexp
-	emd_attrs        []string
+	emd_ignore_attrs []string
 }
 
 type BackupItem struct {
@@ -88,7 +88,7 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 						item_name := i["__name"]["S"]
 						collection_id := i["__collection_id"]["N"]
 						dir_name := collection_ids[collection_id]
-						for _, attr := range self.emd_attrs {
+						for _, attr := range self.emd_ignore_attrs {
 							delete(i, attr)
 						}
 
@@ -168,16 +168,18 @@ func (self *RestoreGenerator) line_reader() chan []byte {
 	return ch_lines
 }
 
-func (self *RestoreGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
+func (self *RestoreGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
 	ch_req := make(chan *fasthttp.Request, 100000)
 
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
 	}
-	self.emd_attrs = []string{`__name`, `__size`, `__atime_secs`, `__mtime_secs`, `__ctime_secs`, `__atime_nsecs`,
-		`__mtime_nsecs`, `__ctime_nsecs`, `__inode_number`, `__obj_type`, `__collection_id`,
-		`__tiny_low`, `__tiny_high`, `__uid`, `__gid`, `__mode`}
+	//self.emd_attrs = []string{`__name`, `__size`, `__atime_secs`, `__mtime_secs`, `__ctime_secs`, `__atime_nsecs`,
+	//	`__mtime_nsecs`, `__ctime_nsecs`, `__inode_number`, `__obj_type`, `__collection_id`,
+	//	`__tiny_low`, `__tiny_high`, `__uid`, `__gid`, `__mode`}
+	self.emd_ignore_attrs = global.IgnoreAttrs
+
 	self.workload.Header["X-v3io-function"] = "PutItem"
 
 	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)

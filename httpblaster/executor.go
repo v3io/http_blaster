@@ -48,6 +48,7 @@ type executor_result struct {
 type Executor struct {
 	connections           int32
 	Workload              config.Workload
+	Global 		      config.Global
 	Host                  string
 	Port                  string
 	TLS_mode              bool
@@ -85,7 +86,7 @@ func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
-	ch_req := req_gen.GenerateRequests(self.Workload, self.TLS_mode, self.Host)
+	ch_req := req_gen.GenerateRequests(self.Global, self.Workload, self.TLS_mode, self.Host)
 	return ch_req, release_req
 }
 
