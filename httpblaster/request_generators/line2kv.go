@@ -3,9 +3,9 @@ package request_generators
 import (
 	"bufio"
 	"fmt"
-	"github.com/nu7hatch/gouuid"
+	//"github.com/nu7hatch/gouuid"
 	"github.com/v3io/http_blaster/httpblaster/config"
-	"github.com/v3io/http_blaster/httpblaster/igz_data"
+	//"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"github.com/valyala/fasthttp"
 	"io"
 	"log"
@@ -15,34 +15,31 @@ import (
 	"sync"
 )
 
-type Line2StreamGenerator struct {
+type Line2KvGenerator struct {
 	RequestCommon
 	workload config.Workload
 }
 
-func (self *Line2StreamGenerator) UseCommon(c RequestCommon) {
+func (self *Line2KvGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *Line2StreamGenerator) generate_request(ch_records chan string,
+func (self *Line2KvGenerator) generate_request(ch_records chan []string,
 	ch_req chan *fasthttp.Request,
 	host string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var contentType string = "application/json"
-	u, _ := uuid.NewV4()
 	for r := range ch_records {
-		sr := igz_data.NewStreamRecord("client", r, u.String(), 0, true)
-		r := igz_data.NewStreamRecords(sr)
 		req := self.PrepareRequest(contentType, self.workload.Header, "PUT",
-			self.base_uri, r.ToJsonString(), host)
+			r[0], r[1], host)
+		//panic(fmt.Sprintf("%+v",r))
 		ch_req <- req
 	}
 	log.Println("generate_request Done")
 }
 
-func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload string, host string) {
+func (self *Line2KvGenerator) generate(ch_req chan *fasthttp.Request, payload string, host string) {
 	defer close(ch_req)
-	var ch_records chan string = make(chan string)
+	var ch_records chan []string = make(chan []string)
 	wg := sync.WaitGroup{}
 	ch_files := self.FilesScan(self.workload.Payload)
 
@@ -56,11 +53,13 @@ func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payloa
 			reader := bufio.NewReader(file)
 			var i int = 0
 			for {
-				line, err := reader.ReadString('\n')
-				if err == nil {
-					ch_records <- strings.TrimSpace(line)
+				address, addr_err := reader.ReadString('\n')
+				payload, payload_err := reader.ReadString('\n')
+
+				if addr_err == nil && payload_err == nil {
+					ch_records <- []string{strings.TrimSpace(address), string(payload)}
 					i++
-				} else if err == io.EOF {
+				} else if addr_err == io.EOF || payload_err == io.EOF {
 					break
 				} else {
 					log.Fatal(err)
@@ -78,12 +77,12 @@ func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payloa
 	log.Println("generators done")
 }
 
-func (self *Line2StreamGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
+func (self *Line2KvGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
 	}
-	self.workload.Header["X-v3io-function"] = "PutRecords"
+	self.workload.Header["X-v3io-function"] = "PutItem"
 
 	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
 
