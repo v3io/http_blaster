@@ -13,8 +13,8 @@ const (
 	LINE2STREAM = "line2stream"
 	CSV2KV      = "csv2kv"
 	JSON2KV     = "json2kv"
-	LINE2KV	    = "line2kv"
-	RESTORE	    = "restore"
+	LINE2KV     = "line2kv"
+	RESTORE     = "restore"
 )
 
 type RequestCommon struct {
@@ -22,7 +22,7 @@ type RequestCommon struct {
 	base_uri string
 }
 
-var(
+var (
 	contentType string = "application/json"
 )
 
@@ -44,11 +44,10 @@ func (self *RequestCommon) PrepareRequest(content_type string,
 	return req
 }
 
-
 func (self *RequestCommon) PrepareRequestBytes(content_type string,
-						header_args map[string]string,
-						method string, uri string,
-						body []byte, host string) *fasthttp.Request {
+	header_args map[string]string,
+	method string, uri string,
+	body []byte, host string) *fasthttp.Request {
 	req := fasthttp.AcquireRequest()
 
 	req.Header.SetContentType(content_type)
@@ -62,7 +61,6 @@ func (self *RequestCommon) PrepareRequestBytes(content_type string,
 	req.AppendBody(body)
 	return req
 }
-
 
 func (self *RequestCommon) SubmitFiles(path string, info os.FileInfo, err error) error {
 	log.Print(path)

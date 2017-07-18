@@ -56,10 +56,10 @@ func (self *Line2KvGenerator) generate(ch_req chan *fasthttp.Request, payload st
 				address, addr_err := reader.ReadString('\n')
 				payload, payload_err := reader.ReadString('\n')
 
-				if addr_err == nil && payload_err == nil{
-					ch_records <- []string {strings.TrimSpace(address), string(payload)}
+				if addr_err == nil && payload_err == nil {
+					ch_records <- []string{strings.TrimSpace(address), string(payload)}
 					i++
-				} else if addr_err == io.EOF || payload_err  == io.EOF{
+				} else if addr_err == io.EOF || payload_err == io.EOF {
 					break
 				} else {
 					log.Fatal(err)
