@@ -85,7 +85,7 @@ func start_cpu_profile() {
 			log.Fatal(err)
 		}
 		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
+		//defer pprof.StopCPUProfile()
 	}
 }
 

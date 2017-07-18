@@ -14,6 +14,7 @@ const (
 	CSV2KV      = "csv2kv"
 	JSON2KV     = "json2kv"
 	LINE2KV	    = "line2kv"
+	RESTORE	    = "restore"
 )
 
 type RequestCommon struct {
@@ -21,26 +22,47 @@ type RequestCommon struct {
 	base_uri string
 }
 
+var(
+	contentType string = "application/json"
+)
+
 func (self *RequestCommon) PrepareRequest(content_type string,
 	header_args map[string]string,
 	method string, uri string,
 	body string, host string) *fasthttp.Request {
 	req := fasthttp.AcquireRequest()
 
-	header := fasthttp.RequestHeader{}
-	header.SetContentType(content_type)
-
-	header.SetMethod(method)
-	header.SetRequestURI(uri)
-	header.SetHost(host)
-
+	req.Header.SetContentType(content_type)
+	req.Header.SetMethod(method)
+	req.Header.SetRequestURI(uri)
+	req.Header.SetHost(host)
 	for k, v := range header_args {
-		header.Set(k, v)
+		req.Header.Set(k, v)
 	}
+
 	req.AppendBodyString(body)
-	header.CopyTo(&req.Header)
 	return req
 }
+
+
+func (self *RequestCommon) PrepareRequestBytes(content_type string,
+						header_args map[string]string,
+						method string, uri string,
+						body []byte, host string) *fasthttp.Request {
+	req := fasthttp.AcquireRequest()
+
+	req.Header.SetContentType(content_type)
+	req.Header.SetMethod(method)
+	req.Header.SetRequestURI(uri)
+	req.Header.SetHost(host)
+	for k, v := range header_args {
+		req.Header.Set(k, v)
+	}
+
+	req.AppendBody(body)
+	return req
+}
+
 
 func (self *RequestCommon) SubmitFiles(path string, info os.FileInfo, err error) error {
 	log.Print(path)

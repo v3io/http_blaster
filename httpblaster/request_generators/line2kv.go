@@ -15,9 +15,6 @@ import (
 	"sync"
 )
 
-var(
-	contentType string = "application/json"
-)
 type Line2KvGenerator struct {
 	RequestCommon
 	workload config.Workload
