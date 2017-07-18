@@ -3,9 +3,7 @@ package request_generators
 import (
 	"bufio"
 	"fmt"
-	//"github.com/nu7hatch/gouuid"
 	"github.com/v3io/http_blaster/httpblaster/config"
-	//"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"github.com/valyala/fasthttp"
 	"io"
 	"log"
@@ -14,9 +12,6 @@ import (
 	"regexp"
 	"io/ioutil"
 	"errors"
-	//"runtime"
-	//"runtime"
-	//"encoding/json"
 	"bytes"
 	"github.com/json-iterator/go"
 )
@@ -36,7 +31,7 @@ type RestoreGenerator struct {
 
 
 type BackupItem struct {
-	Payload []byte //string
+	Payload []byte
 	Uri string
 
 }
