@@ -78,7 +78,7 @@ func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payloa
 	log.Println("generators done")
 }
 
-func (self *Line2StreamGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
+func (self *Line2StreamGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
