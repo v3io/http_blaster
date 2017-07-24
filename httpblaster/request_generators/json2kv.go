@@ -56,13 +56,13 @@ func (self *Json2KV) generate(ch_req chan *fasthttp.Request, payload string, hos
 	for f := range ch_files {
 		if file, err := os.Open(f); err == nil {
 			reader := bufio.NewReader(file)
-			var line_count int=0
+			var line_count int = 0
 			for {
 				line, err := reader.ReadBytes('\n')
 				if err == nil {
 					ch_records <- line
 					line_count++
-					if line_count % 1024 == 0{
+					if line_count%1024 == 0 {
 						log.Printf("line: %d from file %s was submitted", line_count, f)
 					}
 				} else if err == io.EOF {

@@ -50,7 +50,7 @@ type Executor struct {
 	Workload              config.Workload
 	Global                config.Global
 	Host                  string
-	Hosts 		      []string
+	Hosts                 []string
 	Port                  string
 	TLS_mode              bool
 	results               executor_result
@@ -107,7 +107,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		if len(self.Hosts) > 0 {
 			server_id := (i) % len(self.Hosts)
 			host_address = self.Hosts[server_id]
-		}else{
+		} else {
 			host_address = self.Host
 		}
 
