@@ -35,7 +35,6 @@ func (self *CSV2StreamGenerator) generate_request(ch_records chan string,
 	ch_req chan *fasthttp.Request,
 	host string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var contentType string = "application/json"
 	u, _ := uuid.NewV4()
 	for r := range ch_records {
 		columns := strings.Split(r, self.workload.Separator)
