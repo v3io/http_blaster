@@ -50,6 +50,7 @@ type Executor struct {
 	Workload              config.Workload
 	Global                config.Global
 	Host                  string
+	Hosts 		      []string
 	Port                  string
 	TLS_mode              bool
 	results               executor_result
@@ -102,7 +103,15 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	ch_req, release_req_flag := self.load_request_generator()
 
 	for i := 0; i < self.Workload.Workers; i++ {
-		server := fmt.Sprintf("%s:%s", self.Host, self.Port)
+		var host_address string
+		if len(self.Hosts) > 0 {
+			server_id := (i) % len(self.Hosts)
+			host_address = self.Hosts[server_id]
+		}else{
+			host_address = self.Host
+		}
+
+		server := fmt.Sprintf("%s:%s", host_address, self.Port)
 		w := NewWorker(server, self.TLS_mode, self.Workload.Lazy)
 		self.workers = append(self.workers, w)
 		go w.run_worker(ch_req, &workers_wg, release_req_flag)
