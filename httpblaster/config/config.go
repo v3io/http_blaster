@@ -60,26 +60,29 @@ type Global struct {
 	Port                  string
 	TLSMode               bool
 	StatusCodesAcceptance map[string]float64
-	IgnoreAttrs		[]string
+	IgnoreAttrs           []string
 }
 
 type Workload struct {
-	Name       string
-	Container  string
-	Target     string
-	Type       string
-	Duration   duration
-	Count      int
-	Workers    int
-	Id         int32
-	Header     map[string]string
-	Payload    string
-	FileIndex  int
-	FilesCount int
-	Random     bool
-	Generator  string
-	Schema     string
-	Lazy       int
+	Name        string
+	Container   string
+	Target      string
+	Type        string
+	Duration    duration
+	Count       int
+	Workers     int
+	Id          int32
+	Header      map[string]string
+	Payload     string
+	FileIndex   int
+	FilesCount  int
+	Random      bool
+	Generator   string
+	Schema      string
+	Lazy        int
+	ShardCount  uint32
+	ShardColumn uint32
+	Separator   string
 }
 
 func LoadConfig(file_path string) (TomlConfig, error) {

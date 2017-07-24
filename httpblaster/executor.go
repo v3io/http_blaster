@@ -48,7 +48,7 @@ type executor_result struct {
 type Executor struct {
 	connections           int32
 	Workload              config.Workload
-	Global 		      config.Global
+	Global                config.Global
 	Host                  string
 	Port                  string
 	TLS_mode              bool
@@ -82,6 +82,9 @@ func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
 		break
 	case request_generators.RESTORE:
 		req_gen = &request_generators.RestoreGenerator{}
+		break
+	case request_generators.CSV2STREAM:
+		req_gen = &request_generators.CSV2StreamGenerator{}
 		break
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
