@@ -56,6 +56,7 @@ type TomlConfig struct {
 type Global struct {
 	Duration              duration
 	Block_size            int32
+	Servers               []string
 	Server                string
 	Port                  string
 	TLSMode               bool
@@ -71,7 +72,7 @@ type Workload struct {
 	Duration    duration
 	Count       int
 	Workers     int
-	Id          int32
+	Id          int
 	Header      map[string]string
 	Payload     string
 	FileIndex   int

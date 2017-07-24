@@ -60,7 +60,7 @@ func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payloa
 				if err == nil {
 					ch_records <- strings.TrimSpace(line)
 					line_count++
-					if line_count % 1024 == 0{
+					if line_count%1024 == 0 {
 						log.Printf("line: %d from file %s was submitted", line_count, f)
 					}
 				} else if err == io.EOF {
