@@ -83,6 +83,9 @@ func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
 	case request_generators.RESTORE:
 		req_gen = &request_generators.RestoreGenerator{}
 		break
+	case request_generators.CSV2STREAM:
+		req_gen = &request_generators.CSV2StreamGenerator{}
+		break
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
