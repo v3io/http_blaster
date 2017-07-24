@@ -49,7 +49,7 @@ func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl conf
 		}
 	}()
 
-	ch_req := make(chan *fasthttp.Request, 1000)
+	ch_req := make(chan *fasthttp.Request, 100000)
 	go func() {
 		if self.workload.FileIndex == 0 && self.workload.FilesCount == 0 {
 			self.single_file_submitter(ch_req, req, done)
@@ -92,7 +92,7 @@ LOOP:
 }
 
 func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, random bool) chan string {
-	ch := make(chan string, 1000)
+	ch := make(chan string, 100000)
 	go func() {
 		if random {
 			for {

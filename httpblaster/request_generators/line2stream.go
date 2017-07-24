@@ -42,7 +42,7 @@ func (self *Line2StreamGenerator) generate_request(ch_records chan string,
 
 func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload string, host string) {
 	defer close(ch_req)
-	var ch_records chan string = make(chan string)
+	var ch_records chan string = make(chan string, 10000)
 	wg := sync.WaitGroup{}
 	ch_files := self.FilesScan(self.workload.Payload)
 
@@ -54,12 +54,15 @@ func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payloa
 	for f := range ch_files {
 		if file, err := os.Open(f); err == nil {
 			reader := bufio.NewReader(file)
-			var i int = 0
+			var line_count int = 0
 			for {
 				line, err := reader.ReadString('\n')
 				if err == nil {
 					ch_records <- strings.TrimSpace(line)
-					i++
+					line_count++
+					if line_count % 1024 == 0{
+						log.Printf("line: %d from file %s was submitted", line_count, f)
+					}
 				} else if err == io.EOF {
 					break
 				} else {
@@ -67,7 +70,7 @@ func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payloa
 				}
 			}
 
-			log.Println(fmt.Sprintf("Finish file scaning, generated %d records", i))
+			log.Println(fmt.Sprintf("Finish file scaning, generated %d records", line_count))
 		} else {
 			panic(err)
 		}
