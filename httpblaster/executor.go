@@ -48,7 +48,7 @@ type executor_result struct {
 type Executor struct {
 	connections           int32
 	Workload              config.Workload
-	Global 		      config.Global
+	Global                config.Global
 	Host                  string
 	Port                  string
 	TLS_mode              bool

@@ -20,6 +20,9 @@ TLSMode=false
    workers=100
    lazy=10
    payload="examples/payloads/order-book-sample.csv"
+   shardCount=3
+   shardColumn=2
+   Separator="|"
 
 
 
