@@ -81,6 +81,7 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 					var items_j items_s
 					err := jsoniter.Unmarshal(line, &items_j)
 					if err != nil {
+						log.Println("Unable to Unmarshal line:", line)
 						panic(err)
 					}
 					items := items_j.Items
@@ -94,6 +95,7 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 
 						j, e := jsoniter.Marshal(i)
 						if e != nil {
+							log.Println("Unable to Marshal json:", i)
 							panic(e)
 						}
 						var payload bytes.Buffer
