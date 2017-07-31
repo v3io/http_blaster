@@ -59,6 +59,7 @@ type Global struct {
 	Servers               []string
 	Server                string
 	Port                  string
+	PemFile		      string
 	TLSMode               bool
 	StatusCodesAcceptance map[string]float64
 	RetryOnStatusCodes    []int

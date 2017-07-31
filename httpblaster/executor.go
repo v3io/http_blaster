@@ -121,7 +121,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 
 		server := fmt.Sprintf("%s:%s", host_address, self.Globals.Port)
 		w := NewWorker(server, self.Globals.TLSMode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
-			self.Globals.RetryCount)
+			self.Globals.RetryCount, self.Globals.PemFile)
 		self.workers = append(self.workers, w)
 		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag)
 	}

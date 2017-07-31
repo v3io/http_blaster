@@ -30,6 +30,10 @@ import (
 	"net"
 	"sync"
 	"time"
+	"encoding/pem"
+	"crypto/x509"
+	"os"
+	"io/ioutil"
 )
 
 const DialTimeout = 60 * time.Second
@@ -51,6 +55,7 @@ type worker struct {
 	connection_restarts uint32
 	error_count         uint32
 	is_tls_client       bool
+	pem_file	    string
 	br                  *bufio.Reader
 	bw                  *bufio.Writer
 	ch_duration         chan time.Duration
@@ -100,22 +105,55 @@ func (w *worker) send_request(req *request_generators.Request) (error, time.Dura
 
 func (w *worker) open_connection() {
 	conn, err := fasthttp.DialTimeout(w.host, DialTimeout)
-	//conn.SetReadDeadline(time.Now().Add(time.Second*30))
-	//conn.SetWriteDeadline(time.Now().Add(time.Second*30))
 	if err != nil {
 		panic(err)
 		log.Printf("open connection error: %s\n", err)
 	}
 	if w.is_tls_client {
-		conf := &tls.Config{
-			InsecureSkipVerify: true,
-		}
-		w.conn = tls.Client(conn, conf)
-	} else {
+		w.conn = w.open_secure_connection(conn)
+	}else{
 		w.conn = conn
 	}
 	w.br = bufio.NewReaderSize(w.conn, 1024*1024)
 	w.bw = bufio.NewWriter(w.conn)
+}
+
+func (w *worker) open_secure_connection(conn net.Conn) *tls.Conn{
+	var conf *tls.Config
+	if w.pem_file != "" {
+		var pem_data []byte
+		fp, err := os.Open(w.pem_file)
+		if err != nil {
+			panic(err)
+		} else {
+			defer fp.Close()
+			pem_data, err = ioutil.ReadAll(fp)
+			if err != nil {
+				panic(err)
+			}
+		}
+		block, _ := pem.Decode([]byte (pem_data))
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			panic(err)
+			log.Fatal(err)
+		}
+		clientCertPool := x509.NewCertPool()
+		clientCertPool.AddCert(cert)
+
+		conf = &tls.Config{
+			ServerName: w.host,
+			ClientAuth: tls.RequireAndVerifyClientCert,
+			InsecureSkipVerify: true,
+			ClientCAs: clientCertPool,
+		}
+	}else{
+		conf = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
+	c := tls.Client(conn, conf)
+	return c
 }
 
 func (w *worker) close_connection() {
@@ -195,7 +233,7 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 	}
 }
 
-func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retury_count int) *worker {
+func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retury_count int, pem_file string) *worker {
 	if host == "" {
 		return nil
 	}
@@ -208,7 +246,7 @@ func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retury
 		retury_count = 1
 	}
 	worker := worker{host: host, is_tls_client: tls_client, retry_codes:retry_codes_map,
-		retry_count:retury_count}
+		retry_count:retury_count, pem_file:pem_file}
 	worker.results.codes = make(map[int]uint64)
 	worker.open_connection()
 	worker.ch_duration = make(chan time.Duration, 1)
