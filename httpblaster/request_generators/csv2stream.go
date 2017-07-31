@@ -6,34 +6,41 @@ import (
 	"github.com/nu7hatch/gouuid"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
+	"hash/fnv"
 	"io"
 	"log"
 	"os"
 	"runtime"
 	"strings"
 	"sync"
-	"time"
 )
 
-type StreamGetGenerator struct {
+type CSV2StreamGenerator struct {
 	RequestCommon
 	workload config.Workload
 }
 
-func (self *StreamGetGenerator) UseCommon(c RequestCommon) {
+func (self *CSV2StreamGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *StreamGetGenerator) generate_request(ch_records chan string,
-ch_req chan *Request,
-host string, wg *sync.WaitGroup) {
+func (self *CSV2StreamGenerator) Hash32(line string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(line))
+	return h.Sum32()
+}
+
+func (self *CSV2StreamGenerator) generate_request(ch_records chan string,
+	ch_req chan *Request,
+	host string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var contentType string = "application/json"
 	u, _ := uuid.NewV4()
 	for r := range ch_records {
-		sr := igz_data.NewStreamRecord("client", r, u.String(), 0, true)
+		columns := strings.Split(r, self.workload.Separator)
+		shard_id := self.Hash32(columns[self.workload.ShardColumn]) % self.workload.ShardCount
+		sr := igz_data.NewStreamRecord("client", r, u.String(), int(shard_id), true)
 		r := igz_data.NewStreamRecords(sr)
-		req := AcquireRequest()
+		req:=AcquireRequest()
 		self.PrepareRequest(contentType, self.workload.Header, "PUT",
 			self.base_uri, r.ToJsonString(), host, req.Request)
 		ch_req <- req
@@ -41,7 +48,7 @@ host string, wg *sync.WaitGroup) {
 	log.Println("generate_request Done")
 }
 
-func (self *StreamGetGenerator) generate(ch_req chan *Request, payload string, host string) {
+func (self *CSV2StreamGenerator) generate(ch_req chan *Request, payload string, host string) {
 	defer close(ch_req)
 	var ch_records chan string = make(chan string)
 	wg := sync.WaitGroup{}
@@ -79,28 +86,7 @@ func (self *StreamGetGenerator) generate(ch_req chan *Request, payload string, h
 	log.Println("generators done")
 }
 
-func (self *StreamGetGenerator) NextLocationFromResponse (response *Response)interface {}{
-	return 0
-}
-
-func (self *StreamGetGenerator) Consumer(return_ch chan *Response) chan interface{}{
-	ch_location := make(chan interface{}, 1000)
-	go func() {
-		for {
-			select {
-			case response := <-return_ch:
-				loc := self.NextLocationFromResponse(response)
-				ch_location <- loc
-			case <-time.After(time.Second*30):
-				log.Println("didn't get location for more then 30 seconds, exit now")
-				return
-			}
-		}
-	}()
-	return ch_location
-}
-
-func (self *StreamGetGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
+func (self *CSV2StreamGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
 	self.workload = wl
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)

@@ -3,7 +3,7 @@ title = "Workload example"
 [global]
     block_size = 5
     Duration = "160s"
-    server="192.168.206.10"
+    server="127.0.0.1"
     port="8081"
     TLSMode=false
     RetryOnStatusCodes=[400, 405]
@@ -23,6 +23,10 @@ title = "Workload example"
         workers=100
         lazy=10
         payload="examples/payloads/order-book-sample.csv"
+        shardCount=3
+        shardColumn=2
+        Separator="|"
+
 
 
 

@@ -73,8 +73,8 @@ func init() {
 	flag.BoolVar(&enable_log, "d", default_log_file, "enable stdout to log")
 }
 
-func get_workload_id() int32 {
-	return atomic.AddInt32(&wl_id, 1)
+func get_workload_id() int {
+	return int(atomic.AddInt32(&wl_id, 1))
 }
 
 func start_cpu_profile() {
@@ -122,7 +122,7 @@ func load_test_Config() {
 		log.Fatalln("Failed to parse config file")
 	}
 	log.Printf("Running test on %s:%s, tls mode=%v, block size=%d, test timeout %v",
-		cfg.Global.Server, cfg.Global.Port, cfg.Global.TLSMode,
+		cfg.Global.Servers, cfg.Global.Port, cfg.Global.TLSMode,
 		cfg.Global.Block_size, cfg.Global.Duration)
 	dataBfr = make([]byte, cfg.Global.Block_size, cfg.Global.Block_size)
 	for i, _ := range dataBfr {
@@ -135,10 +135,14 @@ func generate_executors() {
 	for Name, workload := range cfg.Workloads {
 		log.Println("Adding executor for ", Name)
 		workload.Id = get_workload_id()
-		e := &httpblaster.Executor{Workload: workload,
-			Data_bfr: dataBfr,
-			Globals:cfg.Global,
-		}
+
+		e := &httpblaster.Executor{
+			Globals: cfg.Global,
+			Workload: workload,
+			Host: cfg.Global.Server,
+			Hosts: cfg.Global.Servers,
+			TLS_mode: cfg.Global.TLSMode,
+			Data_bfr: dataBfr}
 		executors = append(executors, e)
 	}
 }

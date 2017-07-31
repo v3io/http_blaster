@@ -41,7 +41,7 @@ func (self *Csv2KV) generate_request(ch_records chan []string, ch_req chan *Requ
 
 func (self *Csv2KV) generate(ch_req chan *Request, payload string, host string) {
 	defer close(ch_req)
-	var ch_records chan []string = make(chan []string)
+	var ch_records chan []string = make(chan []string, 1000)
 	parser := igz_data.EmdSchemaParser{}
 	e := parser.LoadSchema(self.workload.Schema)
 	if e != nil {
@@ -57,14 +57,14 @@ func (self *Csv2KV) generate(ch_req chan *Request, payload string, host string) 
 	ch_files := self.FilesScan(self.workload.Payload)
 
 	for f := range ch_files {
-		f, err := os.Open(f)
+		fp, err := os.Open(f)
 		if err != nil {
 			panic(err)
 		}
 
-		r := csv.NewReader(f)
+		r := csv.NewReader(fp)
 		r.Comma = parser.JsonSchema.Settings.Separator.Rune
-
+		var line_count = 0
 		for {
 			record, err := r.Read()
 			if err != nil {
@@ -78,18 +78,21 @@ func (self *Csv2KV) generate(ch_req chan *Request, payload string, host string) 
 				log.Println("Skipping scv header ", strings.Join(record[:], ","))
 			} else {
 				ch_records <- record
+				line_count++
+				if line_count%1024 == 0 {
+					log.Printf("line: %d from file %s was submitted", line_count, f)
+				}
 			}
 		}
-		f.Close()
+		fp.Close()
 	}
 
 	close(ch_records)
 	wg.Wait()
 }
 
-func (self *Csv2KV) GenerateRequests(wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
+func (self *Csv2KV) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
 	self.workload = wl
-	//panic(fmt.Sprintf("workload key [%s] workload key sep [%s]", wl.KeyFormat, string(wl.KeyFormatSep.Rune)))
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
 	}

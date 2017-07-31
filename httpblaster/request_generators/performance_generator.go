@@ -21,7 +21,7 @@ func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
+func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
 	self.workload = wl
 	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
 	var contentType string = "text/html"
@@ -51,7 +51,7 @@ func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode 
 		}
 	}()
 
-	ch_req := make(chan *Request, 1000)
+	ch_req := make(chan *Request, 10000)
 
 	go func() {
 		if self.workload.FileIndex == 0 && self.workload.FilesCount == 0 {
@@ -65,8 +65,6 @@ func (self *PerformanceGenerator) GenerateRequests(wl config.Workload, tls_mode 
 
 func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *Request {
 	new_req := AcquireRequest()
-
-	//new_req := fasthttp.AcquireRequest()
 	req.Header.CopyTo(&new_req.Request.Header)
 	new_req.Request.AppendBody(req.Body())
 	return new_req
@@ -97,7 +95,7 @@ LOOP:
 }
 
 func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, random bool) chan string {
-	ch := make(chan string, 1000)
+	ch := make(chan string, 100000)
 	go func() {
 		if random {
 			for {

@@ -48,18 +48,22 @@ type Executor struct {
 	connections           int32
 	Workload              config.Workload
 	Globals               config.Global
-	host                  string
-	port                  string
-	tls_mode              bool
+	//host                  string
+	//port                  string
+	//tls_mode              bool
+	Host                  string
+	Hosts                 []string
+	//Port                  string
+	TLS_mode              bool
 	results               executor_result
 	workers               []*worker
 	Start_time            time.Time
-	statusCodesAcceptance map[string]float64
 	Data_bfr              []byte
 }
 
 
-func (self *Executor) load_request_generator() (chan *request_generators.Request, bool, chan *request_generators.Response) {
+func (self *Executor) load_request_generator() (chan *request_generators.Request,
+	bool, chan *request_generators.Response) {
 	var req_gen request_generators.Generator
 	var release_req bool = true
 	var ch_response chan *request_generators.Response = nil
@@ -79,13 +83,22 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	case request_generators.JSON2KV:
 		req_gen = &request_generators.Json2KV{}
 		break
+	case request_generators.LINE2KV:
+		req_gen = &request_generators.Line2KvGenerator{}
+		break
+	case request_generators.RESTORE:
+		req_gen = &request_generators.RestoreGenerator{}
+		break
+	case request_generators.CSV2STREAM:
+		req_gen = &request_generators.CSV2StreamGenerator{}
+		break
 	case request_generators.STREAM_GET:
 		req_gen = &request_generators.StreamGetGenerator{}
 		ch_response = make(chan *request_generators.Response)
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
-	ch_req := req_gen.GenerateRequests(self.Workload, self.tls_mode, self.host, nil)
+	ch_req := req_gen.GenerateRequests(self.Globals, self.Workload, self.TLS_mode, self.Host, nil)
 	return ch_req, release_req, ch_response
 }
 
@@ -98,9 +111,17 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	ch_req, release_req_flag, ch_response := self.load_request_generator()
 
 	for i := 0; i < self.Workload.Workers; i++ {
-		server := fmt.Sprintf("%s:%s", self.host, self.port)
-		w := NewWorker(server, self.tls_mode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
-		self.Globals.RetryCount)
+		var host_address string
+		if len(self.Hosts) > 0 {
+			server_id := (i) % len(self.Hosts)
+			host_address = self.Hosts[server_id]
+		} else {
+			host_address = self.Host
+		}
+
+		server := fmt.Sprintf("%s:%s", host_address, self.Globals.Port)
+		w := NewWorker(server, self.Globals.TLSMode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
+			self.Globals.RetryCount)
 		self.workers = append(self.workers, w)
 		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag)
 	}
@@ -143,10 +164,10 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 
 func (self *Executor) Start(wg *sync.WaitGroup) error {
 	self.results.Statuses = make(map[int]uint64)
-	self.host = self.Globals.Server
-	self.port = self.Globals.Port
-	self.tls_mode = self.Globals.TLSMode
-	self.statusCodesAcceptance = self.Globals.StatusCodesAcceptance
+	//self.host = self.Globals.Server
+	//self.port = self.Globals.Port
+	//self.tls_mode = self.Globals.TLSMode
+	//self.Globals.StatusCodesAcceptance = self.Globals.StatusCodesAcceptance
 	log.Println("at executor start ", self.Workload)
 	go func() {
 		self.run(wg)
@@ -172,7 +193,7 @@ func (self *Executor) Report() (executor_result, error) {
 
 	log.Println("iops: ", self.results.Iops)
 	for err_code, err_count := range self.results.Statuses {
-		if max_errors, ok := self.statusCodesAcceptance[strconv.Itoa(err_code)]; ok {
+		if max_errors, ok := self.Globals.StatusCodesAcceptance[strconv.Itoa(err_code)]; ok {
 			if self.results.Total > 0 && err_count > 0 {
 				err_percent := (float64(err_count) * float64(100)) / float64(self.results.Total)
 				log.Printf("status code %d occured %f%% during the test \"%s\"",

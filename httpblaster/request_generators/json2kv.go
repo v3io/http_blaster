@@ -44,7 +44,7 @@ func (self *Json2KV) generate_request(ch_records chan []byte, ch_req chan *Reque
 
 func (self *Json2KV) generate(ch_req chan *Request, payload string, host string) {
 	defer close(ch_req)
-	var ch_records chan []byte = make(chan []byte)
+	var ch_records chan []byte = make(chan []byte, 10000)
 
 	wg := sync.WaitGroup{}
 	wg.Add(runtime.NumCPU())
@@ -56,12 +56,15 @@ func (self *Json2KV) generate(ch_req chan *Request, payload string, host string)
 	for f := range ch_files {
 		if file, err := os.Open(f); err == nil {
 			reader := bufio.NewReader(file)
-			var i int = 0
+			var line_count int = 0
 			for {
 				line, err := reader.ReadBytes('\n')
 				if err == nil {
 					ch_records <- line
-					i++
+					line_count++
+					if line_count%1024 == 0 {
+						log.Printf("line: %d from file %s was submitted", line_count, f)
+					}
 				} else if err == io.EOF {
 					break
 				} else {
@@ -69,7 +72,7 @@ func (self *Json2KV) generate(ch_req chan *Request, payload string, host string)
 				}
 			}
 
-			log.Println(fmt.Sprintf("Finish file scaning, generated %d records", i))
+			log.Println(fmt.Sprintf("Finish file scaning, generated %d records", line_count))
 		} else {
 			panic(err)
 		}
@@ -78,9 +81,8 @@ func (self *Json2KV) generate(ch_req chan *Request, payload string, host string)
 	wg.Wait()
 }
 
-func (self *Json2KV) GenerateRequests(wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
+func (self *Json2KV) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response) chan *Request {
 	self.workload = wl
-	//panic(fmt.Sprintf("workload key [%s] workload key sep [%s]", wl.KeyFormat, string(wl.KeyFormatSep.Rune)))
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
 	}
