@@ -3,7 +3,8 @@ title = "Workload get example"
 [global]
 block_size = 5
 Duration = "160s"
-server="29mbw8bh6b.execute-api.us-east-1.amazonaws.com"
+servers=["29mbw8bh6b.execute-api.us-east-1.amazonaws.com", "29mbw8bh6b.execute-api.us-east-1.amazonaws.com1", "127.0.0.1"]
+#server="29mbw8bh6b.execute-api.us-east-1.amazonaws.com"
 port="443"
 TLSMode=true
 PemFile="client.pem"
