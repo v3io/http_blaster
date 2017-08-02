@@ -31,9 +31,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
 	"github.com/v3io/http_blaster/httpblaster"
 	"github.com/v3io/http_blaster/httpblaster/config"
+	"github.com/v3io/http_blaster/httpblaster/tui"
 )
 
 var (
@@ -51,6 +51,7 @@ var (
 	ex_group     sync.WaitGroup
 	enable_log   bool
 	log_file     *os.File
+	enable_ui    bool
 )
 
 const AppVersion = "2.0.0"
@@ -63,6 +64,9 @@ func init() {
 		usage_results_file   = "results file path"
 		default_results_file = "example.results"
 		default_log_file     = true
+		usage_enable_ui      = "enable terminal ui"
+		default_enable_ui    = false
+
 	)
 	flag.StringVar(&conf_file, "conf", default_conf, usage_conf)
 	flag.StringVar(&conf_file, "c", default_conf, usage_conf+" (shorthand)")
@@ -71,6 +75,7 @@ func init() {
 	flag.BoolVar(&cpu_profile, "p", false, "write cpu profile to file")
 	flag.BoolVar(&mem_profile, "m", false, "write mem profile to file")
 	flag.BoolVar(&enable_log, "d", default_log_file, "enable stdout to log")
+	flag.BoolVar(&enable_ui, "u", default_enable_ui, usage_enable_ui)
 }
 
 func get_workload_id() int {
@@ -343,6 +348,12 @@ func main() {
 
 	start_cpu_profile()
 	load_test_Config()
+	if enable_ui{
+		term_ui:= &tui.Term_ui{}
+		term_ui.Init_term_ui(&cfg)
+		defer term_ui.Terminate_ui()
+
+	}
 	generate_executors()
 	start_executors()
 	wait_for_completion()
