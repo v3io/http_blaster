@@ -165,6 +165,7 @@ func (w *worker) run_worker(ch_req chan *fasthttp.Request, wg *sync.WaitGroup, r
 			fasthttp.ReleaseRequest(req)
 		}
 	}
+	w.close_connection()
 }
 
 func NewWorker(host string, tls_client bool, lazy int) *worker {
