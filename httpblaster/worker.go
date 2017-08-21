@@ -174,6 +174,7 @@ func NewWorker(host string, tls_client bool, lazy int) *worker {
 	}
 	worker := worker{host: host, is_tls_client: tls_client}
 	worker.results.codes = make(map[int]uint64)
+	worker.results.min = time.Duration(time.Second * 10)
 	worker.open_connection()
 	worker.ch_duration = make(chan time.Duration, 1)
 	worker.ch_error = make(chan error, 1)
