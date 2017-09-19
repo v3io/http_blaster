@@ -127,6 +127,7 @@ func (w *worker) restart_connection() {
 
 func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	timeout time.Duration) (error, time.Duration) {
+	req.SetHost(w.host)
 	var err error
 	go func() {
 		start := time.Now()
