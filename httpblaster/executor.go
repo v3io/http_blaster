@@ -43,6 +43,7 @@ type executor_result struct {
 	Statuses    map[int]uint64
 	Errors      map[string]int
 	ErrorsCount uint32
+	ConRestarts uint32
 }
 
 type Executor struct {
@@ -125,6 +126,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	self.results.Iops = 0
 
 	for _, w := range self.workers {
+		self.results.ConRestarts += w.connection_restarts
 		self.results.ErrorsCount += w.error_count
 
 		self.results.Total += w.results.count
@@ -172,6 +174,7 @@ func (self *Executor) Report() (executor_result, error) {
 	log.Println("Min: ", self.results.Min)
 	log.Println("Max: ", self.results.Max)
 	log.Println("Avg: ", self.results.Avg)
+	log.Println("Connection Restarts: ", self.results.ConRestarts)
 	log.Println("Error Count: ", self.results.ErrorsCount)
 	log.Println("Statuses: ")
 	for k, v := range self.results.Statuses {

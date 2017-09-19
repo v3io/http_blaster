@@ -127,6 +127,7 @@ func (w *worker) restart_connection() {
 
 func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	timeout time.Duration) (error, time.Duration) {
+	req.SetHost(w.host)
 	var err error
 	go func() {
 		start := time.Now()
@@ -174,6 +175,7 @@ func NewWorker(host string, tls_client bool, lazy int) *worker {
 	}
 	worker := worker{host: host, is_tls_client: tls_client}
 	worker.results.codes = make(map[int]uint64)
+	worker.results.min = time.Duration(time.Second * 10)
 	worker.open_connection()
 	worker.ch_duration = make(chan time.Duration, 1)
 	worker.ch_error = make(chan error, 1)
