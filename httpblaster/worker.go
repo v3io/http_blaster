@@ -73,7 +73,6 @@ func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
 	if err == nil {
 		code = response.StatusCode()
 		w.results.codes[code]++
-
 		w.results.count++
 		if duration < w.results.min {
 			w.results.min = duration
@@ -127,7 +126,6 @@ func (w *worker) restart_connection() {
 
 func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	timeout time.Duration) (error, time.Duration) {
-	req.SetHost(w.host)
 	var err error
 	go func() {
 		start := time.Now()

@@ -15,6 +15,7 @@ import (
 type PerformanceGenerator struct {
 	workload config.Workload
 	RequestCommon
+	Host string
 }
 
 func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
@@ -23,6 +24,7 @@ func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
 
 func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
 	self.workload = wl
+	self.Host = host
 	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
 	var contentType string = "text/html"
 	var payload []byte
@@ -69,9 +71,10 @@ func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *fasthttp
 
 func (self *PerformanceGenerator) single_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request, done chan struct{}) {
 
-	request := self.clone_request(req)
 	var generated int = 0
-LOOP:
+	request := self.clone_request(req)
+	request.SetHost(self.Host)
+	LOOP:
 	for {
 		select {
 		case <-done:

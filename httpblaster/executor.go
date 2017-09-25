@@ -91,7 +91,13 @@ func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
-	ch_req := req_gen.GenerateRequests(self.Global, self.Workload, self.TLS_mode, self.Host)
+	var host string
+	if len(self.Hosts)>0{
+		host = self.Hosts[0]
+	}else{
+		host = self.Host
+	}
+	ch_req := req_gen.GenerateRequests(self.Global, self.Workload, self.TLS_mode, host)
 	return ch_req, release_req
 }
 
