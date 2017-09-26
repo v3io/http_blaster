@@ -158,10 +158,28 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 
 func (w *worker) run_worker(ch_req chan *fasthttp.Request, wg *sync.WaitGroup, release_req bool) {
 	defer wg.Done()
+	var onceSetRequest sync.Once
+	var oncePrepare sync.Once
+	var request *fasthttp.Request
+	var submit_request fasthttp.Request
+
+	prepareRequest := func() {
+		request.Header.CopyTo(&submit_request.Header)
+		submit_request.AppendBody(request.Body())
+		submit_request.SetHost(w.host)
+	}
+
 	for req := range ch_req {
-		w.send_request(req)
 		if release_req {
+			req.SetHost(w.host)
+			w.send_request(req)
 			fasthttp.ReleaseRequest(req)
+		}else{
+			onceSetRequest.Do(func() {
+				request = req
+			})
+			oncePrepare.Do(prepareRequest)
+			w.send_request(&submit_request)
 		}
 	}
 	w.close_connection()
