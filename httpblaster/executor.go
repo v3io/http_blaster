@@ -68,7 +68,9 @@ func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
 	switch gen_type {
 	case request_generators.PERFORMANCE:
 		req_gen = &request_generators.PerformanceGenerator{}
-		release_req = false
+		if self.Workload.FilesCount == 0 {
+			release_req = false
+		}
 		break
 	case request_generators.LINE2STREAM:
 		req_gen = &request_generators.Line2StreamGenerator{}
