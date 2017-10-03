@@ -68,7 +68,7 @@ func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
 	if w.lazy_sleep > 0 {
 		time.Sleep(w.lazy_sleep)
 	}
-	err, duration := w.send(req, response, time.Second*60)
+	err, duration := w.send(req, response, time.Second*120)
 
 	if err == nil {
 		code = response.StatusCode()
