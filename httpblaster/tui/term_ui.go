@@ -5,7 +5,6 @@ import (
 	"runtime"
 	ui "github.com/gizak/termui"
 	"github.com/v3io/http_blaster/httpblaster/config"
-	"fmt"
 	"time"
 	"sync"
 )
@@ -252,8 +251,8 @@ func (self *Term_ui) Update_requests(duration time.Duration, put_count , get_cou
 	self.widget_put_iops_chart.Data = self.iops_put_fifo.Get()
 	self.widget_get_iops_chart.Data = self.iops_get_fifo.Get()
 	ui.Render(self.widget_put_iops_chart, self.widget_get_iops_chart)
-	self.logs_fifo.Insert(fmt.Sprintf("Put iops %v", put_iops))
-	self.logs_fifo.Insert(fmt.Sprintf("Get iops %v", get_iops))
+	//self.logs_fifo.Insert(fmt.Sprintf("Put iops %v", put_iops))
+	//self.logs_fifo.Insert(fmt.Sprintf("Get iops %v", get_iops))
 	self.widget_logs.Items = self.logs_fifo.Get()
 	//ui.Render(ui.Body)//ui.Render(self.widget_logs)
 }
@@ -328,4 +327,12 @@ func (self *Term_ui)Render()  {
 
 func (self *Term_ui)Terminate_ui(){
 	ui.Close()
+}
+func (self *Term_ui)Write(p []byte) (n int, err error){
+	if p == nil{
+		return 0, nil
+	}
+	self.logs_fifo.Insert(string(p))
+	return len(p), nil
+
 }

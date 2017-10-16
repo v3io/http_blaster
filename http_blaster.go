@@ -54,6 +54,7 @@ var (
 	enable_ui    		bool
 	LatencyCollector      	tui.LatencyCollector
 	StatusesCollector	tui.StatusesCollector
+	term_ui 		*tui.Term_ui
 )
 
 const AppVersion = "2.0.0"
@@ -317,7 +318,12 @@ func configure_log_to_file() {
 		if err != nil {
 			log.Fatalln("failed to open log file")
 		} else {
-			log_writers := io.MultiWriter(os.Stdout, log_file)
+			var log_writers io.Writer
+			if enable_ui{
+				log_writers = io.MultiWriter(log_file, term_ui)
+			}else{
+				log_writers = io.MultiWriter(os.Stdout, log_file)
+			}
 			log.SetOutput(log_writers)
 		}
 	}
@@ -346,25 +352,14 @@ func handle_exit() {
 
 func main() {
 	parse_cmd_line_args()
-	configure_log_to_file()
-	log.Println("Starting http_blaster")
-
-	defer handle_exit()
-	defer close_log_file()
-	defer stop_cpu_profile()
-	defer write_mem_profile()
-
-	start_cpu_profile()
-	load_test_Config()
-	term_ui:= &tui.Term_ui{}
 	ch_done := make (chan struct {})
+	term_ui = &tui.Term_ui{}
 	if enable_ui{
-		term_ui.Init_term_ui(&cfg)
-		defer term_ui.Terminate_ui()
 		go func() {
+			term_ui.Init_term_ui(&cfg)
 			tick := time.Tick(time.Millisecond*500)
 			for {
-				select {
+			select {
 				case <-tick:
 					term_ui.Update_latency_chart(LatencyCollector.Get())
 					term_ui.Update_status_codes(StatusesCollector.Get())
@@ -375,12 +370,28 @@ func main() {
 			}
 
 		}()
-
 	}
+	configure_log_to_file()
+	log.Println("Starting http_blaster")
+
+	defer handle_exit()
+	defer close_log_file()
+	defer stop_cpu_profile()
+	defer write_mem_profile()
+
+	start_cpu_profile()
+	load_test_Config()
 	generate_executors(term_ui)
 	start_executors()
 	wait_for_completion()
+	log.Println("Executors done!")
 	err_code := report()
+	time.Sleep(time.Second*2)
+	term_ui.Render()
+
 	close(ch_done)
+	time.Sleep(time.Second*3)
+	term_ui.Terminate_ui()
 	exit(err_code)
+
 }
