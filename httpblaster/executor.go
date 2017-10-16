@@ -29,6 +29,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/v3io/http_blaster/httpblaster/tui"
 )
 
 type executor_result struct {
@@ -59,6 +60,9 @@ type Executor struct {
 	workers               []*worker
 	Start_time            time.Time
 	Data_bfr              []byte
+	TermUi  	      *tui.Term_ui
+	Ch_latency 	      chan time.Duration
+	Ch_statuses	      chan int
 }
 
 
@@ -123,9 +127,34 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		w := NewWorker(server, self.Globals.TLSMode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
 			self.Globals.RetryCount, self.Globals.PemFile)
 		self.workers = append(self.workers, w)
-		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag)
+		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag, self.Ch_latency, self.Ch_statuses)
 	}
-	workers_wg.Wait()
+	ended := make(chan bool)
+	go func() {
+		workers_wg.Wait()
+		close(ended)
+	}()
+	tick := time.Tick(time.Millisecond*500)
+LOOP:
+	for {
+		select {
+		case <-ended:
+			break LOOP
+		case <- tick:
+			var put_req_count uint64 = 0
+			var get_req_count uint64 = 0
+			for _, w := range self.workers{
+				if w.results.method == `PUT` {
+					put_req_count += w.results.count
+				}else{
+					get_req_count += w.results.count
+				}
+			}
+			self.TermUi.Update_requests(time.Now().Sub(self.Start_time), put_req_count, get_req_count)
+		}
+	}
+
+
 	self.results.Duration = time.Now().Sub(self.Start_time)
 	self.results.Min = time.Duration(time.Second * 10)
 	self.results.Max = 0

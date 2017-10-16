@@ -37,21 +37,23 @@ import (
 )
 
 var (
-	start_time   time.Time
-	end_time     time.Time
-	wl_id        int32 = -1
-	conf_file    string
-	results_file string
-	showVersion  bool
-	dataBfr      []byte
-	cpu_profile  = false
-	mem_profile  = false
-	cfg          config.TomlConfig
-	executors    []*httpblaster.Executor
-	ex_group     sync.WaitGroup
-	enable_log   bool
-	log_file     *os.File
-	enable_ui    bool
+	start_time   		time.Time
+	end_time     		time.Time
+	wl_id        		int32 = -1
+	conf_file    		string
+	results_file 		string
+	showVersion  		bool
+	dataBfr      		[]byte
+	cpu_profile  		= false
+	mem_profile  		= false
+	cfg          		config.TomlConfig
+	executors    		[]*httpblaster.Executor
+	ex_group     		sync.WaitGroup
+	enable_log   		bool
+	log_file     		*os.File
+	enable_ui    		bool
+	LatencyCollector      	tui.LatencyCollector
+	StatusesCollector	tui.StatusesCollector
 )
 
 const AppVersion = "2.0.0"
@@ -136,7 +138,10 @@ func load_test_Config() {
 
 }
 
-func generate_executors() {
+func generate_executors(term_ui *tui.Term_ui) {
+	ch_latency :=  LatencyCollector.New(160,1)
+	ch_statuses := StatusesCollector.New(160,1)
+
 	for Name, workload := range cfg.Workloads {
 		log.Println("Adding executor for ", Name)
 		workload.Id = get_workload_id()
@@ -147,7 +152,10 @@ func generate_executors() {
 			Host: cfg.Global.Server,
 			Hosts: cfg.Global.Servers,
 			TLS_mode: cfg.Global.TLSMode,
-			Data_bfr: dataBfr}
+			Data_bfr: dataBfr,
+			TermUi:term_ui,
+			Ch_latency: ch_latency,
+			Ch_statuses: ch_statuses}
 		executors = append(executors, e)
 	}
 }
@@ -348,15 +356,31 @@ func main() {
 
 	start_cpu_profile()
 	load_test_Config()
+	term_ui:= &tui.Term_ui{}
+	ch_done := make (chan struct {})
 	if enable_ui{
-		term_ui:= &tui.Term_ui{}
 		term_ui.Init_term_ui(&cfg)
 		defer term_ui.Terminate_ui()
+		go func() {
+			tick := time.Tick(time.Millisecond*500)
+			for {
+				select {
+				case <-tick:
+					term_ui.Update_latency_chart(LatencyCollector.Get())
+					term_ui.Update_status_codes(StatusesCollector.Get())
+					term_ui.Render()
+				case <-ch_done:
+					return
+				}
+			}
+
+		}()
 
 	}
-	generate_executors()
+	generate_executors(term_ui)
 	start_executors()
 	wait_for_completion()
 	err_code := report()
+	close(ch_done)
 	exit(err_code)
 }

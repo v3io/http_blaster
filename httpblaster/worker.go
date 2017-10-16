@@ -46,6 +46,7 @@ type worker_results struct {
 	read  uint64
 	write uint64
 	codes map[int]uint64
+	method string
 }
 
 type worker struct {
@@ -201,21 +202,31 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 }
 
 
-func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request, wg *sync.WaitGroup, release_req bool) {
+func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
+				wg *sync.WaitGroup, release_req bool,
+				ch_latency chan time.Duration,
+				ch_statuses chan int) {
 	defer wg.Done()
-	for req := range ch_req {
+	var req_type sync.Once
 
+	for req := range ch_req {
+		req_type.Do(func() {
+			w.results.method = string(req.Request.Header.Method())
+		})
 		var response *request_generators.Response
 		var err error
 		LOOP:
 		for i := 0; i < w.retry_count; i++ {
-			err, _, response = w.send_request(req)
+			var d time.Duration
+			err, d, response = w.send_request(req)
 			if err != nil {
 				//retry on error
 				request_generators.ReleaseResponse(response)
 				continue
 			} else if _, ok := w.retry_codes[response.Response.StatusCode()]; !ok {
 				//not subject to retry
+				ch_statuses <- response.Response.StatusCode()
+				ch_latency <- d
 				break LOOP
 			} else if i + 1 < w.retry_count {
 				//not the last loop
