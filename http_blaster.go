@@ -51,6 +51,7 @@ var (
 	ex_group     sync.WaitGroup
 	enable_log   bool
 	log_file     *os.File
+	worker_qd    int = 10000
 )
 
 const AppVersion = "2.0.0"
@@ -63,6 +64,8 @@ func init() {
 		usage_results_file   = "results file path"
 		default_results_file = "example.results"
 		default_log_file     = true
+		default_worker_qd    = 10000
+		usage_worker_qd      = "queue depth for worker requests"
 	)
 	flag.StringVar(&conf_file, "conf", default_conf, usage_conf)
 	flag.StringVar(&conf_file, "c", default_conf, usage_conf+" (shorthand)")
@@ -71,6 +74,7 @@ func init() {
 	flag.BoolVar(&cpu_profile, "p", false, "write cpu profile to file")
 	flag.BoolVar(&mem_profile, "m", false, "write mem profile to file")
 	flag.BoolVar(&enable_log, "d", default_log_file, "enable stdout to log")
+	flag.IntVar(&worker_qd, "q", default_worker_qd, usage_worker_qd)
 }
 
 func get_workload_id() int {

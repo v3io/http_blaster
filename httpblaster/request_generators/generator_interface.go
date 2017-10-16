@@ -7,5 +7,5 @@ import (
 
 type Generator interface {
 	UseCommon(c RequestCommon)
-	GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request
+	GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, worker_qd int) chan *fasthttp.Request
 }

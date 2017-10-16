@@ -22,7 +22,7 @@ func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
+func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, worker_qd int) chan *fasthttp.Request {
 	self.workload = wl
 	self.Host = host
 	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
@@ -51,7 +51,7 @@ func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl conf
 		}
 	}()
 
-	ch_req := make(chan *fasthttp.Request, 1000)
+	ch_req := make(chan *fasthttp.Request, worker_qd)
 	go func() {
 		if self.workload.FileIndex == 0 && self.workload.FilesCount == 0 {
 			self.single_file_submitter(ch_req, req, done)
