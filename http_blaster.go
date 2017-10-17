@@ -352,22 +352,24 @@ func handle_exit() {
 
 func main() {
 	parse_cmd_line_args()
-	ch_done := make (chan struct {})
+	var ch_done chan struct{}
 	term_ui = &tui.Term_ui{}
 	if enable_ui{
+		ch_done = term_ui.Init_term_ui(&cfg)
 		go func() {
-			term_ui.Init_term_ui(&cfg)
+			defer term_ui.Terminate_ui()
 			tick := time.Tick(time.Millisecond*500)
 			for {
 			select {
+				case <-ch_done:
+					return
 				case <-tick:
 					term_ui.Update_latency_chart(LatencyCollector.Get())
 					term_ui.Update_status_codes(StatusesCollector.Get())
 					term_ui.Render()
-				case <-ch_done:
-					return
 				}
 			}
+
 
 		}()
 	}
@@ -386,12 +388,12 @@ func main() {
 	wait_for_completion()
 	log.Println("Executors done!")
 	err_code := report()
-	time.Sleep(time.Second*2)
-	term_ui.Render()
-
-	close(ch_done)
-	time.Sleep(time.Second*3)
-	term_ui.Terminate_ui()
+	select {
+	case <- ch_done:
+		break
+	case <- time.After(time.Second*10):
+		close(ch_done)
+		break
+	}
 	exit(err_code)
-
 }

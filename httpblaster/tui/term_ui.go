@@ -26,6 +26,7 @@ type Term_ui struct {
 	logs_fifo *StringsFifo
 	statuses map[int]uint64
 	M sync.RWMutex
+	ch_done chan struct{}
 }
 
 type StringsFifo struct {
@@ -89,6 +90,8 @@ func (self *Term_ui)ui_set_title(x,y,w,h int)  (ui.GridBufferer){
 	ui.Handle("/sys/kbd/q", func(ui.Event) {
 		// press q to quit
 		ui.StopLoop()
+		ui.Close()
+		close(self.ch_done)
 	})
 	ui.Render(ui_titile_par)
 	return ui_titile_par
@@ -254,24 +257,22 @@ func (self *Term_ui) Update_requests(duration time.Duration, put_count , get_cou
 	//self.logs_fifo.Insert(fmt.Sprintf("Put iops %v", put_iops))
 	//self.logs_fifo.Insert(fmt.Sprintf("Get iops %v", get_iops))
 	self.widget_logs.Items = self.logs_fifo.Get()
-	//ui.Render(ui.Body)//ui.Render(self.widget_logs)
 }
 
 func (self *Term_ui)Update_status_codes(labels []string, values []int){
 	self.widget_request_bar_chart.Data = values
 	self.widget_request_bar_chart.DataLabels = labels
-	//ui.Render(ui.Body)//ui.Render(self.widget_request_bar_chart)
 }
 
 
 func (self *Term_ui)Update_latency_chart(labels []string, values []int){
 	self.widget_latency.Data = values
 	self.widget_latency.DataLabels = labels
-	//ui.Render(ui.Body)//ui.Render(self.widget_request_bar_chart)
 }
 
-func (self *Term_ui)Init_term_ui(cfg *config.TomlConfig){
+func (self *Term_ui)Init_term_ui(cfg *config.TomlConfig) chan struct{}{
 	self.cfg = cfg
+	self.ch_done = make(chan struct{})
 	self.iops_get_fifo = &Float64Fifo{}
 	self.iops_get_fifo.Init(150)
 	self.iops_put_fifo = &Float64Fifo{}
@@ -319,6 +320,7 @@ func (self *Term_ui)Init_term_ui(cfg *config.TomlConfig){
 	ui.Body.Align()
 	ui.Render(ui.Body)
 	go ui.Loop()
+	return self.ch_done
 }
 
 func (self *Term_ui)Render()  {
@@ -326,6 +328,7 @@ func (self *Term_ui)Render()  {
 }
 
 func (self *Term_ui)Terminate_ui(){
+	ui.StopLoop()
 	ui.Close()
 }
 func (self *Term_ui)Write(p []byte) (n int, err error){
@@ -333,6 +336,9 @@ func (self *Term_ui)Write(p []byte) (n int, err error){
 		return 0, nil
 	}
 	self.logs_fifo.Insert(string(p))
+	if self.widget_logs != nil {
+		self.widget_logs.Items = self.logs_fifo.Get()
+	}
 	return len(p), nil
 
 }
