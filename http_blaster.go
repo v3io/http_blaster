@@ -352,6 +352,7 @@ func handle_exit() {
 
 func main() {
 	parse_cmd_line_args()
+	load_test_Config()
 	var ch_done chan struct{}
 	term_ui = &tui.Term_ui{}
 	if enable_ui{
@@ -382,7 +383,6 @@ func main() {
 	defer write_mem_profile()
 
 	start_cpu_profile()
-	load_test_Config()
 	generate_executors(term_ui)
 	start_executors()
 	wait_for_completion()
