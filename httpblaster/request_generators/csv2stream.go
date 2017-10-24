@@ -86,7 +86,7 @@ func (self *CSV2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload
 	log.Println("generators done")
 }
 
-func (self *CSV2StreamGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
+func (self *CSV2StreamGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, worker_qd int) chan *fasthttp.Request {
 	self.workload = wl
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
@@ -95,7 +95,7 @@ func (self *CSV2StreamGenerator) GenerateRequests(global config.Global, wl confi
 
 	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
 
-	ch_req := make(chan *fasthttp.Request, 1000)
+	ch_req := make(chan *fasthttp.Request, worker_qd)
 
 	go self.generate(ch_req, self.workload.Payload, host)
 

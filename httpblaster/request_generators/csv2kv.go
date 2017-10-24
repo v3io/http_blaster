@@ -91,7 +91,7 @@ func (self *Csv2KV) generate(ch_req chan *fasthttp.Request, payload string, host
 	wg.Wait()
 }
 
-func (self *Csv2KV) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
+func (self *Csv2KV) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, worker_qd int) chan *fasthttp.Request {
 	self.workload = wl
 	//panic(fmt.Sprintf("workload key [%s] workload key sep [%s]", wl.KeyFormat, string(wl.KeyFormatSep.Rune)))
 	if self.workload.Header == nil {
@@ -100,7 +100,7 @@ func (self *Csv2KV) GenerateRequests(global config.Global, wl config.Workload, t
 	self.workload.Header["X-v3io-function"] = "PutItem"
 	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
 
-	ch_req := make(chan *fasthttp.Request, 1000)
+	ch_req := make(chan *fasthttp.Request, worker_qd)
 
 	go self.generate(ch_req, self.workload.Payload, host)
 

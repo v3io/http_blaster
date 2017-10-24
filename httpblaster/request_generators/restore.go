@@ -170,9 +170,9 @@ func (self *RestoreGenerator) line_reader() chan []byte {
 	return ch_lines
 }
 
-func (self *RestoreGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string) chan *fasthttp.Request {
+func (self *RestoreGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, worker_qd int) chan *fasthttp.Request {
 	self.workload = wl
-	ch_req := make(chan *fasthttp.Request, 100000)
+	ch_req := make(chan *fasthttp.Request, worker_qd)
 
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)

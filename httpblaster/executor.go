@@ -59,6 +59,7 @@ type Executor struct {
 	Start_time            time.Time
 	StatusCodesAcceptance map[string]float64
 	Data_bfr              []byte
+	WorkerQd 	      int
 }
 
 func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
@@ -99,7 +100,7 @@ func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
 	}else{
 		host = self.Host
 	}
-	ch_req := req_gen.GenerateRequests(self.Global, self.Workload, self.TLS_mode, host)
+	ch_req := req_gen.GenerateRequests(self.Global, self.Workload, self.TLS_mode, host, self.WorkerQd)
 	return ch_req, release_req
 }
 
