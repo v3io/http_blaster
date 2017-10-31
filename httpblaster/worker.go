@@ -133,12 +133,15 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 			log.Printf("send write error: %s\n", err)
 			log.Println(fmt.Sprintf("%+v", req))
 			w.ch_error <- err
+			return
 		} else if err = w.bw.Flush(); err != nil {
 			log.Printf("send flush error: %s\n", err)
 			w.ch_error <- err
+			return
 		} else if err = resp.Read(w.br); err != nil {
 			log.Printf("send read error: %s\n", err)
 			w.ch_error <- err
+			return
 		}
 		end := time.Now()
 		w.ch_duration <- end.Sub(start)
