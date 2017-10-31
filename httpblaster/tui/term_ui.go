@@ -19,7 +19,8 @@ type Term_ui struct {
 	widget_logs  *ui.List
 	widget_progress  ui.GridBufferer
 	widget_request_bar_chart  *ui.BarChart
-	widget_latency  *ui.BarChart
+	widget_put_latency  *ui.BarChart
+	widget_get_latency  *ui.BarChart
 
 	iops_get_fifo *Float64Fifo
 	iops_put_fifo *Float64Fifo
@@ -139,7 +140,7 @@ func (self *Term_ui)ui_set_system_info(x,y,w,h int) (ui.GridBufferer){
 	table1.Y = y
 	table1.X = x
 	table1.Width = w
-	table1.Height = h
+	table1.Height = 7
 	table1.BorderLabel = "Syetem Info"
 	return table1
 }
@@ -188,22 +189,41 @@ func (self *Term_ui)ui_set_requests_bar_chart(x,y,w,h int)  (*ui.BarChart) {
 }
 
 
-func (self *Term_ui)ui_set_latency_bar_chart(x,y,w,h int)  (*ui.BarChart) {
+func (self *Term_ui)ui_set_put_latency_bar_chart(x,y,w,h int)  (*ui.BarChart) {
 	bc := ui.NewBarChart()
 	bc.BarGap=3
 	bc.BarWidth=8
 	data := []int{}
 	bclabels := []string{}
-	bc.BorderLabel = "Latency ms"
+	bc.BorderLabel = "put Latency ms"
 	bc.Data = data
 	bc.Width = 50
-	bc.Height = h
+	bc.Height = 16
 	bc.DataLabels = bclabels
 	bc.TextColor = ui.ColorGreen
 	bc.BarColor = ui.ColorGreen
 	bc.NumColor = ui.ColorYellow
 	return bc
 }
+
+
+func (self *Term_ui)ui_set_get_latency_bar_chart(x,y,w,h int)  (*ui.BarChart) {
+	bc := ui.NewBarChart()
+	bc.BarGap=3
+	bc.BarWidth=8
+	data := []int{}
+	bclabels := []string{}
+	bc.BorderLabel = "get Latency ms"
+	bc.Data = data
+	bc.Width = 50
+	bc.Height = 16
+	bc.DataLabels = bclabels
+	bc.TextColor = ui.ColorGreen
+	bc.BarColor = ui.ColorGreen
+	bc.NumColor = ui.ColorYellow
+	return bc
+}
+
 
 
 
@@ -214,8 +234,8 @@ func (self *Term_ui)ui_get_iops(x,y,w,h int)  (*ui.LineChart) {
 
 	lc2.Width = 77
 	lc2.Height = 16
-	lc2.X = x
-	lc2.Y = 12
+	lc2.X = 0
+	lc2.Y = 0
 	lc2.AxesColor = ui.ColorWhite
 	lc2.LineColor = ui.ColorCyan | ui.AttrBold
 	lc2.Data = self.iops_get_fifo.Get()
@@ -230,8 +250,8 @@ func (self *Term_ui)ui_put_iops(x,y,w,h int) (*ui.LineChart){
 	lc2.Data = self.iops_put_fifo.Get()
 	lc2.Width = 77
 	lc2.Height = 16
-	lc2.X = x
-	lc2.Y = 12
+	lc2.X = 0
+	lc2.Y = 0
 	lc2.AxesColor = ui.ColorWhite
 	lc2.LineColor = ui.ColorCyan | ui.AttrBold
 	return lc2
@@ -253,7 +273,7 @@ func (self *Term_ui) Update_requests(duration time.Duration, put_count , get_cou
 	}
 	self.widget_put_iops_chart.Data = self.iops_put_fifo.Get()
 	self.widget_get_iops_chart.Data = self.iops_get_fifo.Get()
-	ui.Render(self.widget_put_iops_chart, self.widget_get_iops_chart)
+	//ui.Render(self.widget_put_iops_chart, self.widget_get_iops_chart)
 	//self.logs_fifo.Insert(fmt.Sprintf("Put iops %v", put_iops))
 	//self.logs_fifo.Insert(fmt.Sprintf("Get iops %v", get_iops))
 	self.widget_logs.Items = self.logs_fifo.Get()
@@ -264,10 +284,14 @@ func (self *Term_ui)Update_status_codes(labels []string, values []int){
 	self.widget_request_bar_chart.DataLabels = labels
 }
 
+func (self *Term_ui)Update_put_latency_chart(labels []string, values []int){
+	self.widget_put_latency.Data = values
+	self.widget_put_latency.DataLabels = labels
+}
 
-func (self *Term_ui)Update_latency_chart(labels []string, values []int){
-	self.widget_latency.Data = values
-	self.widget_latency.DataLabels = labels
+func (self *Term_ui)Update_get_latency_chart(labels []string, values []int){
+	self.widget_get_latency.Data = values
+	self.widget_get_latency.DataLabels = labels
 }
 
 func (self *Term_ui)Init_term_ui(cfg *config.TomlConfig) chan struct{}{
@@ -286,13 +310,14 @@ func (self *Term_ui)Init_term_ui(cfg *config.TomlConfig) chan struct{}{
 	}
 
 	self.widget_title = self.ui_set_title(0,0,128,3)
-	self.widget_sys_info = self.ui_set_system_info(0,0,0,5)
-	self.widget_server_info = self.ui_set_servers_info(0,0,0,5)
-	self.widget_put_iops_chart = self.ui_put_iops(78,0,0,0)
+	self.widget_sys_info = self.ui_set_system_info(0,0,0,0)
+	self.widget_server_info = self.ui_set_servers_info(0,0,0,0)
+	self.widget_put_iops_chart = self.ui_put_iops(0,0,0,0)
 	self.widget_get_iops_chart = self.ui_get_iops(0,0,0,0)
-	self.widget_logs = self.ui_set_log_list(0, 0, 155,30)
-	self.widget_request_bar_chart = self.ui_set_requests_bar_chart(0,0,0,16)
-	self.widget_latency = self.ui_set_latency_bar_chart(0,0,0,30)
+	self.widget_put_latency = self.ui_set_put_latency_bar_chart(0,0,0,0)
+	self.widget_get_latency = self.ui_set_get_latency_bar_chart(0,0,0,0)
+	self.widget_request_bar_chart = self.ui_set_requests_bar_chart(0,0,0,20)
+	self.widget_logs = self.ui_set_log_list(0, 0, 0,20)
 	//self.widget_progress = self.ui_set_progress(0, 0, 155, 3)
 
 	ui.Body.AddRows(
@@ -304,13 +329,16 @@ func (self *Term_ui)Init_term_ui(cfg *config.TomlConfig) chan struct{}{
 			ui.NewCol(6,0, self.widget_server_info),
 		),
 		ui.NewRow(
-			ui.NewCol(4,0, self.widget_put_iops_chart),
-			ui.NewCol(4,0, self.widget_get_iops_chart),
-			ui.NewCol(4,0, self.widget_request_bar_chart),
+			ui.NewCol(6,0, self.widget_put_iops_chart),
+			ui.NewCol(6,0, self.widget_put_latency),
+		),
+		ui.NewRow(
+			ui.NewCol(6,0, self.widget_get_iops_chart),
+			ui.NewCol(6,0, self.widget_get_latency),
 		),
 		ui.NewRow(
 			ui.NewCol(6,0, self.widget_logs),
-			ui.NewCol(6,0, self.widget_latency),
+			ui.NewCol(6,0, self.widget_request_bar_chart),
 		),
 		//ui.NewRow(
 		//	ui.NewCol(12,0, self.widget_progress),

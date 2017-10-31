@@ -52,7 +52,8 @@ var (
 	enable_log   		bool
 	log_file     		*os.File
 	enable_ui    		bool
-	LatencyCollector      	tui.LatencyCollector
+	LatencyCollectorGet    	tui.LatencyCollector
+	LatencyCollectorPut    	tui.LatencyCollector
 	StatusesCollector	tui.StatusesCollector
 	term_ui 		*tui.Term_ui
 )
@@ -140,7 +141,8 @@ func load_test_Config() {
 }
 
 func generate_executors(term_ui *tui.Term_ui) {
-	ch_latency :=  LatencyCollector.New(160,1)
+	ch_put_latency :=  LatencyCollectorPut.New(160,1)
+	ch_get_latency :=  LatencyCollectorGet.New(160,1)
 	ch_statuses := StatusesCollector.New(160,1)
 
 	for Name, workload := range cfg.Workloads {
@@ -155,7 +157,8 @@ func generate_executors(term_ui *tui.Term_ui) {
 			TLS_mode: cfg.Global.TLSMode,
 			Data_bfr: dataBfr,
 			TermUi:term_ui,
-			Ch_latency: ch_latency,
+			Ch_get_latency: ch_get_latency,
+			Ch_put_latency: ch_put_latency,
 			Ch_statuses: ch_statuses}
 		executors = append(executors, e)
 	}
@@ -365,7 +368,8 @@ func main() {
 				case <-ch_done:
 					return
 				case <-tick:
-					term_ui.Update_latency_chart(LatencyCollector.Get())
+					term_ui.Update_put_latency_chart(LatencyCollectorPut.Get())
+					term_ui.Update_get_latency_chart(LatencyCollectorGet.Get())
 					term_ui.Update_status_codes(StatusesCollector.Get())
 					term_ui.Render()
 				}

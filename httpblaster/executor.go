@@ -61,7 +61,8 @@ type Executor struct {
 	Start_time            time.Time
 	Data_bfr              []byte
 	TermUi  	      *tui.Term_ui
-	Ch_latency 	      chan time.Duration
+	Ch_get_latency 	      chan time.Duration
+	Ch_put_latency	      chan time.Duration
 	Ch_statuses	      chan int
 }
 
@@ -127,7 +128,14 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		w := NewWorker(server, self.Globals.TLSMode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
 			self.Globals.RetryCount, self.Globals.PemFile)
 		self.workers = append(self.workers, w)
-		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag, self.Ch_latency, self.Ch_statuses)
+		var ch_latency chan time.Duration
+		if self.Workload.Type == "GET"{
+			ch_latency = self.Ch_get_latency
+		}else{
+			ch_latency = self.Ch_put_latency
+		}
+
+		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag, ch_latency, self.Ch_statuses)
 	}
 	ended := make(chan bool)
 	go func() {
