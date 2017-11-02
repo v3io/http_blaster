@@ -34,22 +34,36 @@ type StringsFifo struct {
 	string
 	Length int
 	Items []string
+	ch_messages chan string
+	lock sync.Mutex
 }
 
 func (self *StringsFifo)Init(length int){
 	self.Length = length
-	self.Items = make([]string, 10)
+	self.Items = make([]string, length)
+	self.ch_messages = make(chan string, 100)
+	go func() {
+		for msg := range self.ch_messages{
+			func() {
+				self.lock.Lock()
+				defer self.lock.Unlock()
+				if len(self.Items) < self.Length {
+					self.Items = append(self.Items, msg)
+				} else {
+					self.Items = self.Items[1:]
+					self.Items = append(self.Items, msg)
+				}
+			}()
+		}
+	}()
 }
 
 func (self *StringsFifo)Insert(msg string){
-	if len(self.Items) < self.Length{
-		self.Items = append(self.Items, msg)
-	}else{
-		self.Items = self.Items[1:]
-		self.Items = append(self.Items, msg)
-	}
+	self.ch_messages <- msg
 }
 func(self *StringsFifo)Get()[]string{
+	self.lock.Lock()
+	defer self.lock.Unlock()
 	return self.Items
 }
 
@@ -259,7 +273,12 @@ func (self *Term_ui) Update_requests(duration time.Duration, put_count , get_cou
 	}
 	self.widget_put_iops_chart.Data = self.iops_put_fifo.Get()
 	self.widget_get_iops_chart.Data = self.iops_get_fifo.Get()
+
+}
+
+func (self *Term_ui)Refresh_log()  {
 	self.widget_logs.Items = self.logs_fifo.Get()
+	ui.Render(self.widget_logs)
 }
 
 func (self *Term_ui)Update_status_codes(labels []string, values []int){
@@ -289,7 +308,7 @@ func (self *Term_ui)Init_term_ui(cfg *config.TomlConfig) chan struct{}{
 	self.iops_put_fifo = &Float64Fifo{}
 	self.iops_put_fifo.Init(150)
 	self.logs_fifo = &StringsFifo{}
-	self.logs_fifo.Init(30)
+	self.logs_fifo.Init(10)
 	self.statuses = make(map[int]uint64)
 	err := ui.Init()
 	if err != nil {
@@ -352,5 +371,6 @@ func (self *Term_ui)Write(p []byte) (n int, err error){
 	if self.widget_logs != nil {
 		self.widget_logs.Items = self.logs_fifo.Get()
 	}
+	ui.Render(self.widget_logs)
 	return len(p), nil
 }
