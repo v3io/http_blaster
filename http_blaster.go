@@ -357,8 +357,8 @@ func main() {
 	parse_cmd_line_args()
 	load_test_Config()
 	var ch_done chan struct{}
-	term_ui = &tui.Term_ui{}
 	if enable_ui{
+		term_ui = &tui.Term_ui{}
 		ch_done = term_ui.Init_term_ui(&cfg)
 		go func() {
 			defer term_ui.Terminate_ui()
@@ -392,12 +392,14 @@ func main() {
 	wait_for_completion()
 	log.Println("Executors done!")
 	err_code := report()
-	select {
-	case <- ch_done:
-		break
-	case <- time.After(time.Second*10):
-		close(ch_done)
-		break
+	if enable_ui {
+		select {
+		case <-ch_done:
+			break
+		case <-time.After(time.Second * 10):
+			close(ch_done)
+			break
+		}
 	}
 	exit(err_code)
 }

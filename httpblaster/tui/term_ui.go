@@ -81,10 +81,10 @@ func(self *Float64Fifo)Get()[]float64{
 
 func (self *Term_ui)ui_set_title(x,y,w,h int)  (ui.GridBufferer){
 	ui_titile_par := ui.NewPar("Running " +self.cfg.Title + " : PRESS q TO QUIT")
-	ui_titile_par.Height = 3
+	ui_titile_par.Height = h
 	ui_titile_par.X = x
 	ui_titile_par.Y = y
-	ui_titile_par.Width = 50
+	ui_titile_par.Width = w
 	ui_titile_par.TextFgColor = ui.ColorWhite
 	ui_titile_par.BorderLabel = "Title"
 	ui_titile_par.BorderFg = ui.ColorCyan
@@ -140,7 +140,7 @@ func (self *Term_ui)ui_set_system_info(x,y,w,h int) (ui.GridBufferer){
 	table1.Y = y
 	table1.X = x
 	table1.Width = w
-	table1.Height = 7
+	table1.Height = h
 	table1.BorderLabel = "Syetem Info"
 	return table1
 }
@@ -157,20 +157,6 @@ func (self *Term_ui)ui_set_log_list(x,y,w,h int) (*ui.List){
 	return list
 }
 
-func (self *Term_ui)ui_set_progress(x,y,w,h int)  (ui.GridBufferer){
-	g := ui.NewGauge()
-	g.Percent = 50
-	g.Width = w
-	g.Height = h
-	g.Y = y
-	g.X = x
-	g.BorderLabel = "Progress"
-	g.BarColor = ui.ColorRed
-	g.BorderFg = ui.ColorWhite
-	g.BorderLabelFg = ui.ColorCyan
-	return g
-}
-
 func (self *Term_ui)ui_set_requests_bar_chart(x,y,w,h int)  (*ui.BarChart) {
 	bc := ui.NewBarChart()
 	bc.BarGap=3
@@ -179,7 +165,7 @@ func (self *Term_ui)ui_set_requests_bar_chart(x,y,w,h int)  (*ui.BarChart) {
 	bclabels := []string{}
 	bc.BorderLabel = "Status codes"
 	bc.Data = data
-	bc.Width = 50
+	bc.Width = w
 	bc.Height = h
 	bc.DataLabels = bclabels
 	bc.TextColor = ui.ColorGreen
@@ -197,8 +183,8 @@ func (self *Term_ui)ui_set_put_latency_bar_chart(x,y,w,h int)  (*ui.BarChart) {
 	bclabels := []string{}
 	bc.BorderLabel = "put Latency ms"
 	bc.Data = data
-	bc.Width = 50
-	bc.Height = 16
+	bc.Width = w
+	bc.Height = h
 	bc.DataLabels = bclabels
 	bc.TextColor = ui.ColorGreen
 	bc.BarColor = ui.ColorGreen
@@ -215,8 +201,8 @@ func (self *Term_ui)ui_set_get_latency_bar_chart(x,y,w,h int)  (*ui.BarChart) {
 	bclabels := []string{}
 	bc.BorderLabel = "get Latency ms"
 	bc.Data = data
-	bc.Width = 50
-	bc.Height = 16
+	bc.Width = w
+	bc.Height = h
 	bc.DataLabels = bclabels
 	bc.TextColor = ui.ColorGreen
 	bc.BarColor = ui.ColorGreen
@@ -232,10 +218,10 @@ func (self *Term_ui)ui_get_iops(x,y,w,h int)  (*ui.LineChart) {
 	lc2.BorderLabel = "Get iops chart"
 	lc2.Mode = "braille"
 
-	lc2.Width = 77
-	lc2.Height = 16
-	lc2.X = 0
-	lc2.Y = 0
+	lc2.Width = w
+	lc2.Height = h
+	lc2.X = x
+	lc2.Y = y
 	lc2.AxesColor = ui.ColorWhite
 	lc2.LineColor = ui.ColorCyan | ui.AttrBold
 	lc2.Data = self.iops_get_fifo.Get()
@@ -248,10 +234,10 @@ func (self *Term_ui)ui_put_iops(x,y,w,h int) (*ui.LineChart){
 	lc2.BorderLabel = "Put iops chart"
 	lc2.Mode = "braille"
 	lc2.Data = self.iops_put_fifo.Get()
-	lc2.Width = 77
-	lc2.Height = 16
-	lc2.X = 0
-	lc2.Y = 0
+	lc2.Width = w
+	lc2.Height = h
+	lc2.X = x
+	lc2.Y = y
 	lc2.AxesColor = ui.ColorWhite
 	lc2.LineColor = ui.ColorCyan | ui.AttrBold
 	return lc2
@@ -273,9 +259,6 @@ func (self *Term_ui) Update_requests(duration time.Duration, put_count , get_cou
 	}
 	self.widget_put_iops_chart.Data = self.iops_put_fifo.Get()
 	self.widget_get_iops_chart.Data = self.iops_get_fifo.Get()
-	//ui.Render(self.widget_put_iops_chart, self.widget_get_iops_chart)
-	//self.logs_fifo.Insert(fmt.Sprintf("Put iops %v", put_iops))
-	//self.logs_fifo.Insert(fmt.Sprintf("Get iops %v", get_iops))
 	self.widget_logs.Items = self.logs_fifo.Get()
 }
 
@@ -294,6 +277,10 @@ func (self *Term_ui)Update_get_latency_chart(labels []string, values []int){
 	self.widget_get_latency.DataLabels = labels
 }
 
+func Percentage(value, total int) int {
+	return value*total/100
+}
+
 func (self *Term_ui)Init_term_ui(cfg *config.TomlConfig) chan struct{}{
 	self.cfg = cfg
 	self.ch_done = make(chan struct{})
@@ -308,17 +295,17 @@ func (self *Term_ui)Init_term_ui(cfg *config.TomlConfig) chan struct{}{
 	if err != nil {
 		panic(err)
 	}
+	term_hight := ui.TermHeight()
 
-	self.widget_title = self.ui_set_title(0,0,128,3)
-	self.widget_sys_info = self.ui_set_system_info(0,0,0,0)
+	self.widget_title = self.ui_set_title(0,0,50,Percentage(7, term_hight))
 	self.widget_server_info = self.ui_set_servers_info(0,0,0,0)
-	self.widget_put_iops_chart = self.ui_put_iops(0,0,0,0)
-	self.widget_get_iops_chart = self.ui_get_iops(0,0,0,0)
-	self.widget_put_latency = self.ui_set_put_latency_bar_chart(0,0,0,0)
-	self.widget_get_latency = self.ui_set_get_latency_bar_chart(0,0,0,0)
-	self.widget_request_bar_chart = self.ui_set_requests_bar_chart(0,0,0,20)
-	self.widget_logs = self.ui_set_log_list(0, 0, 0,20)
-	//self.widget_progress = self.ui_set_progress(0, 0, 155, 3)
+	self.widget_sys_info = self.ui_set_system_info(0,0,0,self.widget_server_info.GetHeight())
+	self.widget_put_iops_chart = self.ui_put_iops(0,0,0,Percentage(30, term_hight))
+	self.widget_get_iops_chart = self.ui_get_iops(0,0,0,Percentage(30, term_hight))
+	self.widget_put_latency = self.ui_set_put_latency_bar_chart(0,0,0,Percentage(30, term_hight))
+	self.widget_get_latency = self.ui_set_get_latency_bar_chart(0,0,0,Percentage(30, term_hight))
+	self.widget_request_bar_chart = self.ui_set_requests_bar_chart(0,0,0,Percentage(20, term_hight))
+	self.widget_logs = self.ui_set_log_list(0, 0, 0,Percentage(20, term_hight))
 
 	ui.Body.AddRows(
 		ui.NewRow(
@@ -340,9 +327,6 @@ func (self *Term_ui)Init_term_ui(cfg *config.TomlConfig) chan struct{}{
 			ui.NewCol(6,0, self.widget_logs),
 			ui.NewCol(6,0, self.widget_request_bar_chart),
 		),
-		//ui.NewRow(
-		//	ui.NewCol(12,0, self.widget_progress),
-		//),
 	)
 
 	ui.Body.Align()
@@ -359,6 +343,7 @@ func (self *Term_ui)Terminate_ui(){
 	ui.StopLoop()
 	ui.Close()
 }
+
 func (self *Term_ui)Write(p []byte) (n int, err error){
 	if p == nil{
 		return 0, nil
@@ -368,5 +353,4 @@ func (self *Term_ui)Write(p []byte) (n int, err error){
 		self.widget_logs.Items = self.logs_fifo.Get()
 	}
 	return len(p), nil
-
 }

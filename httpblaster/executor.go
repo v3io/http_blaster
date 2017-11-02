@@ -148,17 +148,19 @@ LOOP:
 		select {
 		case <-ended:
 			break LOOP
-		case <- tick:
-			var put_req_count uint64 = 0
-			var get_req_count uint64 = 0
-			for _, w := range self.workers{
-				if w.results.method == `PUT` {
-					put_req_count += w.results.count
-				}else{
-					get_req_count += w.results.count
+		case <-tick:
+			if self.TermUi != nil {
+				var put_req_count uint64 = 0
+				var get_req_count uint64 = 0
+				for _, w := range self.workers {
+					if w.results.method == `PUT` {
+						put_req_count += w.results.count
+					} else {
+						get_req_count += w.results.count
+					}
 				}
+				self.TermUi.Update_requests(time.Now().Sub(self.Start_time), put_req_count, get_req_count)
 			}
-			self.TermUi.Update_requests(time.Now().Sub(self.Start_time), put_req_count, get_req_count)
 		}
 	}
 
