@@ -172,10 +172,13 @@ func start_executors() {
 	}
 }
 
-func wait_for_completion(ch_done chan struct{}) {
+func wait_for_completion() {
 	log.Println("Wait for executors to finish")
 	ex_group.Wait()
 	end_time = time.Now()
+}
+
+func wait_for_ui_completion(ch_done chan struct{}) {
 	if enable_ui {
 		select {
 		case <-ch_done:
@@ -377,6 +380,7 @@ func enable_tui()chan struct{}{
 					term_ui.Update_put_latency_chart(LatencyCollectorPut.Get())
 					term_ui.Update_get_latency_chart(LatencyCollectorGet.Get())
 					term_ui.Update_status_codes(StatusesCollector.Get())
+					term_ui.Refresh_log()
 					term_ui.Render()
 				}
 			}
@@ -419,9 +423,11 @@ func main() {
 	start_cpu_profile()
 	generate_executors(term_ui)
 	start_executors()
-	wait_for_completion(ch_done)
+	wait_for_completion()
 	log.Println("Executors done!")
 	dump_latencies_histograms()
 	err_code := report()
+	log.Println("Done with error code ", err_code)
+	wait_for_ui_completion(ch_done)
 	exit(err_code)
 }
