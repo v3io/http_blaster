@@ -172,10 +172,19 @@ func start_executors() {
 	}
 }
 
-func wait_for_completion() {
+func wait_for_completion(ch_done chan struct{}) {
 	log.Println("Wait for executors to finish")
 	ex_group.Wait()
 	end_time = time.Now()
+	if enable_ui {
+		select {
+		case <-ch_done:
+			break
+		case <-time.After(time.Second * 10):
+			close(ch_done)
+			break
+		}
+	}
 }
 
 func report_executor_result(file string) {
@@ -353,18 +362,15 @@ func handle_exit() {
 	}
 }
 
-func main() {
-	parse_cmd_line_args()
-	load_test_Config()
-	var ch_done chan struct{}
+func enable_tui()chan struct{}{
 	if enable_ui{
 		term_ui = &tui.Term_ui{}
-		ch_done = term_ui.Init_term_ui(&cfg)
+		ch_done := term_ui.Init_term_ui(&cfg)
 		go func() {
 			defer term_ui.Terminate_ui()
 			tick := time.Tick(time.Millisecond*500)
 			for {
-			select {
+				select {
 				case <-ch_done:
 					return
 				case <-tick:
@@ -374,10 +380,34 @@ func main() {
 					term_ui.Render()
 				}
 			}
-
-
 		}()
+		return ch_done
 	}
+	return nil
+}
+
+func dump_latencies_histograms()  {
+	log.Println("Get latency histogram")
+	vs_get, ls_get := LatencyCollectorGet.Get()
+	for i,v := range vs_get{
+		if ls_get[i]!= 0 {
+			log.Println(fmt.Sprintf("%v %v", v, ls_get[i]))
+		}
+	}
+	log.Println("Put latency histogram")
+	vs_put, ls_put := LatencyCollectorPut.Get()
+	for i,v := range vs_put{
+		if ls_put[i]!= 0 {
+			log.Println(fmt.Sprintf("%v %v", v, ls_put[i]))
+		}
+	}
+}
+
+
+func main() {
+	parse_cmd_line_args()
+	load_test_Config()
+	ch_done := enable_tui()
 	configure_log_to_file()
 	log.Println("Starting http_blaster")
 
@@ -389,17 +419,9 @@ func main() {
 	start_cpu_profile()
 	generate_executors(term_ui)
 	start_executors()
-	wait_for_completion()
+	wait_for_completion(ch_done)
 	log.Println("Executors done!")
+	dump_latencies_histograms()
 	err_code := report()
-	if enable_ui {
-		select {
-		case <-ch_done:
-			break
-		case <-time.After(time.Second * 10):
-			close(ch_done)
-			break
-		}
-	}
 	exit(err_code)
 }
