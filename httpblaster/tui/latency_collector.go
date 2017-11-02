@@ -21,8 +21,8 @@ func (self *LatencyCollector)New(n int, alpha float64)  chan time.Duration{
 	return self.ch_values
 }
 
-func (self *LatencyCollector)Add(v float64) {
-	self.WeighHist.Add(v)
+func (self *LatencyCollector)Add(v time.Duration) {
+	self.ch_values <- v
 }
 
 func (self *LatencyCollector)Get()([]string, []int)  {
