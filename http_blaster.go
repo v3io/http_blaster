@@ -407,6 +407,15 @@ func dump_latencies_histograms()  {
 	}
 }
 
+func dump_status_code_histogram(){
+	log.Println("Status codes:")
+	labels, values:= StatusesCollector.Get()
+	for i,v := range labels{
+		if values[i]!= 0 {
+			log.Println(fmt.Sprintf("%v %v%%", v, values[i]))
+		}
+	}
+}
 
 func main() {
 	parse_cmd_line_args()
@@ -426,6 +435,7 @@ func main() {
 	wait_for_completion()
 	log.Println("Executors done!")
 	dump_latencies_histograms()
+	dump_status_code_histogram()
 	err_code := report()
 	log.Println("Done with error code ", err_code)
 	wait_for_ui_completion(ch_done)
