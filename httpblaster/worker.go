@@ -64,6 +64,7 @@ type worker struct {
 	lazy_sleep          time.Duration
 	retry_codes 	    map[int]interface{}
 	retry_count 	    int
+	timer 		    *time.Timer
 }
 
 
@@ -188,13 +189,14 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 		end := time.Now()
 		w.ch_duration <- end.Sub(start)
 	}()
+	w.timer.Reset(timeout)
 	select {
 	case duration := <-w.ch_duration:
 		return nil, duration
 	case err := <-w.ch_error:
 		log.Printf("rerquest completed with error:%s", err.Error())
 		return err, timeout
-	case <-time.After(timeout):
+	case <- w.timer.C:
 		log.Printf("Error: request didn't complete on timeout url:%s", req.URI().String())
 		return errors.New(fmt.Sprintf("request timedout url:%s", req.URI().String())), timeout
 	}
@@ -263,5 +265,6 @@ func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retury
 	worker.ch_duration = make(chan time.Duration, 1)
 	worker.ch_error = make(chan error, 1)
 	worker.lazy_sleep = time.Duration(lazy) * time.Millisecond
+	worker.timer = time.NewTimer(time.Second * 120)
 	return &worker
 }
