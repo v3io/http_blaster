@@ -308,7 +308,9 @@ func report() int {
 
 func configure_log() {
 
-	log.SetFormatter(&log.TextFormatter{ForceColors:true, FullTimestamp:true})
+	log.SetFormatter(&log.TextFormatter{ForceColors:true,
+		FullTimestamp:true,
+	TimestampFormat: "2006/01/02-15:04:05"})
 	if verbose {
 		log.SetLevel(log.DebugLevel)
 	}else{
