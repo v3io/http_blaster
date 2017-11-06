@@ -25,7 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/valyala/fasthttp"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net"
 	"sync"
 	"time"
@@ -83,7 +83,7 @@ func (w *worker) send_request(req *fasthttp.Request) (error, time.Duration) {
 		w.results.avg = w.results.avg + (duration-w.results.avg)/time.Duration(w.results.count)
 	} else {
 		w.error_count++
-		log.Println("[ERROR]", err.Error())
+		log.Debugln(err.Error())
 
 	}
 	if response.ConnectionClose() {
@@ -130,16 +130,16 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	go func() {
 		start := time.Now()
 		if err = req.Write(w.bw); err != nil {
-			log.Printf("send write error: %s\n", err)
-			log.Println(fmt.Sprintf("%+v", req))
+			log.Debugf("send write error: %s\n", err)
+			log.Debugln(fmt.Sprintf("%+v", req))
 			w.ch_error <- err
 			return
 		} else if err = w.bw.Flush(); err != nil {
-			log.Printf("send flush error: %s\n", err)
+			log.Debugf("send flush error: %s\n", err)
 			w.ch_error <- err
 			return
 		} else if err = resp.Read(w.br); err != nil {
-			log.Printf("send read error: %s\n", err)
+			log.Debugf("send read error: %s\n", err)
 			w.ch_error <- err
 			return
 		}
@@ -150,10 +150,10 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	case duration := <-w.ch_duration:
 		return nil, duration
 	case err := <-w.ch_error:
-		log.Printf("rerquest completed with error:%s", err.Error())
+		log.Debugf("rerquest completed with error:%s", err.Error())
 		return err, timeout
 	case <-time.After(timeout):
-		log.Printf("Error: request didn't complete on timeout url:%s", req.URI().String())
+		log.Debugf("Error: request didn't complete on timeout url:%s", req.URI().String())
 		return errors.New(fmt.Sprintf("request timedout url:%s", req.URI().String())), timeout
 	}
 	return nil, timeout

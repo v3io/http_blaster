@@ -6,7 +6,7 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/valyala/fasthttp"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	"time"

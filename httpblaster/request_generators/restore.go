@@ -10,7 +10,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"io"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"regexp"
 	"sync"

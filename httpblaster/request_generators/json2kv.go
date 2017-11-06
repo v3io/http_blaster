@@ -7,7 +7,7 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"github.com/valyala/fasthttp"
 	"io"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"runtime"
 	"sync"

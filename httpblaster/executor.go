@@ -25,7 +25,7 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/request_generators"
 	"github.com/valyala/fasthttp"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 	"sync"
@@ -159,14 +159,14 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	}
 	self.results.Iops = self.results.Total / seconds
 
-	log.Println("Ending ", self.Workload.Name)
+	log.Info("Ending ", self.Workload.Name)
 
 	return nil
 }
 
 func (self *Executor) Start(wg *sync.WaitGroup) error {
 	self.results.Statuses = make(map[int]uint64)
-	log.Println("at executor start ", self.Workload)
+	log.Info("at executor start ", self.Workload)
 	go func() {
 		self.run(wg)
 	}()
@@ -178,24 +178,24 @@ func (self *Executor) Stop() error {
 }
 
 func (self *Executor) Report() (executor_result, error) {
-	log.Println("report for wl ", self.Workload.Id, ":")
-	log.Println("Total Requests ", self.results.Total)
-	log.Println("Min: ", self.results.Min)
-	log.Println("Max: ", self.results.Max)
-	log.Println("Avg: ", self.results.Avg)
-	log.Println("Connection Restarts: ", self.results.ConRestarts)
-	log.Println("Error Count: ", self.results.ErrorsCount)
-	log.Println("Statuses: ")
+	log.Info("report for wl ", self.Workload.Id, ":")
+	log.Info("Total Requests ", self.results.Total)
+	log.Info("Min: ", self.results.Min)
+	log.Info("Max: ", self.results.Max)
+	log.Info("Avg: ", self.results.Avg)
+	log.Info("Connection Restarts: ", self.results.ConRestarts)
+	log.Info("Error Count: ", self.results.ErrorsCount)
+	log.Info("Statuses: ")
 	for k, v := range self.results.Statuses {
 		log.Println(fmt.Sprintf("%d - %d", k, v))
 	}
 
-	log.Println("iops: ", self.results.Iops)
+	log.Info("iops: ", self.results.Iops)
 	for err_code, err_count := range self.results.Statuses {
 		if max_errors, ok := self.StatusCodesAcceptance[strconv.Itoa(err_code)]; ok {
 			if self.results.Total > 0 && err_count > 0 {
 				err_percent := (float64(err_count) * float64(100)) / float64(self.results.Total)
-				log.Printf("status code %d occured %f%% during the test \"%s\"",
+				log.Infof("status code %d occured %f%% during the test \"%s\"",
 					err_code, err_percent, self.Workload.Name)
 				if float64(err_percent) > float64(max_errors) {
 					return self.results,
@@ -207,6 +207,9 @@ func (self *Executor) Report() (executor_result, error) {
 			return self.results, errors.New(fmt.Sprintf("Executor %s completed with errors: %+v",
 				self.Workload.Name, self.results.Statuses))
 		}
+	}
+	if self.results.ErrorsCount > 0 {
+		return self.results, errors.New("executor completed with errors")
 	}
 	return self.results, nil
 }

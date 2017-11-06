@@ -9,7 +9,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"hash/fnv"
 	"io"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"runtime"
 	"strings"

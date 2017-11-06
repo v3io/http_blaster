@@ -20,11 +20,9 @@ such restriction.
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"os"
 	"runtime/pprof"
@@ -34,6 +32,7 @@ import (
 
 	"github.com/v3io/http_blaster/httpblaster"
 	"github.com/v3io/http_blaster/httpblaster/config"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -52,6 +51,7 @@ var (
 	enable_log   bool
 	log_file     *os.File
 	worker_qd    int = 10000
+	verbose      bool = false
 )
 
 const AppVersion = "2.0.0"
@@ -61,19 +61,29 @@ func init() {
 		default_conf         = "example.toml"
 		usage_conf           = "conf file path"
 		usage_version        = "show version"
+		default_showversion  = false
 		usage_results_file   = "results file path"
 		default_results_file = "example.results"
+		usage_log_file       = "enable stdout to log"
 		default_log_file     = true
 		default_worker_qd    = 10000
 		usage_worker_qd      = "queue depth for worker requests"
+		usage_verbose        = "print debug logs"
+		default_verbose      = false
+		usage_memprofile     = "write mem profile to file"
+		default_memprofile   = false
+		usage_cpuprofile     = "write cpu profile to file"
+		default_cpuprofile   = false
+
 	)
 	flag.StringVar(&conf_file, "conf", default_conf, usage_conf)
 	flag.StringVar(&conf_file, "c", default_conf, usage_conf+" (shorthand)")
 	flag.StringVar(&results_file, "o", default_results_file, usage_results_file+" (shorthand)")
-	flag.BoolVar(&showVersion, "v", false, usage_version)
-	flag.BoolVar(&cpu_profile, "p", false, "write cpu profile to file")
-	flag.BoolVar(&mem_profile, "m", false, "write mem profile to file")
-	flag.BoolVar(&enable_log, "d", default_log_file, "enable stdout to log")
+	flag.BoolVar(&showVersion, "version", default_showversion, usage_version)
+	flag.BoolVar(&cpu_profile, "p", default_cpuprofile, usage_cpuprofile)
+	flag.BoolVar(&mem_profile, "m", default_memprofile, usage_memprofile)
+	flag.BoolVar(&enable_log, "d", default_log_file, usage_log_file)
+	flag.BoolVar(&verbose, "v", default_verbose, usage_verbose)
 	flag.IntVar(&worker_qd, "q", default_worker_qd, usage_worker_qd)
 }
 
@@ -296,7 +306,15 @@ func report() int {
 	return 0
 }
 
-func configure_log_to_file() {
+func configure_log() {
+
+	log.SetFormatter(&log.TextFormatter{ForceColors:true, FullTimestamp:true})
+	if verbose {
+		log.SetLevel(log.DebugLevel)
+	}else{
+		log.SetLevel(log.InfoLevel)
+	}
+
 	if enable_log {
 		file_name := fmt.Sprintf("%s.log", results_file)
 		var err error = nil
@@ -318,8 +336,8 @@ func close_log_file() {
 
 func exit(err_code int) {
 	if err_code != 0 {
-		err := errors.New("Test failed with error")
-		panic(err)
+		log.Errorln("Test failed with error")
+		os.Exit(err_code)
 	}
 	log.Println("Test completed successfully")
 }
@@ -333,7 +351,7 @@ func handle_exit() {
 
 func main() {
 	parse_cmd_line_args()
-	configure_log_to_file()
+	configure_log()
 	log.Println("Starting http_blaster")
 
 	defer handle_exit()

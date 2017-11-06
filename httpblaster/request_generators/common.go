@@ -3,7 +3,7 @@ package request_generators
 import (
 	"fmt"
 	"github.com/valyala/fasthttp"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 )
