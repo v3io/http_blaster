@@ -22,6 +22,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	log "github.com/sirupsen/logrus"
+	"github.com/v3io/http_blaster/httpblaster"
+	"github.com/v3io/http_blaster/httpblaster/config"
+	"github.com/v3io/http_blaster/httpblaster/tui"
 	"io"
 	"math/rand"
 	"os"
@@ -29,34 +33,30 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"github.com/v3io/http_blaster/httpblaster"
-	"github.com/v3io/http_blaster/httpblaster/config"
-	log "github.com/sirupsen/logrus"
-	"github.com/v3io/http_blaster/httpblaster/tui"
 )
 
 var (
-	start_time   		time.Time
-	end_time     		time.Time
-	wl_id        		int32 = -1
-	conf_file    		string
-	results_file 		string
-	showVersion  		bool
-	dataBfr      		[]byte
-	cpu_profile  		= false
-	mem_profile  		= false
-	cfg          		config.TomlConfig
-	executors    		[]*httpblaster.Executor
-	ex_group     		sync.WaitGroup
-	enable_log   		bool
-	log_file     		*os.File
-	worker_qd    int = 10000
-	verbose      bool = false
-	enable_ui    		bool
-	LatencyCollectorGet    	tui.LatencyCollector
-	LatencyCollectorPut    	tui.LatencyCollector
-	StatusesCollector	tui.StatusesCollector
-	term_ui 		*tui.Term_ui
+	start_time          time.Time
+	end_time            time.Time
+	wl_id               int32 = -1
+	conf_file           string
+	results_file        string
+	showVersion         bool
+	dataBfr             []byte
+	cpu_profile         = false
+	mem_profile         = false
+	cfg                 config.TomlConfig
+	executors           []*httpblaster.Executor
+	ex_group            sync.WaitGroup
+	enable_log          bool
+	log_file            *os.File
+	worker_qd           int  = 10000
+	verbose             bool = false
+	enable_ui           bool
+	LatencyCollectorGet tui.LatencyCollector
+	LatencyCollectorPut tui.LatencyCollector
+	StatusesCollector   tui.StatusesCollector
+	term_ui             *tui.Term_ui
 )
 
 const AppVersion = "3.0.0"
@@ -153,25 +153,25 @@ func load_test_Config() {
 }
 
 func generate_executors(term_ui *tui.Term_ui) {
-	ch_put_latency :=  LatencyCollectorPut.New(160,1)
-	ch_get_latency :=  LatencyCollectorGet.New(160,1)
-	ch_statuses := StatusesCollector.New(160,1)
+	ch_put_latency := LatencyCollectorPut.New(160, 1)
+	ch_get_latency := LatencyCollectorGet.New(160, 1)
+	ch_statuses := StatusesCollector.New(160, 1)
 
 	for Name, workload := range cfg.Workloads {
 		log.Println("Adding executor for ", Name)
 		workload.Id = get_workload_id()
 
 		e := &httpblaster.Executor{
-			Globals: cfg.Global,
-			Workload: workload,
-			Host: cfg.Global.Server,
-			Hosts: cfg.Global.Servers,
-			TLS_mode: cfg.Global.TLSMode,
-			Data_bfr: dataBfr,
-			TermUi:term_ui,
+			Globals:        cfg.Global,
+			Workload:       workload,
+			Host:           cfg.Global.Server,
+			Hosts:          cfg.Global.Servers,
+			TLS_mode:       cfg.Global.TLSMode,
+			Data_bfr:       dataBfr,
+			TermUi:         term_ui,
 			Ch_get_latency: ch_get_latency,
 			Ch_put_latency: ch_put_latency,
-			Ch_statuses: ch_statuses}
+			Ch_statuses:    ch_statuses}
 		executors = append(executors, e)
 	}
 }
@@ -339,12 +339,12 @@ func report() int {
 
 func configure_log() {
 
-	log.SetFormatter(&log.TextFormatter{ForceColors:true,
-		FullTimestamp:true,
-	TimestampFormat: "2006/01/02-15:04:05"})
+	log.SetFormatter(&log.TextFormatter{ForceColors: true,
+		FullTimestamp:   true,
+		TimestampFormat: "2006/01/02-15:04:05"})
 	if verbose {
 		log.SetLevel(log.DebugLevel)
-	}else{
+	} else {
 		log.SetLevel(log.InfoLevel)
 	}
 
@@ -356,9 +356,9 @@ func configure_log() {
 			log.Fatalln("failed to open log file")
 		} else {
 			var log_writers io.Writer
-			if enable_ui{
+			if enable_ui {
 				log_writers = io.MultiWriter(log_file, term_ui)
-			}else{
+			} else {
 				log_writers = io.MultiWriter(os.Stdout, log_file)
 			}
 			log.SetOutput(log_writers)
@@ -387,13 +387,13 @@ func handle_exit() {
 	}
 }
 
-func enable_tui()chan struct{}{
-	if enable_ui{
+func enable_tui() chan struct{} {
+	if enable_ui {
 		term_ui = &tui.Term_ui{}
 		ch_done := term_ui.Init_term_ui(&cfg)
 		go func() {
 			defer term_ui.Terminate_ui()
-			tick := time.Tick(time.Millisecond*500)
+			tick := time.Tick(time.Millisecond * 500)
 			for {
 				select {
 				case <-ch_done:
@@ -412,28 +412,28 @@ func enable_tui()chan struct{}{
 	return nil
 }
 
-func dump_latencies_histograms()  {
+func dump_latencies_histograms() {
 	log.Println("Get latency histogram")
 	vs_get, ls_get := LatencyCollectorGet.Get()
-	for i,v := range vs_get{
-		if ls_get[i]!= 0 {
+	for i, v := range vs_get {
+		if ls_get[i] != 0 {
 			log.Println(fmt.Sprintf("%v %v", v, ls_get[i]))
 		}
 	}
 	log.Println("Put latency histogram")
 	vs_put, ls_put := LatencyCollectorPut.Get()
-	for i,v := range vs_put{
-		if ls_put[i]!= 0 {
+	for i, v := range vs_put {
+		if ls_put[i] != 0 {
 			log.Println(fmt.Sprintf("%v %v", v, ls_put[i]))
 		}
 	}
 }
 
-func dump_status_code_histogram(){
+func dump_status_code_histogram() {
 	log.Println("Status codes:")
-	labels, values:= StatusesCollector.Get()
-	for i,v := range labels{
-		if values[i]!= 0 {
+	labels, values := StatusesCollector.Get()
+	for i, v := range labels {
+		if values[i] != 0 {
 			log.Println(fmt.Sprintf("%v %v%%", v, values[i]))
 		}
 	}

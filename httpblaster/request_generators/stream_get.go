@@ -25,8 +25,8 @@ func (self *StreamGetGenerator) UseCommon(c RequestCommon) {
 }
 
 func (self *StreamGetGenerator) generate_request(ch_records chan string,
-ch_req chan *Request,
-host string, wg *sync.WaitGroup) {
+	ch_req chan *Request,
+	host string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var contentType string = "application/json"
 	u, _ := uuid.NewV4()
@@ -79,11 +79,11 @@ func (self *StreamGetGenerator) generate(ch_req chan *Request, payload string, h
 	log.Println("generators done")
 }
 
-func (self *StreamGetGenerator) NextLocationFromResponse (response *Response)interface {}{
+func (self *StreamGetGenerator) NextLocationFromResponse(response *Response) interface{} {
 	return 0
 }
 
-func (self *StreamGetGenerator) Consumer(return_ch chan *Response) chan interface{}{
+func (self *StreamGetGenerator) Consumer(return_ch chan *Response) chan interface{} {
 	ch_location := make(chan interface{}, 1000)
 	go func() {
 		for {
@@ -91,7 +91,7 @@ func (self *StreamGetGenerator) Consumer(return_ch chan *Response) chan interfac
 			case response := <-return_ch:
 				loc := self.NextLocationFromResponse(response)
 				ch_location <- loc
-			case <-time.After(time.Second*30):
+			case <-time.After(time.Second * 30):
 				log.Println("didn't get location for more then 30 seconds, exit now")
 				return
 			}
@@ -100,7 +100,7 @@ func (self *StreamGetGenerator) Consumer(return_ch chan *Response) chan interfac
 	return ch_location
 }
 
-func (self *StreamGetGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response, worker_qd int ) chan *Request {
+func (self *StreamGetGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response, worker_qd int) chan *Request {
 	self.workload = wl
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)

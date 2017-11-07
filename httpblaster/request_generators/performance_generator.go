@@ -3,10 +3,10 @@ package request_generators
 import (
 	"bytes"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/valyala/fasthttp"
 	"io/ioutil"
-	log "github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	"time"
@@ -41,7 +41,7 @@ func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl conf
 
 		}
 	}
-	req:=AcquireRequest()
+	req := AcquireRequest()
 	self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
 		self.base_uri, string(payload), host, req.Request)
 
@@ -71,12 +71,12 @@ func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *Request 
 	return new_req
 }
 
-func (self *PerformanceGenerator) single_file_submitter(ch_req chan *Request, req *fasthttp.Request, done chan struct{}){
+func (self *PerformanceGenerator) single_file_submitter(ch_req chan *Request, req *fasthttp.Request, done chan struct{}) {
 
 	var generated int = 0
 	request := self.clone_request(req)
 	request.Request.SetHost(self.Host)
-	LOOP:
+LOOP:
 	for {
 		select {
 		case <-done:

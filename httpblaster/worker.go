@@ -22,30 +22,30 @@ package httpblaster
 import (
 	"bufio"
 	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/request_generators"
 	"github.com/valyala/fasthttp"
-	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net"
+	"os"
 	"sync"
 	"time"
-	"encoding/pem"
-	"crypto/x509"
-	"os"
-	"io/ioutil"
 )
 
 const DialTimeout = 60 * time.Second
 
 type worker_results struct {
-	count uint64
-	min   time.Duration
-	max   time.Duration
-	avg   time.Duration
-	read  uint64
-	write uint64
-	codes map[int]uint64
+	count  uint64
+	min    time.Duration
+	max    time.Duration
+	avg    time.Duration
+	read   uint64
+	write  uint64
+	codes  map[int]uint64
 	method string
 }
 
@@ -56,30 +56,29 @@ type worker struct {
 	connection_restarts uint32
 	error_count         uint32
 	is_tls_client       bool
-	pem_file	    string
+	pem_file            string
 	br                  *bufio.Reader
 	bw                  *bufio.Writer
 	ch_duration         chan time.Duration
 	ch_error            chan error
 	lazy_sleep          time.Duration
-	retry_codes 	    map[int]interface{}
-	retry_count 	    int
-	timer 		    *time.Timer
+	retry_codes         map[int]interface{}
+	retry_count         int
+	timer               *time.Timer
 }
-
 
 func (w *worker) send_request(req *request_generators.Request) (error, time.Duration, *request_generators.Response) {
 	response := request_generators.AcquireResponse()
 	var (
-		code int
-		err error
+		code     int
+		err      error
 		duration time.Duration
 	)
 	if w.lazy_sleep > 0 {
 		time.Sleep(w.lazy_sleep)
 	}
 
-	err, duration = w.send(req.Request, response.Response, time.Second * 120)
+	err, duration = w.send(req.Request, response.Response, time.Second*120)
 
 	if err == nil {
 		code = response.Response.StatusCode()
@@ -91,7 +90,7 @@ func (w *worker) send_request(req *request_generators.Request) (error, time.Dura
 		if duration > w.results.max {
 			w.results.max = duration
 		}
-		w.results.avg = w.results.avg + (duration - w.results.avg) / time.Duration(w.results.count)
+		w.results.avg = w.results.avg + (duration-w.results.avg)/time.Duration(w.results.count)
 	} else {
 		w.error_count++
 		log.Debugln(err.Error())
@@ -112,14 +111,14 @@ func (w *worker) open_connection() {
 	}
 	if w.is_tls_client {
 		w.conn = w.open_secure_connection(conn)
-	}else{
+	} else {
 		w.conn = conn
 	}
 	w.br = bufio.NewReaderSize(w.conn, 1024*1024)
 	w.bw = bufio.NewWriter(w.conn)
 }
 
-func (w *worker) open_secure_connection(conn net.Conn) *tls.Conn{
+func (w *worker) open_secure_connection(conn net.Conn) *tls.Conn {
 	var conf *tls.Config
 	if w.pem_file != "" {
 		var pem_data []byte
@@ -133,7 +132,7 @@ func (w *worker) open_secure_connection(conn net.Conn) *tls.Conn{
 				panic(err)
 			}
 		}
-		block, _ := pem.Decode([]byte (pem_data))
+		block, _ := pem.Decode([]byte(pem_data))
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
 			panic(err)
@@ -143,12 +142,12 @@ func (w *worker) open_secure_connection(conn net.Conn) *tls.Conn{
 		clientCertPool.AddCert(cert)
 
 		conf = &tls.Config{
-			ServerName: w.host,
-			ClientAuth: tls.RequireAndVerifyClientCert,
+			ServerName:         w.host,
+			ClientAuth:         tls.RequireAndVerifyClientCert,
 			InsecureSkipVerify: true,
-			ClientCAs: clientCertPool,
+			ClientCAs:          clientCertPool,
 		}
-	}else{
+	} else {
 		conf = &tls.Config{
 			InsecureSkipVerify: true,
 		}
@@ -198,18 +197,17 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	case err := <-w.ch_error:
 		log.Debugf("rerquest completed with error:%s", err.Error())
 		return err, timeout
-	case <- w.timer.C:
+	case <-w.timer.C:
 		log.Printf("Error: request didn't complete on timeout url:%s", req.URI().String())
 		return errors.New(fmt.Sprintf("request timedout url:%s", req.URI().String())), timeout
 	}
 	return nil, timeout
 }
 
-
 func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
-				wg *sync.WaitGroup, release_req bool,
-				ch_latency chan time.Duration,
-				ch_statuses chan int) {
+	wg *sync.WaitGroup, release_req bool,
+	ch_latency chan time.Duration,
+	ch_statuses chan int) {
 	defer wg.Done()
 	var onceSetRequest sync.Once
 	var oncePrepare sync.Once
@@ -231,7 +229,7 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 		if release_req {
 			req.Request.SetHost(w.host)
 			submit_request = req
-		}else{
+		} else {
 			onceSetRequest.Do(func() {
 				request = req
 			})
@@ -240,7 +238,7 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 
 		var response *request_generators.Response
 		var err error
-		LOOP:
+	LOOP:
 		for i := 0; i < w.retry_count; i++ {
 			var d time.Duration
 			err, d, response = w.send_request(submit_request)
@@ -253,7 +251,7 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 				ch_statuses <- response.Response.StatusCode()
 				ch_latency <- d
 				break LOOP
-			} else if i + 1 < w.retry_count {
+			} else if i+1 < w.retry_count {
 				//not the last loop
 				request_generators.ReleaseResponse(response)
 			}
@@ -275,15 +273,15 @@ func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retry_
 		return nil
 	}
 	retry_codes_map := make(map[int]interface{})
-	for _,c := range retry_codes{
-		retry_codes_map[c]=true
+	for _, c := range retry_codes {
+		retry_codes_map[c] = true
 
 	}
 	if retry_count == 0 {
 		retry_count = 1
 	}
-	worker := worker{host: host, is_tls_client: tls_client, retry_codes:retry_codes_map,
-		retry_count:retry_count, pem_file:pem_file}
+	worker := worker{host: host, is_tls_client: tls_client, retry_codes: retry_codes_map,
+		retry_count: retry_count, pem_file: pem_file}
 	worker.results.codes = make(map[int]uint64)
 	worker.results.min = time.Duration(time.Second * 10)
 	worker.open_connection()

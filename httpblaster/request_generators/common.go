@@ -2,8 +2,8 @@ package request_generators
 
 import (
 	"fmt"
-	"github.com/valyala/fasthttp"
 	log "github.com/sirupsen/logrus"
+	"github.com/valyala/fasthttp"
 	"os"
 	"path/filepath"
 )
@@ -31,7 +31,7 @@ var (
 func (self *RequestCommon) PrepareRequest(content_type string,
 	header_args map[string]string,
 	method string, uri string,
-	body string, host string,req *fasthttp.Request){
+	body string, host string, req *fasthttp.Request) {
 
 	req.Header.SetContentType(content_type)
 	req.Header.SetMethod(method)
@@ -46,7 +46,7 @@ func (self *RequestCommon) PrepareRequest(content_type string,
 func (self *RequestCommon) PrepareRequestBytes(content_type string,
 	header_args map[string]string,
 	method string, uri string,
-	body []byte, host string, req *fasthttp.Request){
+	body []byte, host string, req *fasthttp.Request) {
 
 	req.Header.SetContentType(content_type)
 	req.Header.SetMethod(method)

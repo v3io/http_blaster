@@ -22,14 +22,14 @@ package httpblaster
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/request_generators"
-	log "github.com/sirupsen/logrus"
+	"github.com/v3io/http_blaster/httpblaster/tui"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"github.com/v3io/http_blaster/httpblaster/tui"
 )
 
 type executor_result struct {
@@ -47,27 +47,26 @@ type executor_result struct {
 }
 
 type Executor struct {
-	connections           int32
-	Workload              config.Workload
-	Globals               config.Global
+	connections int32
+	Workload    config.Workload
+	Globals     config.Global
 	//host                  string
 	//port                  string
 	//tls_mode              bool
-	Host                  string
-	Hosts                 []string
+	Host  string
+	Hosts []string
 	//Port                  string
-	TLS_mode              bool
-	results               executor_result
-	workers               []*worker
-	Start_time            time.Time
-	Data_bfr              []byte
-	WorkerQd 	      int
-	TermUi  	      *tui.Term_ui
-	Ch_get_latency 	      chan time.Duration
-	Ch_put_latency	      chan time.Duration
-	Ch_statuses	      chan int
+	TLS_mode       bool
+	results        executor_result
+	workers        []*worker
+	Start_time     time.Time
+	Data_bfr       []byte
+	WorkerQd       int
+	TermUi         *tui.Term_ui
+	Ch_get_latency chan time.Duration
+	Ch_put_latency chan time.Duration
+	Ch_statuses    chan int
 }
-
 
 func (self *Executor) load_request_generator() (chan *request_generators.Request,
 	bool, chan *request_generators.Response) {
@@ -108,9 +107,9 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
 	var host string
-	if len(self.Hosts)>0{
+	if len(self.Hosts) > 0 {
 		host = self.Hosts[0]
-	}else{
+	} else {
 		host = self.Host
 	}
 
@@ -140,9 +139,9 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 			self.Globals.RetryCount, self.Globals.PemFile)
 		self.workers = append(self.workers, w)
 		var ch_latency chan time.Duration
-		if self.Workload.Type == "GET"{
+		if self.Workload.Type == "GET" {
 			ch_latency = self.Ch_get_latency
-		}else{
+		} else {
 			ch_latency = self.Ch_put_latency
 		}
 
@@ -153,7 +152,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		workers_wg.Wait()
 		close(ended)
 	}()
-	tick := time.Tick(time.Millisecond*500)
+	tick := time.Tick(time.Millisecond * 500)
 LOOP:
 	for {
 		select {
@@ -174,7 +173,6 @@ LOOP:
 			}
 		}
 	}
-
 
 	self.results.Duration = time.Now().Sub(self.Start_time)
 	self.results.Min = time.Duration(time.Second * 10)

@@ -59,11 +59,11 @@ type Global struct {
 	Servers               []string
 	Server                string
 	Port                  string
-	PemFile		      string
+	PemFile               string
 	TLSMode               bool
 	StatusCodesAcceptance map[string]float64
 	RetryOnStatusCodes    []int
-	RetryCount 	      int
+	RetryCount            int
 	IgnoreAttrs           []string
 }
 

@@ -3,9 +3,9 @@ package request_generators
 import (
 	"bufio"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"io"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"runtime"
 	"strings"
@@ -26,7 +26,7 @@ func (self *Line2KvGenerator) generate_request(ch_records chan []string,
 	host string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for r := range ch_records {
-		req:=AcquireRequest()
+		req := AcquireRequest()
 		self.PrepareRequest(contentType, self.workload.Header, "PUT",
 			r[0], r[1], host, req.Request)
 		ch_req <- req

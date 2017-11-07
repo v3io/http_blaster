@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/json-iterator/go"
+	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"io"
 	"io/ioutil"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"regexp"
 	"sync"
@@ -127,7 +127,7 @@ func (self *RestoreGenerator) generate(ch_req chan *Request,
 		go func() {
 			defer wg.Done()
 			for item := range ch_items {
-				req:=AcquireRequest()
+				req := AcquireRequest()
 				self.PrepareRequestBytes(contentType, self.workload.Header, "PUT",
 					item.Uri, item.Payload, host, req.Request)
 				ch_req <- req

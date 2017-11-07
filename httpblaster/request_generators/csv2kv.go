@@ -2,10 +2,10 @@ package request_generators
 
 import (
 	"encoding/csv"
+	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"io"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"runtime"
 	"strings"
@@ -90,7 +90,6 @@ func (self *Csv2KV) generate(ch_req chan *Request, payload string, host string) 
 	close(ch_records)
 	wg.Wait()
 }
-
 
 func (self *Csv2KV) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response, worker_qd int) chan *Request {
 	self.workload = wl

@@ -16,6 +16,7 @@ type Response struct {
 	Id       int64
 	Response *fasthttp.Response
 }
+
 //
 //var (
 //	instance *request_pool
@@ -47,7 +48,7 @@ var (
 func AcquireRequest() *Request {
 	v := requestPool.Get()
 	if v == nil {
-		return &Request{Request:fasthttp.AcquireRequest()}
+		return &Request{Request: fasthttp.AcquireRequest()}
 	}
 	return v.(*Request)
 }
@@ -59,7 +60,7 @@ func ReleaseRequest(req *Request) {
 func AcquireResponse() *Response {
 	v := responsePool.Get()
 	if v == nil {
-		return &Response{Response:fasthttp.AcquireResponse()}
+		return &Response{Response: fasthttp.AcquireResponse()}
 	}
 	return v.(*Response)
 }

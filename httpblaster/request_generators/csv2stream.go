@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/nu7hatch/gouuid"
+	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"hash/fnv"
 	"io"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"runtime"
 	"strings"
@@ -40,7 +40,7 @@ func (self *CSV2StreamGenerator) generate_request(ch_records chan string,
 		shard_id := self.Hash32(columns[self.workload.ShardColumn]) % self.workload.ShardCount
 		sr := igz_data.NewStreamRecord("client", r, u.String(), int(shard_id), true)
 		r := igz_data.NewStreamRecords(sr)
-		req:=AcquireRequest()
+		req := AcquireRequest()
 		self.PrepareRequest(contentType, self.workload.Header, "PUT",
 			self.base_uri, r.ToJsonString(), host, req.Request)
 		ch_req <- req
