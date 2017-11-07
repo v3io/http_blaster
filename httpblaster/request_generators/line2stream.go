@@ -6,7 +6,6 @@ import (
 	"github.com/nu7hatch/gouuid"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
-	"github.com/valyala/fasthttp"
 	"io"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -25,7 +24,7 @@ func (self *Line2StreamGenerator) UseCommon(c RequestCommon) {
 }
 
 func (self *Line2StreamGenerator) generate_request(ch_records chan string,
-	ch_req chan *fasthttp.Request,
+	ch_req chan *Request,
 	host string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var contentType string = "application/json"
@@ -33,14 +32,15 @@ func (self *Line2StreamGenerator) generate_request(ch_records chan string,
 	for r := range ch_records {
 		sr := igz_data.NewStreamRecord("client", r, u.String(), 0, true)
 		r := igz_data.NewStreamRecords(sr)
-		req := self.PrepareRequest(contentType, self.workload.Header, "PUT",
-			self.base_uri, r.ToJsonString(), host)
+		req := AcquireRequest()
+		self.PrepareRequest(contentType, self.workload.Header, "PUT",
+			self.base_uri, r.ToJsonString(), host, req.Request)
 		ch_req <- req
 	}
 	log.Println("generate_request Done")
 }
 
-func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payload string, host string) {
+func (self *Line2StreamGenerator) generate(ch_req chan *Request, payload string, host string) {
 	defer close(ch_req)
 	var ch_records chan string = make(chan string, 10000)
 	wg := sync.WaitGroup{}
@@ -81,7 +81,7 @@ func (self *Line2StreamGenerator) generate(ch_req chan *fasthttp.Request, payloa
 	log.Println("generators done")
 }
 
-func (self *Line2StreamGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, worker_qd int) chan *fasthttp.Request {
+func (self *Line2StreamGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response, worker_qd int) chan *Request {
 	self.workload = wl
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
@@ -90,7 +90,7 @@ func (self *Line2StreamGenerator) GenerateRequests(global config.Global, wl conf
 
 	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
 
-	ch_req := make(chan *fasthttp.Request, worker_qd)
+	ch_req := make(chan *Request, worker_qd)
 
 	go self.generate(ch_req, self.workload.Payload, host)
 

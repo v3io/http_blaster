@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/json-iterator/go"
 	"github.com/v3io/http_blaster/httpblaster/config"
-	"github.com/valyala/fasthttp"
 	"io"
 	"io/ioutil"
 	log "github.com/sirupsen/logrus"
@@ -117,7 +116,7 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 	return ch_items
 }
 
-func (self *RestoreGenerator) generate(ch_req chan *fasthttp.Request,
+func (self *RestoreGenerator) generate(ch_req chan *Request,
 	ch_items chan *BackupItem, host string) {
 	defer close(ch_req)
 	wg := sync.WaitGroup{}
@@ -128,8 +127,9 @@ func (self *RestoreGenerator) generate(ch_req chan *fasthttp.Request,
 		go func() {
 			defer wg.Done()
 			for item := range ch_items {
-				req := self.PrepareRequestBytes(contentType, self.workload.Header, "PUT",
-					item.Uri, item.Payload, host)
+				req:=AcquireRequest()
+				self.PrepareRequestBytes(contentType, self.workload.Header, "PUT",
+					item.Uri, item.Payload, host, req.Request)
 				ch_req <- req
 			}
 		}()
@@ -170,16 +170,13 @@ func (self *RestoreGenerator) line_reader() chan []byte {
 	return ch_lines
 }
 
-func (self *RestoreGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, worker_qd int) chan *fasthttp.Request {
+func (self *RestoreGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response, worker_qd int) chan *Request {
 	self.workload = wl
-	ch_req := make(chan *fasthttp.Request, worker_qd)
+	ch_req := make(chan *Request, worker_qd)
 
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
 	}
-	//self.emd_attrs = []string{`__name`, `__size`, `__atime_secs`, `__mtime_secs`, `__ctime_secs`, `__atime_nsecs`,
-	//	`__mtime_nsecs`, `__ctime_nsecs`, `__inode_number`, `__obj_type`, `__collection_id`,
-	//	`__tiny_low`, `__tiny_high`, `__uid`, `__gid`, `__mode`}
 	self.emd_ignore_attrs = global.IgnoreAttrs
 
 	self.workload.Header["X-v3io-function"] = "PutItem"

@@ -14,6 +14,7 @@ const (
 	CSV2KV      = "csv2kv"
 	CSV2STREAM  = "csv2stream"
 	JSON2KV     = "json2kv"
+	STREAM_GET  = "stream_get"
 	LINE2KV     = "line2kv"
 	RESTORE     = "restore"
 )
@@ -30,8 +31,7 @@ var (
 func (self *RequestCommon) PrepareRequest(content_type string,
 	header_args map[string]string,
 	method string, uri string,
-	body string, host string) *fasthttp.Request {
-	req := fasthttp.AcquireRequest()
+	body string, host string,req *fasthttp.Request){
 
 	req.Header.SetContentType(content_type)
 	req.Header.SetMethod(method)
@@ -40,16 +40,13 @@ func (self *RequestCommon) PrepareRequest(content_type string,
 	for k, v := range header_args {
 		req.Header.Set(k, v)
 	}
-
 	req.AppendBodyString(body)
-	return req
 }
 
 func (self *RequestCommon) PrepareRequestBytes(content_type string,
 	header_args map[string]string,
 	method string, uri string,
-	body []byte, host string) *fasthttp.Request {
-	req := fasthttp.AcquireRequest()
+	body []byte, host string, req *fasthttp.Request){
 
 	req.Header.SetContentType(content_type)
 	req.Header.SetMethod(method)
@@ -58,9 +55,7 @@ func (self *RequestCommon) PrepareRequestBytes(content_type string,
 	for k, v := range header_args {
 		req.Header.Set(k, v)
 	}
-
 	req.AppendBody(body)
-	return req
 }
 
 func (self *RequestCommon) SubmitFiles(path string, info os.FileInfo, err error) error {
