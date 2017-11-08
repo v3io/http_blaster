@@ -20,61 +20,78 @@ such restriction.
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
+	log "github.com/sirupsen/logrus"
+	"github.com/v3io/http_blaster/httpblaster"
+	"github.com/v3io/http_blaster/httpblaster/config"
+	"github.com/v3io/http_blaster/httpblaster/tui"
 	"io"
-	"log"
 	"math/rand"
 	"os"
 	"runtime/pprof"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/v3io/http_blaster/httpblaster"
-	"github.com/v3io/http_blaster/httpblaster/config"
 )
 
 var (
-	start_time   time.Time
-	end_time     time.Time
-	wl_id        int32 = -1
-	conf_file    string
-	results_file string
-	showVersion  bool
-	dataBfr      []byte
-	cpu_profile  = false
-	mem_profile  = false
-	cfg          config.TomlConfig
-	executors    []*httpblaster.Executor
-	ex_group     sync.WaitGroup
-	enable_log   bool
-	log_file     *os.File
-	worker_qd    int = 10000
+	start_time          time.Time
+	end_time            time.Time
+	wl_id               int32 = -1
+	conf_file           string
+	results_file        string
+	showVersion         bool
+	dataBfr             []byte
+	cpu_profile         = false
+	mem_profile         = false
+	cfg                 config.TomlConfig
+	executors           []*httpblaster.Executor
+	ex_group            sync.WaitGroup
+	enable_log          bool
+	log_file            *os.File
+	worker_qd           int  = 10000
+	verbose             bool = false
+	enable_ui           bool
+	LatencyCollectorGet tui.LatencyCollector
+	LatencyCollectorPut tui.LatencyCollector
+	StatusesCollector   tui.StatusesCollector
+	term_ui             *tui.Term_ui
 )
 
-const AppVersion = "2.0.0"
+const AppVersion = "3.0.0"
 
 func init() {
 	const (
 		default_conf         = "example.toml"
 		usage_conf           = "conf file path"
 		usage_version        = "show version"
+		default_showversion  = false
 		usage_results_file   = "results file path"
 		default_results_file = "example.results"
+		usage_log_file       = "enable stdout to log"
 		default_log_file     = true
 		default_worker_qd    = 10000
 		usage_worker_qd      = "queue depth for worker requests"
+		usage_verbose        = "print debug logs"
+		default_verbose      = false
+		usage_memprofile     = "write mem profile to file"
+		default_memprofile   = false
+		usage_cpuprofile     = "write cpu profile to file"
+		default_cpuprofile   = false
+		usage_enable_ui      = "enable terminal ui"
+		default_enable_ui    = false
 	)
 	flag.StringVar(&conf_file, "conf", default_conf, usage_conf)
 	flag.StringVar(&conf_file, "c", default_conf, usage_conf+" (shorthand)")
 	flag.StringVar(&results_file, "o", default_results_file, usage_results_file+" (shorthand)")
-	flag.BoolVar(&showVersion, "v", false, usage_version)
-	flag.BoolVar(&cpu_profile, "p", false, "write cpu profile to file")
-	flag.BoolVar(&mem_profile, "m", false, "write mem profile to file")
-	flag.BoolVar(&enable_log, "d", default_log_file, "enable stdout to log")
+	flag.BoolVar(&showVersion, "version", default_showversion, usage_version)
+	flag.BoolVar(&cpu_profile, "p", default_cpuprofile, usage_cpuprofile)
+	flag.BoolVar(&mem_profile, "m", default_memprofile, usage_memprofile)
+	flag.BoolVar(&enable_log, "d", default_log_file, usage_log_file)
+	flag.BoolVar(&verbose, "v", default_verbose, usage_verbose)
 	flag.IntVar(&worker_qd, "q", default_worker_qd, usage_worker_qd)
+	flag.BoolVar(&enable_ui, "u", default_enable_ui, usage_enable_ui)
 }
 
 func get_workload_id() int {
@@ -135,14 +152,26 @@ func load_test_Config() {
 
 }
 
-func generate_executors() {
+func generate_executors(term_ui *tui.Term_ui) {
+	ch_put_latency := LatencyCollectorPut.New(160, 1)
+	ch_get_latency := LatencyCollectorGet.New(160, 1)
+	ch_statuses := StatusesCollector.New(160, 1)
+
 	for Name, workload := range cfg.Workloads {
 		log.Println("Adding executor for ", Name)
 		workload.Id = get_workload_id()
 
-		e := &httpblaster.Executor{Global: cfg.Global, Workload: workload, Host: cfg.Global.Server,
-			Hosts: cfg.Global.Servers, Port: cfg.Global.Port, TLS_mode: cfg.Global.TLSMode,
-			StatusCodesAcceptance: cfg.Global.StatusCodesAcceptance, Data_bfr: dataBfr}
+		e := &httpblaster.Executor{
+			Globals:        cfg.Global,
+			Workload:       workload,
+			Host:           cfg.Global.Server,
+			Hosts:          cfg.Global.Servers,
+			TLS_mode:       cfg.Global.TLSMode,
+			Data_bfr:       dataBfr,
+			TermUi:         term_ui,
+			Ch_get_latency: ch_get_latency,
+			Ch_put_latency: ch_put_latency,
+			Ch_statuses:    ch_statuses}
 		executors = append(executors, e)
 	}
 }
@@ -159,6 +188,18 @@ func wait_for_completion() {
 	log.Println("Wait for executors to finish")
 	ex_group.Wait()
 	end_time = time.Now()
+}
+
+func wait_for_ui_completion(ch_done chan struct{}) {
+	if enable_ui {
+		select {
+		case <-ch_done:
+			break
+		case <-time.After(time.Second * 10):
+			close(ch_done)
+			break
+		}
+	}
 }
 
 func report_executor_result(file string) {
@@ -296,7 +337,17 @@ func report() int {
 	return 0
 }
 
-func configure_log_to_file() {
+func configure_log() {
+
+	log.SetFormatter(&log.TextFormatter{ForceColors: true,
+		FullTimestamp:   true,
+		TimestampFormat: "2006/01/02-15:04:05"})
+	if verbose {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
+	}
+
 	if enable_log {
 		file_name := fmt.Sprintf("%s.log", results_file)
 		var err error = nil
@@ -304,7 +355,12 @@ func configure_log_to_file() {
 		if err != nil {
 			log.Fatalln("failed to open log file")
 		} else {
-			log_writers := io.MultiWriter(os.Stdout, log_file)
+			var log_writers io.Writer
+			if enable_ui {
+				log_writers = io.MultiWriter(log_file, term_ui)
+			} else {
+				log_writers = io.MultiWriter(os.Stdout, log_file)
+			}
 			log.SetOutput(log_writers)
 		}
 	}
@@ -318,8 +374,8 @@ func close_log_file() {
 
 func exit(err_code int) {
 	if err_code != 0 {
-		err := errors.New("Test failed with error")
-		panic(err)
+		log.Errorln("Test failed with error")
+		os.Exit(err_code)
 	}
 	log.Println("Test completed successfully")
 }
@@ -331,9 +387,63 @@ func handle_exit() {
 	}
 }
 
+func enable_tui() chan struct{} {
+	if enable_ui {
+		term_ui = &tui.Term_ui{}
+		ch_done := term_ui.Init_term_ui(&cfg)
+		go func() {
+			defer term_ui.Terminate_ui()
+			tick := time.Tick(time.Millisecond * 500)
+			for {
+				select {
+				case <-ch_done:
+					return
+				case <-tick:
+					term_ui.Update_put_latency_chart(LatencyCollectorPut.Get())
+					term_ui.Update_get_latency_chart(LatencyCollectorGet.Get())
+					term_ui.Update_status_codes(StatusesCollector.Get())
+					term_ui.Refresh_log()
+					term_ui.Render()
+				}
+			}
+		}()
+		return ch_done
+	}
+	return nil
+}
+
+func dump_latencies_histograms() {
+	log.Println("Get latency histogram")
+	vs_get, ls_get := LatencyCollectorGet.Get()
+	for i, v := range vs_get {
+		if ls_get[i] != 0 {
+			log.Println(fmt.Sprintf("%v %v", v, ls_get[i]))
+		}
+	}
+	log.Println("Put latency histogram")
+	vs_put, ls_put := LatencyCollectorPut.Get()
+	for i, v := range vs_put {
+		if ls_put[i] != 0 {
+			log.Println(fmt.Sprintf("%v %v", v, ls_put[i]))
+		}
+	}
+}
+
+func dump_status_code_histogram() {
+	log.Println("Status codes:")
+	labels, values := StatusesCollector.Get()
+	for i, v := range labels {
+		if values[i] != 0 {
+			log.Println(fmt.Sprintf("%v %v%%", v, values[i]))
+		}
+	}
+}
+
 func main() {
 	parse_cmd_line_args()
-	configure_log_to_file()
+	load_test_Config()
+	ch_done := enable_tui()
+	configure_log()
 	log.Println("Starting http_blaster")
 
 	defer handle_exit()
@@ -342,10 +452,14 @@ func main() {
 	defer write_mem_profile()
 
 	start_cpu_profile()
-	load_test_Config()
-	generate_executors()
+	generate_executors(term_ui)
 	start_executors()
 	wait_for_completion()
+	log.Println("Executors done!")
+	dump_latencies_histograms()
+	dump_status_code_histogram()
 	err_code := report()
+	log.Println("Done with error code ", err_code)
+	wait_for_ui_completion(ch_done)
 	exit(err_code)
 }

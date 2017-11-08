@@ -3,10 +3,10 @@ package request_generators
 import (
 	"bytes"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/valyala/fasthttp"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -22,7 +22,7 @@ func (self *PerformanceGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, worker_qd int) chan *fasthttp.Request {
+func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response, worker_qd int) chan *Request {
 	self.workload = wl
 	self.Host = host
 	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
@@ -41,8 +41,10 @@ func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl conf
 
 		}
 	}
-	req := self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
-		self.base_uri, string(payload), host)
+	req := AcquireRequest()
+	self.PrepareRequest(contentType, self.workload.Header, string(self.workload.Type),
+		self.base_uri, string(payload), host, req.Request)
+
 	done := make(chan struct{})
 	go func() {
 		select {
@@ -51,30 +53,30 @@ func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl conf
 		}
 	}()
 
-	ch_req := make(chan *fasthttp.Request, worker_qd)
+	ch_req := make(chan *Request, worker_qd)
 	go func() {
 		if self.workload.FileIndex == 0 && self.workload.FilesCount == 0 {
-			self.single_file_submitter(ch_req, req, done)
+			self.single_file_submitter(ch_req, req.Request, done)
 		} else {
-			self.multi_file_submitter(ch_req, req, done)
+			self.multi_file_submitter(ch_req, req.Request, done)
 		}
 	}()
 	return ch_req
 }
 
-func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *fasthttp.Request {
-	new_req := fasthttp.AcquireRequest()
-	req.Header.CopyTo(&new_req.Header)
-	new_req.AppendBody(req.Body())
+func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *Request {
+	new_req := AcquireRequest()
+	req.Header.CopyTo(&new_req.Request.Header)
+	new_req.Request.AppendBody(req.Body())
 	return new_req
 }
 
-func (self *PerformanceGenerator) single_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request, done chan struct{}) {
+func (self *PerformanceGenerator) single_file_submitter(ch_req chan *Request, req *fasthttp.Request, done chan struct{}) {
 
 	var generated int = 0
 	request := self.clone_request(req)
-	request.SetHost(self.Host)
-	LOOP:
+	request.Request.SetHost(self.Host)
+LOOP:
 	for {
 		select {
 		case <-done:
@@ -116,7 +118,7 @@ func (self *PerformanceGenerator) gen_files_uri(file_index int, count int, rando
 	return ch
 }
 
-func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *fasthttp.Request, req *fasthttp.Request, done chan struct{}) {
+func (self *PerformanceGenerator) multi_file_submitter(ch_req chan *Request, req *fasthttp.Request, done chan struct{}) {
 	ch_uri := self.gen_files_uri(self.workload.FileIndex, self.workload.FilesCount, self.workload.Random)
 	var generated int = 0
 LOOP:
@@ -127,7 +129,7 @@ LOOP:
 		default:
 			uri := <-ch_uri
 			request := self.clone_request(req)
-			request.SetRequestURI(uri)
+			request.Request.SetRequestURI(uri)
 			if self.workload.Count == 0 {
 				ch_req <- request
 				generated += 1

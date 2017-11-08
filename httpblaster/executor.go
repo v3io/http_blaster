@@ -22,10 +22,10 @@ package httpblaster
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/request_generators"
-	"github.com/valyala/fasthttp"
-	"log"
+	"github.com/v3io/http_blaster/httpblaster/tui"
 	"strconv"
 	"strings"
 	"sync"
@@ -47,24 +47,33 @@ type executor_result struct {
 }
 
 type Executor struct {
-	connections           int32
-	Workload              config.Workload
-	Global                config.Global
-	Host                  string
-	Hosts                 []string
-	Port                  string
-	TLS_mode              bool
-	results               executor_result
-	workers               []*worker
-	Start_time            time.Time
-	StatusCodesAcceptance map[string]float64
-	Data_bfr              []byte
-	WorkerQd 	      int
+	connections int32
+	Workload    config.Workload
+	Globals     config.Global
+	//host                  string
+	//port                  string
+	//tls_mode              bool
+	Host  string
+	Hosts []string
+	//Port                  string
+	TLS_mode       bool
+	results        executor_result
+	workers        []*worker
+	Start_time     time.Time
+	Data_bfr       []byte
+	WorkerQd       int
+	TermUi         *tui.Term_ui
+	Ch_get_latency chan time.Duration
+	Ch_put_latency chan time.Duration
+	Ch_statuses    chan int
 }
 
-func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
+func (self *Executor) load_request_generator() (chan *request_generators.Request,
+	bool, chan *request_generators.Response) {
 	var req_gen request_generators.Generator
 	var release_req bool = true
+	var ch_response chan *request_generators.Response = nil
+
 	gen_type := strings.ToLower(self.Workload.Generator)
 	switch gen_type {
 	case request_generators.PERFORMANCE:
@@ -91,17 +100,21 @@ func (self *Executor) load_request_generator() (chan *fasthttp.Request, bool) {
 	case request_generators.CSV2STREAM:
 		req_gen = &request_generators.CSV2StreamGenerator{}
 		break
+	case request_generators.STREAM_GET:
+		req_gen = &request_generators.StreamGetGenerator{}
+		ch_response = make(chan *request_generators.Response)
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
 	var host string
-	if len(self.Hosts)>0{
+	if len(self.Hosts) > 0 {
 		host = self.Hosts[0]
-	}else{
+	} else {
 		host = self.Host
 	}
-	ch_req := req_gen.GenerateRequests(self.Global, self.Workload, self.TLS_mode, host, self.WorkerQd)
-	return ch_req, release_req
+
+	ch_req := req_gen.GenerateRequests(self.Globals, self.Workload, self.TLS_mode, host, nil, self.WorkerQd)
+	return ch_req, release_req, ch_response
 }
 
 func (self *Executor) run(wg *sync.WaitGroup) error {
@@ -110,7 +123,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	workers_wg := sync.WaitGroup{}
 	workers_wg.Add(self.Workload.Workers)
 
-	ch_req, release_req_flag := self.load_request_generator()
+	ch_req, release_req_flag, ch_response := self.load_request_generator()
 
 	for i := 0; i < self.Workload.Workers; i++ {
 		var host_address string
@@ -121,12 +134,46 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 			host_address = self.Host
 		}
 
-		server := fmt.Sprintf("%s:%s", host_address, self.Port)
-		w := NewWorker(server, self.TLS_mode, self.Workload.Lazy)
+		server := fmt.Sprintf("%s:%s", host_address, self.Globals.Port)
+		w := NewWorker(server, self.Globals.TLSMode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
+			self.Globals.RetryCount, self.Globals.PemFile)
 		self.workers = append(self.workers, w)
-		go w.run_worker(ch_req, &workers_wg, release_req_flag)
+		var ch_latency chan time.Duration
+		if self.Workload.Type == "GET" {
+			ch_latency = self.Ch_get_latency
+		} else {
+			ch_latency = self.Ch_put_latency
+		}
+
+		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag, ch_latency, self.Ch_statuses)
 	}
-	workers_wg.Wait()
+	ended := make(chan bool)
+	go func() {
+		workers_wg.Wait()
+		close(ended)
+	}()
+	tick := time.Tick(time.Millisecond * 500)
+LOOP:
+	for {
+		select {
+		case <-ended:
+			break LOOP
+		case <-tick:
+			if self.TermUi != nil {
+				var put_req_count uint64 = 0
+				var get_req_count uint64 = 0
+				for _, w := range self.workers {
+					if w.results.method == `PUT` {
+						put_req_count += w.results.count
+					} else {
+						get_req_count += w.results.count
+					}
+				}
+				self.TermUi.Update_requests(time.Now().Sub(self.Start_time), put_req_count, get_req_count)
+			}
+		}
+	}
+
 	self.results.Duration = time.Now().Sub(self.Start_time)
 	self.results.Min = time.Duration(time.Second * 10)
 	self.results.Max = 0
@@ -159,14 +206,18 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 	}
 	self.results.Iops = self.results.Total / seconds
 
-	log.Println("Ending ", self.Workload.Name)
+	log.Info("Ending ", self.Workload.Name)
 
 	return nil
 }
 
 func (self *Executor) Start(wg *sync.WaitGroup) error {
 	self.results.Statuses = make(map[int]uint64)
-	log.Println("at executor start ", self.Workload)
+	log.Info("at executor start ", self.Workload)
+	//self.host = self.Globals.Server
+	//self.port = self.Globals.Port
+	//self.tls_mode = self.Globals.TLSMode
+	//self.Globals.StatusCodesAcceptance = self.Globals.StatusCodesAcceptance
 	go func() {
 		self.run(wg)
 	}()
@@ -178,24 +229,24 @@ func (self *Executor) Stop() error {
 }
 
 func (self *Executor) Report() (executor_result, error) {
-	log.Println("report for wl ", self.Workload.Id, ":")
-	log.Println("Total Requests ", self.results.Total)
-	log.Println("Min: ", self.results.Min)
-	log.Println("Max: ", self.results.Max)
-	log.Println("Avg: ", self.results.Avg)
-	log.Println("Connection Restarts: ", self.results.ConRestarts)
-	log.Println("Error Count: ", self.results.ErrorsCount)
-	log.Println("Statuses: ")
+	log.Info("report for wl ", self.Workload.Id, ":")
+	log.Info("Total Requests ", self.results.Total)
+	log.Info("Min: ", self.results.Min)
+	log.Info("Max: ", self.results.Max)
+	log.Info("Avg: ", self.results.Avg)
+	log.Info("Connection Restarts: ", self.results.ConRestarts)
+	log.Info("Error Count: ", self.results.ErrorsCount)
+	log.Info("Statuses: ")
 	for k, v := range self.results.Statuses {
 		log.Println(fmt.Sprintf("%d - %d", k, v))
 	}
 
-	log.Println("iops: ", self.results.Iops)
+	log.Info("iops: ", self.results.Iops)
 	for err_code, err_count := range self.results.Statuses {
-		if max_errors, ok := self.StatusCodesAcceptance[strconv.Itoa(err_code)]; ok {
+		if max_errors, ok := self.Globals.StatusCodesAcceptance[strconv.Itoa(err_code)]; ok {
 			if self.results.Total > 0 && err_count > 0 {
 				err_percent := (float64(err_count) * float64(100)) / float64(self.results.Total)
-				log.Printf("status code %d occured %f%% during the test \"%s\"",
+				log.Infof("status code %d occured %f%% during the test \"%s\"",
 					err_code, err_percent, self.Workload.Name)
 				if float64(err_percent) > float64(max_errors) {
 					return self.results,
@@ -207,6 +258,9 @@ func (self *Executor) Report() (executor_result, error) {
 			return self.results, errors.New(fmt.Sprintf("Executor %s completed with errors: %+v",
 				self.Workload.Name, self.results.Statuses))
 		}
+	}
+	if self.results.ErrorsCount > 0 {
+		return self.results, errors.New("executor completed with errors")
 	}
 	return self.results, nil
 }

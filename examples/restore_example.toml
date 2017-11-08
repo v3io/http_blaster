@@ -16,12 +16,13 @@ TLSMode=false
 
 [workloads]
    [workloads.line2kv]
-   name="line2kv example"
-   Generator="line2kv"
+   name="restore example"
+   Generator="restore"
    Container="1"
    Target=""
    workers=20
    payload="get_items.Big data.4.0"
+   schema="Big data.data.json"
 
 
 
