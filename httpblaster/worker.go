@@ -37,6 +37,7 @@ import (
 )
 
 const DialTimeout = 60 * time.Second
+const RequestTimeout = 600 * time.Second
 
 type worker_results struct {
 	count  uint64
@@ -78,7 +79,7 @@ func (w *worker) send_request(req *request_generators.Request) (error, time.Dura
 		time.Sleep(w.lazy_sleep)
 	}
 
-	err, duration = w.send(req.Request, response.Response, time.Second*120)
+	err, duration = w.send(req.Request, response.Response, RequestTimeout)
 
 	if err == nil {
 		code = response.Response.StatusCode()
