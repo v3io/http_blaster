@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"log"
+	"regexp"
 )
 
 type Schema struct {
@@ -75,14 +77,13 @@ func (self *EmdSchemaParser) LoadSchema(file_path, update_mode, update_expressio
 }
 
 func (self *EmdSchemaParser) GetUpdateExpressionIndexes() {
-	keys := strings.Split(self.updateExpression, "$")
+	r := regexp.MustCompile(`\$[a-zA-Z_]+`)
+	matches := r.FindAllString(self.updateExpression, -1)
 
-	for _, key := range keys {
-		k := strings.Split(key, ";")[0]
-		//k = strings.Split(key, "+")[0]
-		k = strings.TrimSpace(k)
-		self.updateExpression = strings.Replace(self.updateExpression, "$"+k, "%v", 1)
-		k = strings.Trim(k, "$")
+	for _, key := range matches {
+		self.updateExpression = strings.Replace(self.updateExpression, key, "%v", 1)
+		k := strings.Trim(key, "$")
+		log.Println(k)
 		for i, v := range self.values_map {
 			if v.Name == k {
 				self.update_fields_indexs = append(self.update_fields_indexs, i)
