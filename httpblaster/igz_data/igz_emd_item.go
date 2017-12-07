@@ -3,7 +3,7 @@ package igz_data
 import (
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
-	"github.com/nuclio/nuclio/pkg/errors"
+	"errors"
 	"fmt"
 )
 
