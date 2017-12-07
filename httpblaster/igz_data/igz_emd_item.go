@@ -2,7 +2,9 @@ package igz_data
 
 import (
 	"encoding/json"
-	log4go "github.com/alecthomas/log4go"
+	log "github.com/sirupsen/logrus"
+	"github.com/nuclio/nuclio/pkg/errors"
+	"fmt"
 )
 
 type IgzType string
@@ -36,7 +38,9 @@ func (self *IgzEmdItem) ToJsonString() string {
 
 func (self *IgzEmdItem) InsertKey(key string, value_type IgzType, value interface{}) error {
 	if _, ok := self.Key[key]; ok {
-		return log4go.Error("Key %s Override existing key %v", key, self.Key)
+		err := fmt.Sprintf("Key %s Override existing key %v", key, self.Key)
+		log.Error(err)
+		return errors.New(err)
 	}
 	self.Key[key] = make(map[string]interface{})
 	self.Key[key][string(value_type)] = value
@@ -45,7 +49,9 @@ func (self *IgzEmdItem) InsertKey(key string, value_type IgzType, value interfac
 
 func (self *IgzEmdItem) InsertItemAttr(attr_name string, value_type IgzType, value interface{}) error {
 	if _, ok := self.Item[attr_name]; ok {
-		return log4go.Error("Key %s Override existing item %v", attr_name, self.Item)
+		err := fmt.Sprintf("Key %s Override existing item %v", attr_name, self.Item)
+		log.Error(err)
+		return errors.New(err)
 	}
 	self.Item[attr_name] = make(map[string]interface{})
 	self.Item[attr_name][string(value_type)] = value
@@ -69,7 +75,9 @@ type IgzEmdItemUpdate struct {
 
 func (self *IgzEmdItemUpdate) InsertKey(key string, value_type IgzType, value interface{}) error {
 	if _, ok := self.Key[key]; ok {
-		return log4go.Error("Key %s Override existing key %v", key, self.Key)
+		err := fmt.Sprintf("Key %s Override existing key %v", key, self.Key)
+		log.Error(err)
+		return errors.New(err)
 	}
 	self.Key[key] = make(map[string]interface{})
 	self.Key[key][string(value_type)] = value
@@ -100,7 +108,9 @@ func (self *IgzEmdItemQuery) ToJsonString() string {
 
 func (self *IgzEmdItemQuery) InsertKey(key string, value_type IgzType, value interface{}) error {
 	if _, ok := self.Key[key]; ok {
-		return log4go.Error("Key %s Override existing key %v", key, self.Key)
+		err := fmt.Sprintf("Key %s Override existing key %v", key, self.Key)
+		log.Error(err)
+		return errors.New(err)
 	}
 	self.Key[key] = make(map[string]interface{})
 	self.Key[key][string(value_type)] = value
@@ -132,7 +142,9 @@ func (self *IgzEmdItemsQuery) ToJsonString() string {
 
 func (self *IgzEmdItemsQuery) InsertStartingKey(key string, value_type IgzType, value interface{}) error {
 	if _, ok := self.StartingKey[key]; ok {
-		return log4go.Error("Key %s Override existing key %v", key, self.StartingKey)
+		err := fmt.Sprintf("Key %s Override existing key %v", key, self.StartingKey)
+		log.Error(err)
+		return errors.New(err)
 	}
 	self.StartingKey[key] = make(map[string]interface{})
 	self.StartingKey[key][string(value_type)] = value
@@ -141,7 +153,9 @@ func (self *IgzEmdItemsQuery) InsertStartingKey(key string, value_type IgzType, 
 
 func (self *IgzEmdItemsQuery) InsertEndingKey(key string, value_type IgzType, value interface{}) error {
 	if _, ok := self.EndingKey[key]; ok {
-		return log4go.Error("Key %s Override existing key %v", key, self.EndingKey)
+		err := fmt.Sprintf("Key %s Override existing key %v", key, self.EndingKey)
+		log.Error(err)
+		return errors.New(err)
 	}
 	self.EndingKey[key] = make(map[string]interface{})
 	self.EndingKey[key][string(value_type)] = value
