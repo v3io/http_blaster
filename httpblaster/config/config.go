@@ -87,6 +87,8 @@ type Workload struct {
 	ShardCount  uint32
 	ShardColumn uint32
 	Separator   string
+	UpdateMode  string
+	UpdateExpression string
 }
 
 func LoadConfig(file_path string) (TomlConfig, error) {

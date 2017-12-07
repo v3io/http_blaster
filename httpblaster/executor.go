@@ -88,6 +88,9 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	case request_generators.CSV2KV:
 		req_gen = &request_generators.Csv2KV{}
 		break
+	case request_generators.CSVUPDATEKV:
+		req_gen = &request_generators.CsvUpdateKV{}
+		break
 	case request_generators.JSON2KV:
 		req_gen = &request_generators.Json2KV{}
 		break

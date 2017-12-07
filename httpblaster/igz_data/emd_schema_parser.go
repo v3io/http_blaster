@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
+	"regexp"
 )
 
 type Schema struct {
@@ -22,6 +23,7 @@ type SchemaSettings struct {
 	Separator config.Sep
 	KeyFields string
 	KeyFormat string
+	UpdateFields string
 }
 
 type SchemaValue struct {
@@ -41,9 +43,13 @@ type EmdSchemaParser struct {
 	schema_key_format string
 	schema_key_fields string
 	JsonSchema        Schema
+	update_fields     string
+	update_fields_indexs []int
+	updateMode        string
+	updateExpression  string
 }
 
-func (self *EmdSchemaParser) LoadSchema(file_path string) error {
+func (self *EmdSchemaParser) LoadSchema(file_path, update_mode, update_expression string) error {
 
 	self.values_map = make(map[int]SchemaValue)
 	plan, _ := ioutil.ReadFile(file_path)
@@ -56,12 +62,32 @@ func (self *EmdSchemaParser) LoadSchema(file_path string) error {
 
 	self.schema_key_format = settings.KeyFormat
 	self.schema_key_fields = settings.KeyFields
+	self.updateMode = update_mode
+	self.updateExpression = update_expression
 
 	for _, v := range columns {
 		self.values_map[v.Index] = v
 	}
 	self.GetKeyIndexes()
+	if len(self.updateExpression) > 0 {
+		self.GetUpdateExpressionIndexes()
+	}
 	return nil
+}
+
+func (self *EmdSchemaParser) GetUpdateExpressionIndexes() {
+	r := regexp.MustCompile(`\$[a-zA-Z_]+`)
+	matches := r.FindAllString(self.updateExpression, -1)
+
+	for _, key := range matches {
+		self.updateExpression = strings.Replace(self.updateExpression, key, "%v", 1)
+		k := strings.Trim(key, "$")
+		for i, v := range self.values_map {
+			if v.Name == k {
+				self.update_fields_indexs = append(self.update_fields_indexs, i)
+			}
+		}
+	}
 }
 
 func (self *EmdSchemaParser) GetKeyIndexes() {
@@ -74,6 +100,21 @@ func (self *EmdSchemaParser) GetKeyIndexes() {
 		}
 	}
 }
+
+func (self *EmdSchemaParser) GetFieldsIndexes(fields, delimiter string ) []int{
+	keys := strings.Split(fields, delimiter)
+	indexArray := make([]int,1)
+
+	for _, key := range keys {
+		for i, v := range self.values_map {
+			if v.Name == key {
+				indexArray = append(indexArray, i)
+			}
+		}
+	}
+	return indexArray
+}
+
 
 func (self *EmdSchemaParser) KeyFromCSVRecord(vals []string) string {
 	//when no keys, generate random
@@ -106,6 +147,24 @@ func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 	}
 	return string(emd_item.ToJsonString())
 }
+
+
+func (self *EmdSchemaParser) EmdUpdateFromCSVRecord(vals []string) string {
+	emd_update := NewEmdItemUpdate()
+	emd_update.InsertKey("key", T_STRING, self.KeyFromCSVRecord(vals))
+	emd_update.UpdateMode = self.updateMode
+	var fields []interface{}
+	for _, i := range self.update_fields_indexs {
+		fields = append(fields, vals[i])
+	}
+	if len(fields) > 0 {
+		emd_update.UpdateExpression = fmt.Sprintf(self.updateExpression, fields...)
+	}else{
+		emd_update.UpdateExpression = self.updateExpression
+	}
+	return string(emd_update.ToJsonString())
+}
+
 
 func (self *EmdSchemaParser) HandleJsonSource(source string) []string {
 	var out []string
