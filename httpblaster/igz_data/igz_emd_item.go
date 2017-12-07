@@ -64,17 +64,17 @@ type IgzEmdItemUpdate struct {
 	//TableName           string
 	UpdateMode 	    string
 	UpdateExpression    string
-	//Key  map[string]map[string]interface{}
+	Key  map[string]map[string]interface{}
 }
-//
-//func (self *IgzEmdItemUpdate) InsertKey(key string, value_type IgzType, value interface{}) error {
-//	if _, ok := self.Key[key]; ok {
-//		return log4go.Error("Key %s Override existing key %v", key, self.Key)
-//	}
-//	self.Key[key] = make(map[string]interface{})
-//	self.Key[key][string(value_type)] = value
-//	return nil
-//}
+
+func (self *IgzEmdItemUpdate) InsertKey(key string, value_type IgzType, value interface{}) error {
+	if _, ok := self.Key[key]; ok {
+		return log4go.Error("Key %s Override existing key %v", key, self.Key)
+	}
+	self.Key[key] = make(map[string]interface{})
+	self.Key[key][string(value_type)] = value
+	return nil
+}
 
 func (self *IgzEmdItemUpdate) ToJsonString() string {
 	body, _ := json.Marshal(self)
@@ -83,7 +83,7 @@ func (self *IgzEmdItemUpdate) ToJsonString() string {
 
 func NewEmdItemUpdate() *IgzEmdItemUpdate {
 	i := &IgzEmdItemUpdate{}
-	//i.Key = make(map[string]map[string]interface{})
+	i.Key = make(map[string]map[string]interface{})
 	return i
 }
 

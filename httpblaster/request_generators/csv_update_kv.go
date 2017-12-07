@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"fmt"
 )
 
 type CsvUpdateKV struct {
@@ -35,6 +36,7 @@ func (self *CsvUpdateKV) generate_request(ch_records chan []string, ch_req chan 
 		req := AcquireRequest()
 		self.PrepareRequest(contentType, self.workload.Header, "PUT",
 			self.base_uri, json_payload, host, req.Request)
+		//panic(fmt.Sprintf("%+v", req))
 		ch_req <- req
 	}
 }

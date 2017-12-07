@@ -153,6 +153,7 @@ func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 
 func (self *EmdSchemaParser) EmdUpdateFromCSVRecord(vals []string) string {
 	emd_update := NewEmdItemUpdate()
+	emd_update.InsertKey("key", T_STRING, self.KeyFromCSVRecord(vals))
 	emd_update.UpdateMode = self.updateMode
 	var fields []interface{}
 	for _, i := range self.update_fields_indexs {

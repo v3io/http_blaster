@@ -2,8 +2,8 @@
   "SETTINGS": {
     "Format": "csv",
     "Separator": ",",
-    "KeyFields": "",
-    "KeyFormat": ""
+    "KeyFields": "customer_code",
+    "KeyFormat": "%v"
   },
   "COLUMNS": [{
     "Index": 0,

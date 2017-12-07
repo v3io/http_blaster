@@ -20,7 +20,7 @@ title = "Workload example"
         payload="examples/payloads/data_csv_100K.txt"
         schema="examples/schemas/schema_csv_update_example.json"
         UpdateMode = "CreateOrReplaceAttributes"
-        UpdateExpression = "if_not_exists( hits , 0 ); hits=hits+1; subcustomer_id=$subcustomer_id; geographic_region=$geographic_region; billing_flag=$billing_flag; ip_address=$ip_address"
+        UpdateExpression = "if_not_exists( hits , 0 ); hits=hits+1; subcustomer_id='$subcustomer_id'; geographic_region=$geographic_region; billing_flag=$billing_flag; ip_address='$ip_address'"
 
 
 
