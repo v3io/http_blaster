@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"strconv"
 	"strings"
-	"log"
 	"regexp"
 )
 
@@ -83,7 +82,6 @@ func (self *EmdSchemaParser) GetUpdateExpressionIndexes() {
 	for _, key := range matches {
 		self.updateExpression = strings.Replace(self.updateExpression, key, "%v", 1)
 		k := strings.Trim(key, "$")
-		log.Println(k)
 		for i, v := range self.values_map {
 			if v.Name == k {
 				self.update_fields_indexs = append(self.update_fields_indexs, i)
