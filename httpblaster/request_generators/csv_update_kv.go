@@ -35,8 +35,6 @@ func (self *CsvUpdateKV) generate_request(ch_records chan []string, ch_req chan 
 		req := AcquireRequest()
 		self.PrepareRequest(contentType, self.workload.Header, "PUT",
 			self.base_uri, json_payload, host, req.Request)
-		log.Printf("%+v", req)
-		panic("ttt")
 		ch_req <- req
 	}
 }
