@@ -1,0 +1,28 @@
+title = "Workload example"
+
+[global]
+    Duration = "160s"
+    server="192.168.206.10"
+    port="8081"
+    TLSMode=false
+    [global.StatusCodesAcceptance]
+        200 = 100.0 # upto 100% return status of 200
+        204 = 100.0
+        205 = 100.0
+
+[workloads]
+    [workloads.load_to_t1]
+        name="load_to_t1"
+        Generator="csvupdatekv"
+        container="1"
+        Target="t2/"
+        workers=10
+        payload="examples/payloads/data_csv_100K.txt"
+        schema="examples/schemas/schema_csv_update_example.json"
+        UpdateMode = "CreateOrReplaceAttributes"
+        UpdateExpression = "if_not_exists( hits , 0 ); hits=hits+1; subcustomer_id=$subcustomer_id; geographic_region=$geographic_region; billing_flag=$billing_flag; ip_address=$ip_address"
+
+
+
+
+

@@ -12,6 +12,7 @@ const (
 	PERFORMANCE = "performance"
 	LINE2STREAM = "line2stream"
 	CSV2KV      = "csv2kv"
+	CSVUPDATEKV = "csvupdatekv"
 	CSV2STREAM  = "csv2stream"
 	JSON2KV     = "json2kv"
 	STREAM_GET  = "stream_get"

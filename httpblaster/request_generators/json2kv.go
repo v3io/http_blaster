@@ -26,7 +26,7 @@ func (self *Json2KV) generate_request(ch_records chan []byte, ch_req chan *Reque
 	defer wg.Done()
 	parser := igz_data.EmdSchemaParser{}
 	var contentType string = "text/html"
-	e := parser.LoadSchema(self.workload.Schema)
+	e := parser.LoadSchema(self.workload.Schema, "", "")
 	if e != nil {
 		panic(e)
 	}

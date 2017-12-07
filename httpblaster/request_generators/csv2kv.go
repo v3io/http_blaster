@@ -26,7 +26,7 @@ func (self *Csv2KV) generate_request(ch_records chan []string, ch_req chan *Requ
 	defer wg.Done()
 	parser := igz_data.EmdSchemaParser{}
 	var contentType string = "text/html"
-	e := parser.LoadSchema(self.workload.Schema)
+	e := parser.LoadSchema(self.workload.Schema, "", "")
 	if e != nil {
 		panic(e)
 	}
@@ -43,7 +43,7 @@ func (self *Csv2KV) generate(ch_req chan *Request, payload string, host string) 
 	defer close(ch_req)
 	var ch_records chan []string = make(chan []string, 1000)
 	parser := igz_data.EmdSchemaParser{}
-	e := parser.LoadSchema(self.workload.Schema)
+	e := parser.LoadSchema(self.workload.Schema, "", "")
 	if e != nil {
 		panic(e)
 	}

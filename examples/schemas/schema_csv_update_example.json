@@ -1,0 +1,57 @@
+{
+  "SETTINGS": {
+    "Format": "csv",
+    "Separator": ",",
+    "KeyFields": "",
+    "KeyFormat": ""
+  },
+  "COLUMNS": [{
+    "Index": 0,
+    "Type": "S",
+    "Name": "customer_code",
+    "Nullable": true
+    },
+    {
+      "Index": 1,
+      "Type": "S",
+      "Name": "timestamp_of_data",
+      "Nullable": true
+    },
+    {
+      "Index": 2,
+      "Type": "S",
+      "Name": "subcustomer_id",
+      "Nullable": true
+    },
+    {
+      "Index": 3,
+      "Type": "S",
+      "Name": "geographic_region",
+      "Nullable": true
+    },
+    {
+      "Index": 4,
+      "Type": "S",
+      "Name": "billing_flag",
+      "Nullable": true
+    },
+    {
+      "Index": 5,
+      "Type": "S",
+      "Name": "ip_address",
+      "Nullable": true
+    },
+    {
+      "Index": 6,
+      "Type": "S",
+      "Name": "bytes",
+      "Nullable": true
+    },
+    {
+      "Index": 7,
+      "Type": "S",
+      "Name": "hits",
+      "Nullable": true
+    }
+  ]
+}
