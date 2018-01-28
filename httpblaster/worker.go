@@ -34,6 +34,10 @@ import (
 	"os"
 	"sync"
 	"time"
+	"path/filepath"
+	"bytes"
+	"encoding/gob"
+	"encoding/base64"
 )
 
 const DialTimeout = 60 * time.Second
@@ -194,12 +198,13 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 		end := time.Now()
 		w.ch_duration <- end.Sub(start)
 	}()
+
 	w.timer.Reset(timeout)
 	select {
 	case duration := <-w.ch_duration:
 		return nil, duration
 	case err := <-w.ch_error:
-		log.Debugf("rerquest completed with error:%s", err.Error())
+		log.Debugf("request completed with error:%s", err.Error())
 		return err, timeout
 	case <-w.timer.C:
 		log.Printf("Error: request didn't complete on timeout url:%s", req.URI().String())
@@ -208,16 +213,56 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	return nil, timeout
 }
 
+func (w * worker) dump_requests() chan *fasthttp.Request{
+	c := make(chan *fasthttp.Request)
+	t := time.Now()
+	dir := t.Format("2006-01-02-150405")
+	err := os.Mkdir(dir,0777)
+	if err != nil{
+		log.Error("Fail to create dump dir %v:%v", dir, err.Error())
+		return nil
+	}
+
+	go func() {
+		b := bytes.Buffer{}
+		e := gob.NewEncoder(&b)
+
+		i := 0
+		for r := range c{
+			file_name := fmt.Sprintf("request_%v", i)
+			file_path := filepath.Join(dir, file_name)
+			i++
+			err := e.Encode(r)
+			if err != nil { fmt.Println(`failed gob Encode`, err) }
+			str := base64.StdEncoding.EncodeToString(b.Bytes())
+			file, err := os.Create(file_path)
+			if err != nil{
+				log.Errorf("Fail to open file %v for request dump: %v", file_path, err.Error())
+			}else{
+				log.Debug("Write dump request")
+				file.WriteString(str)
+				file.Close()
+			}
+		}
+	}()
+	return c
+}
+
 func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
 	wg *sync.WaitGroup, release_req bool,
 	ch_latency chan time.Duration,
-	ch_statuses chan int) {
+	ch_statuses chan int,
+	dump_requests bool) {
 	defer wg.Done()
 	var onceSetRequest sync.Once
 	var oncePrepare sync.Once
 	var request *request_generators.Request
-	var submit_request *request_generators.Request = request_generators.AcquireRequest()
+	submit_request := request_generators.AcquireRequest()
 	var req_type sync.Once
+	var ch_dump chan *fasthttp.Request
+	if dump_requests{
+		ch_dump = w.dump_requests()
+	}
 
 	prepareRequest := func() {
 		request.Request.Header.CopyTo(&submit_request.Request.Header)
@@ -259,6 +304,12 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 				//not the last loop
 				request_generators.ReleaseResponse(response)
 			}
+		}
+		if response.Response.StatusCode() & 400 != 0 && dump_requests{
+			//dump request
+			r:= fasthttp.AcquireRequest()
+			request.Request.CopyTo(r)
+			ch_dump <- r
 		}
 		if ch_resp != nil {
 			ch_resp <- response

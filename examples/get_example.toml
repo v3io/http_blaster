@@ -16,9 +16,10 @@ TLSMode=false
    [workloads.get]
     generator="performance"
     name="multi get from 20 workers"
-    container=""
-    Target="test.html"
+    container="dsdsdsd"
+    Target="tesdsdsdsdsdt.html"
     Duration = "10s"
+
     TYPE="GET"
-    count=0
-    workers=20
+    count=1
+    workers=1

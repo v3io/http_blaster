@@ -8,9 +8,9 @@ import (
 	"github.com/nu7hatch/gouuid"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"io/ioutil"
+	"regexp"
 	"strconv"
 	"strings"
-	"regexp"
 )
 
 type Schema struct {
@@ -19,10 +19,10 @@ type Schema struct {
 }
 
 type SchemaSettings struct {
-	Format    string
-	Separator config.Sep
-	KeyFields string
-	KeyFormat string
+	Format       string
+	Separator    config.Sep
+	KeyFields    string
+	KeyFormat    string
 	UpdateFields string
 }
 
@@ -37,16 +37,16 @@ type SchemaValue struct {
 }
 
 type EmdSchemaParser struct {
-	Schema_file       string
-	values_map        map[int]SchemaValue
-	schema_key_indexs []int
-	schema_key_format string
-	schema_key_fields string
-	JsonSchema        Schema
-	update_fields     string
+	Schema_file          string
+	values_map           map[int]SchemaValue
+	schema_key_indexs    []int
+	schema_key_format    string
+	schema_key_fields    string
+	JsonSchema           Schema
+	update_fields        string
 	update_fields_indexs []int
-	updateMode        string
-	updateExpression  string
+	updateMode           string
+	updateExpression     string
 }
 
 func (self *EmdSchemaParser) LoadSchema(file_path, update_mode, update_expression string) error {
@@ -101,9 +101,9 @@ func (self *EmdSchemaParser) GetKeyIndexes() {
 	}
 }
 
-func (self *EmdSchemaParser) GetFieldsIndexes(fields, delimiter string ) []int{
+func (self *EmdSchemaParser) GetFieldsIndexes(fields, delimiter string) []int {
 	keys := strings.Split(fields, delimiter)
-	indexArray := make([]int,1)
+	indexArray := make([]int, 1)
 
 	for _, key := range keys {
 		for i, v := range self.values_map {
@@ -114,7 +114,6 @@ func (self *EmdSchemaParser) GetFieldsIndexes(fields, delimiter string ) []int{
 	}
 	return indexArray
 }
-
 
 func (self *EmdSchemaParser) KeyFromCSVRecord(vals []string) string {
 	//when no keys, generate random
@@ -148,7 +147,6 @@ func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 	return string(emd_item.ToJsonString())
 }
 
-
 func (self *EmdSchemaParser) EmdUpdateFromCSVRecord(vals []string) string {
 	emd_update := NewEmdItemUpdate()
 	//emd_update.InsertKey("key", T_STRING, self.KeyFromCSVRecord(vals))
@@ -159,12 +157,11 @@ func (self *EmdSchemaParser) EmdUpdateFromCSVRecord(vals []string) string {
 	}
 	if len(fields) > 0 {
 		emd_update.UpdateExpression = fmt.Sprintf(self.updateExpression, fields...)
-	}else{
+	} else {
 		emd_update.UpdateExpression = self.updateExpression
 	}
 	return string(emd_update.ToJsonString())
 }
-
 
 func (self *EmdSchemaParser) HandleJsonSource(source string) []string {
 	var out []string

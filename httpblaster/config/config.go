@@ -68,26 +68,26 @@ type Global struct {
 }
 
 type Workload struct {
-	Name        string
-	Container   string
-	Target      string
-	Type        string
-	Duration    duration
-	Count       int
-	Workers     int
-	Id          int
-	Header      map[string]string
-	Payload     string
-	FileIndex   int
-	FilesCount  int
-	Random      bool
-	Generator   string
-	Schema      string
-	Lazy        int
-	ShardCount  uint32
-	ShardColumn uint32
-	Separator   string
-	UpdateMode  string
+	Name             string
+	Container        string
+	Target           string
+	Type             string
+	Duration         duration
+	Count            int
+	Workers          int
+	Id               int
+	Header           map[string]string
+	Payload          string
+	FileIndex        int
+	FilesCount       int
+	Random           bool
+	Generator        string
+	Schema           string
+	Lazy             int
+	ShardCount       uint32
+	ShardColumn      uint32
+	Separator        string
+	UpdateMode       string
 	UpdateExpression string
 }
 
