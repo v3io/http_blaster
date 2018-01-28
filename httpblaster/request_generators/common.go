@@ -18,6 +18,7 @@ const (
 	STREAM_GET  = "stream_get"
 	LINE2KV     = "line2kv"
 	RESTORE     = "restore"
+	LINE2HTTP   = "line2http"
 )
 
 type RequestCommon struct {

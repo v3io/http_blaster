@@ -103,6 +103,9 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	case request_generators.CSV2STREAM:
 		req_gen = &request_generators.CSV2StreamGenerator{}
 		break
+	case request_generators.LINE2HTTP:
+		req_gen = &request_generators.Line2SHttpGenerator{}
+		break
 	case request_generators.STREAM_GET:
 		req_gen = &request_generators.StreamGetGenerator{}
 		ch_response = make(chan *request_generators.Response)
