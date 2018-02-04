@@ -25,7 +25,7 @@ func (self *Line2SHttpGenerator) generate_request(ch_lines chan string,
 	ch_req chan *Request,
 	host string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var contentType string = "application/json"
+	var contentType string = "application/text"
 	for r := range ch_lines {
 		req := AcquireRequest()
 		self.PrepareRequest(contentType, self.workload.Header, "PUT",
