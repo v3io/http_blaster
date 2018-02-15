@@ -41,6 +41,8 @@ import (
 
 const DialTimeout = 60 * time.Second
 const RequestTimeout = 600 * time.Second
+var once sync.Once
+var dump_dir string
 
 type worker_results struct {
 	count  uint64
@@ -69,6 +71,7 @@ type worker struct {
 	retry_codes         map[int]interface{}
 	retry_count         int
 	timer               *time.Timer
+	id 					int
 }
 
 func (w *worker) send_request(req *request_generators.Request) (error, time.Duration, *request_generators.Response) {
@@ -212,46 +215,47 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	return nil, timeout
 }
 
-func (w * worker) dump_requests(dump_location string) chan *fasthttp.Request{
-	c := make(chan *fasthttp.Request)
-	t := time.Now()
-	dir := path.Join(dump_location,fmt.Sprintf("BlasterDump-%v", t.Format("2006-01-02-150405")))
-	err := os.Mkdir(dir,0777)
-	if err != nil{
-		log.Errorf("Fail to create dump dir %v:%v", dir, err.Error())
-		return nil
-	}
+func (w * worker) dump_requests(ch_dump chan *fasthttp.Request, dump_location string,
+	sync_dump *sync.WaitGroup){
 
-	go func() {
-		i := 0
-		for r := range c{
-			file_name := fmt.Sprintf("request_%v", i)
-			file_path := filepath.Join(dir, file_name)
-			i++
-			file, err := os.Create(file_path)
-			if err != nil{
-				log.Errorf("Fail to open file %v for request dump: %v", file_path, err.Error())
-			}else{
-				rdump := &request_generators.RequestDump{}
-				rdump.Host = string(r.Host())
-				rdump.Method = string(r.Header.Method())
-				rdump.Body = string(r.Body())
-				rdump.URI = r.URI().String()
-				rdump.Headers = make(map[string]string)
-				r.Header.VisitAll(func(key, value []byte) {
-					rdump.Headers[string(key)] = string(value)
-				})
-				jsonStr, err := json.Marshal(rdump)
-				if err != nil{
-					log.Errorf("Fail to dump request %v", err.Error())
-				}
-				log.Debug("Write dump request")
-				file.Write(jsonStr)
-				file.Close()
-			}
+	once.Do(func() {
+		t := time.Now()
+		dump_dir = path.Join(dump_location, fmt.Sprintf("BlasterDump-%v", t.Format("2006-01-02-150405")))
+		err := os.Mkdir(dump_dir, 0777)
+		if err != nil {
+			log.Errorf("Fail to create dump dir %v:%v", dump_dir, err.Error())
 		}
-	}()
-	return c
+	})
+	defer sync_dump.Done()
+
+	i := 0
+	for r := range ch_dump {
+		file_name := fmt.Sprintf("w%v_request_%v",w.id, i)
+		file_path := filepath.Join(dump_dir, file_name)
+		log.Info("generating dump file ", file_path)
+		i++
+		file, err := os.Create(file_path)
+		if err != nil {
+			log.Errorf("Fail to open file %v for request dump: %v", file_path, err.Error())
+		} else {
+			rdump := &request_generators.RequestDump{}
+			rdump.Host = string(r.Host())
+			rdump.Method = string(r.Header.Method())
+			rdump.Body = string(r.Body())
+			rdump.URI = r.URI().String()
+			rdump.Headers = make(map[string]string)
+			r.Header.VisitAll(func(key, value []byte) {
+				rdump.Headers[string(key)] = string(value)
+			})
+			jsonStr, err := json.Marshal(rdump)
+			if err != nil {
+				log.Errorf("Fail to dump request %v", err.Error())
+			}
+			log.Debug("Write dump request")
+			file.Write(jsonStr)
+			file.Close()
+		}
+	}
 }
 
 func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
@@ -267,8 +271,11 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 	submit_request := request_generators.AcquireRequest()
 	var req_type sync.Once
 	var ch_dump chan *fasthttp.Request
+	var sync_dump sync.WaitGroup
 	if dump_requests{
-		ch_dump = w.dump_requests(dump_location)
+		ch_dump = make(chan *fasthttp.Request, 100)
+		sync_dump.Add(1)
+		go w.dump_requests(ch_dump, dump_location, &sync_dump)
 	}
 
 	prepareRequest := func() {
@@ -328,10 +335,15 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 			request_generators.ReleaseRequest(req)
 		}
 	}
+	if dump_requests{
+		log.Info("wait for dump routine to end")
+		close(ch_dump)
+		sync_dump.Wait()
+	}
 	w.close_connection()
 }
 
-func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retry_count int, pem_file string) *worker {
+func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retry_count int, pem_file string, id int) *worker {
 	if host == "" {
 		return nil
 	}
@@ -344,7 +356,7 @@ func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retry_
 		retry_count = 1
 	}
 	worker := worker{host: host, is_tls_client: tls_client, retry_codes: retry_codes_map,
-		retry_count: retry_count, pem_file: pem_file}
+		retry_count: retry_count, pem_file: pem_file, id: id }
 	worker.results.codes = make(map[int]uint64)
 	worker.results.min = time.Duration(time.Second * 10)
 	worker.open_connection()

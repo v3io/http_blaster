@@ -147,7 +147,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 
 		server := fmt.Sprintf("%s:%s", host_address, self.Globals.Port)
 		w := NewWorker(server, self.Globals.TLSMode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
-			self.Globals.RetryCount, self.Globals.PemFile)
+			self.Globals.RetryCount, self.Globals.PemFile, i)
 		self.workers = append(self.workers, w)
 		var ch_latency chan time.Duration
 		if self.Workload.Type == "GET" {
