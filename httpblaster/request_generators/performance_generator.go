@@ -37,6 +37,11 @@ func (self *PerformanceGenerator) GenerateRequests(global config.Global, wl conf
 		}
 	} else {
 		if self.workload.Type == http.MethodPut || self.workload.Type == http.MethodPost {
+			Data_bfr = make([]byte, global.Block_size, global.Block_size)
+			for i, _ := range Data_bfr {
+				Data_bfr[i] = byte(rand.Int())
+			}
+
 			payload = bytes.NewBuffer(Data_bfr).Bytes()
 
 		}
