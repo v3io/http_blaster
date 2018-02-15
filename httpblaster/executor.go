@@ -67,6 +67,7 @@ type Executor struct {
 	Ch_put_latency chan time.Duration
 	Ch_statuses    chan int
 	DumpFailures   bool
+	DumpLocation   string
 }
 
 func (self *Executor) load_request_generator() (chan *request_generators.Request,
@@ -152,7 +153,8 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 			ch_latency = self.Ch_put_latency
 		}
 
-		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag, ch_latency, self.Ch_statuses, self.DumpFailures)
+		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag, ch_latency,
+			self.Ch_statuses, self.DumpFailures, self.DumpLocation)
 	}
 	ended := make(chan bool)
 	go func() {

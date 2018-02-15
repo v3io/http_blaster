@@ -6,3 +6,5 @@
 http_blaster
 #ignore iml
 http_blaster.iml
+BlasterDump-*
+*results*

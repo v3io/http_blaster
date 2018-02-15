@@ -60,6 +60,7 @@ var (
 	StatusesCollector   tui.StatusesCollector
 	term_ui             *tui.Term_ui
 	dump_failures       bool = true
+	dump_location 		string ="."
 )
 
 const AppVersion = "3.0.0"
@@ -87,6 +88,8 @@ func init() {
 		default_enable_ui     = false
 		usage_dump_failures   = "enable 4xx status requests dump to file"
 		defaule_dump_failures = false
+		usage_dump_location   = "location of dump requests"
+		default_dump_location = "."
 	)
 	flag.StringVar(&conf_file, "conf", default_conf, usage_conf)
 	flag.StringVar(&conf_file, "c", default_conf, usage_conf+" (shorthand)")
@@ -99,6 +102,8 @@ func init() {
 	flag.IntVar(&worker_qd, "q", default_worker_qd, usage_worker_qd)
 	flag.BoolVar(&enable_ui, "u", default_enable_ui, usage_enable_ui)
 	flag.BoolVar(&dump_failures, "f", defaule_dump_failures, usage_dump_failures)
+	flag.StringVar(&dump_location, "l", default_dump_location, usage_dump_location)
+
 }
 
 func get_workload_id() int {
@@ -179,7 +184,8 @@ func generate_executors(term_ui *tui.Term_ui) {
 			Ch_get_latency: ch_get_latency,
 			Ch_put_latency: ch_put_latency,
 			Ch_statuses:    ch_statuses,
-			DumpFailures:	dump_failures}
+			DumpFailures:	dump_failures,
+			DumpLocation:   dump_location}
 		executors = append(executors, e)
 	}
 }
