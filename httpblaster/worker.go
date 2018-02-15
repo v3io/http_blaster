@@ -232,14 +232,15 @@ func (w * worker) dump_requests(dump_location string) chan *fasthttp.Request{
 			if err != nil{
 				log.Errorf("Fail to open file %v for request dump: %v", file_path, err.Error())
 			}else{
-				rdump := make(map[string]interface{})
-				rdump["URI"] = r.URI().String()
-				rdump["Body"] = string(r.Body())
-				header := make(map[string]interface{})
+				rdump := &request_generators.RequestDump{}
+				rdump.Host = string(r.Host())
+				rdump.Method = string(r.Header.Method())
+				rdump.Body = string(r.Body())
+				rdump.URI = r.URI().String()
+				rdump.Headers = make(map[string]string)
 				r.Header.VisitAll(func(key, value []byte) {
-					header[string(key)] = string(value)
+					rdump.Headers[string(key)] = string(value)
 				})
-				rdump["Headers"] = header
 				jsonStr, err := json.Marshal(rdump)
 				if err != nil{
 					log.Errorf("Fail to dump request %v", err.Error())

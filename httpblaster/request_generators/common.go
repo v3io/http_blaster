@@ -20,6 +20,7 @@ const (
 	LINE2KV     = "line2kv"
 	RESTORE     = "restore"
 	LINE2HTTP   = "line2http"
+	REPLAY      = "replay"
 )
 
 type RequestCommon struct {

@@ -108,6 +108,9 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	case request_generators.LINE2HTTP:
 		req_gen = &request_generators.Line2HttpGenerator{}
 		break
+	case request_generators.REPLAY:
+		req_gen = &request_generators.Replay{}
+		break
 	case request_generators.STREAM_GET:
 		req_gen = &request_generators.StreamGetGenerator{}
 		ch_response = make(chan *request_generators.Response)
