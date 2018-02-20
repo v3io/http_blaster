@@ -13,7 +13,6 @@ import (
 	"os"
 	"regexp"
 	"sync"
-	"net/url"
 )
 
 type RestoreGenerator struct {
@@ -103,9 +102,9 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 							payload.WriteString(`{"Item": `)
 							payload.Write(j)
 							payload.WriteString(`}`)
-							u := url.URL{}
-							u.Path = self.base_uri + dir_name.(string) + item_name
-							ch_items <- &BackupItem{Uri: u.EscapedPath(),
+							//u := url.URL{}
+							//u.Path = self.base_uri + dir_name.(string) + item_name
+							ch_items <- &BackupItem{Uri: self.base_uri + dir_name.(string) + item_name,
 								Payload: payload.Bytes()}
 						}
 					}
