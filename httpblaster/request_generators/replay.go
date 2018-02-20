@@ -2,14 +2,14 @@ package request_generators
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/config"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"sync"
-	"encoding/json"
-	"io/ioutil"
 )
 
 type Replay struct {
@@ -29,7 +29,7 @@ func (self *Replay) generate_request(ch_records chan []byte, ch_req chan *Reques
 		json.Unmarshal(r, req_dump)
 
 		req := AcquireRequest()
-		self.PrepareRequest(contentType,req_dump.Headers,
+		self.PrepareRequest(contentType, req_dump.Headers,
 			req_dump.Method,
 			req_dump.URI,
 			req_dump.Body,
@@ -56,9 +56,9 @@ func (self *Replay) generate(ch_req chan *Request, payload string, host string) 
 			r_count++
 			reader := bufio.NewReader(file)
 			data, err := ioutil.ReadAll(reader)
-			if err != nil{
-				log.Errorf("Fail to read file %v:%v", f,err.Error())
-			}else {
+			if err != nil {
+				log.Errorf("Fail to read file %v:%v", f, err.Error())
+			} else {
 				ch_records <- data
 			}
 			log.Println(fmt.Sprintf("Finish file scaning, generated %d requests ", r_count))

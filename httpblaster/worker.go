@@ -23,6 +23,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -32,15 +33,15 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path"
+	"path/filepath"
 	"sync"
 	"time"
-	"path/filepath"
-	"encoding/json"
-	"path"
 )
 
 const DialTimeout = 60 * time.Second
 const RequestTimeout = 600 * time.Second
+
 var once sync.Once
 var dump_dir string
 
@@ -71,7 +72,7 @@ type worker struct {
 	retry_codes         map[int]interface{}
 	retry_count         int
 	timer               *time.Timer
-	id 					int
+	id                  int
 }
 
 func (w *worker) send_request(req *request_generators.Request) (error, time.Duration, *request_generators.Response) {
@@ -122,7 +123,7 @@ func (w *worker) open_connection() {
 		w.conn = conn
 	}
 	w.br = bufio.NewReader(w.conn)
-	if w.br == nil{
+	if w.br == nil {
 		log.Errorf("Reader is nil, conn: %v", conn)
 	}
 	w.bw = bufio.NewWriter(w.conn)
@@ -215,8 +216,8 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	return nil, timeout
 }
 
-func (w * worker) dump_requests(ch_dump chan *fasthttp.Request, dump_location string,
-	sync_dump *sync.WaitGroup){
+func (w *worker) dump_requests(ch_dump chan *fasthttp.Request, dump_location string,
+	sync_dump *sync.WaitGroup) {
 
 	once.Do(func() {
 		t := time.Now()
@@ -230,7 +231,7 @@ func (w * worker) dump_requests(ch_dump chan *fasthttp.Request, dump_location st
 
 	i := 0
 	for r := range ch_dump {
-		file_name := fmt.Sprintf("w%v_request_%v",w.id, i)
+		file_name := fmt.Sprintf("w%v_request_%v", w.id, i)
 		file_path := filepath.Join(dump_dir, file_name)
 		log.Info("generating dump file ", file_path)
 		i++
@@ -259,11 +260,11 @@ func (w * worker) dump_requests(ch_dump chan *fasthttp.Request, dump_location st
 }
 
 func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
-		wg *sync.WaitGroup, release_req bool,
-		ch_latency chan time.Duration,
-		ch_statuses chan int,
-		dump_requests bool,
-		dump_location string) {
+	wg *sync.WaitGroup, release_req bool,
+	ch_latency chan time.Duration,
+	ch_statuses chan int,
+	dump_requests bool,
+	dump_location string) {
 	defer wg.Done()
 	var onceSetRequest sync.Once
 	var oncePrepare sync.Once
@@ -272,7 +273,7 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 	var req_type sync.Once
 	var ch_dump chan *fasthttp.Request
 	var sync_dump sync.WaitGroup
-	if dump_requests{
+	if dump_requests {
 		ch_dump = make(chan *fasthttp.Request, 100)
 		sync_dump.Add(1)
 		go w.dump_requests(ch_dump, dump_location, &sync_dump)
@@ -320,9 +321,9 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 			}
 		}
 		if response.Response.StatusCode() >= 400 &&
-			response.Response.StatusCode() < 500 && dump_requests{
+			response.Response.StatusCode() < 500 && dump_requests {
 			//dump request
-			r:= fasthttp.AcquireRequest()
+			r := fasthttp.AcquireRequest()
 			r.SetBody(submit_request.Request.Body())
 			submit_request.Request.CopyTo(r)
 			ch_dump <- r
@@ -336,7 +337,7 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 			request_generators.ReleaseRequest(req)
 		}
 	}
-	if dump_requests{
+	if dump_requests {
 		log.Info("wait for dump routine to end")
 		close(ch_dump)
 		sync_dump.Wait()
@@ -357,7 +358,7 @@ func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retry_
 		retry_count = 1
 	}
 	worker := worker{host: host, is_tls_client: tls_client, retry_codes: retry_codes_map,
-		retry_count: retry_count, pem_file: pem_file, id: id }
+		retry_count: retry_count, pem_file: pem_file, id: id}
 	worker.results.codes = make(map[int]uint64)
 	worker.results.min = time.Duration(time.Second * 10)
 	worker.open_connection()

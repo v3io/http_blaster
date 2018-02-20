@@ -4,8 +4,8 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
-	"os"
 	"net/url"
+	"os"
 	"path/filepath"
 )
 
@@ -36,7 +36,7 @@ func (self *RequestCommon) PrepareRequest(content_type string,
 	header_args map[string]string,
 	method string, uri string,
 	body string, host string, req *fasthttp.Request) {
-	u := url.URL{Path:uri}
+	u := url.URL{Path: uri}
 	req.Header.SetContentType(content_type)
 	req.Header.SetMethod(method)
 	req.Header.SetRequestURI(u.EscapedPath())
@@ -51,7 +51,7 @@ func (self *RequestCommon) PrepareRequestBytes(content_type string,
 	header_args map[string]string,
 	method string, uri string,
 	body []byte, host string, req *fasthttp.Request) {
-	u := url.URL{Path:uri}
+	u := url.URL{Path: uri}
 	req.Header.SetContentType(content_type)
 	req.Header.SetMethod(method)
 	req.Header.SetRequestURI(u.EscapedPath())

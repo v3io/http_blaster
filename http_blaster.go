@@ -57,8 +57,8 @@ var (
 	LatencyCollectorPut tui.LatencyCollector
 	StatusesCollector   tui.StatusesCollector
 	term_ui             *tui.Term_ui
-	dump_failures       bool = true
-	dump_location 		string ="."
+	dump_failures       bool   = true
+	dump_location       string = "."
 )
 
 const AppVersion = "3.0.0"
@@ -180,7 +180,7 @@ func generate_executors(term_ui *tui.Term_ui) {
 			Ch_get_latency: ch_get_latency,
 			Ch_put_latency: ch_put_latency,
 			Ch_statuses:    ch_statuses,
-			DumpFailures:	dump_failures,
+			DumpFailures:   dump_failures,
 			DumpLocation:   dump_location}
 		executors = append(executors, e)
 	}
