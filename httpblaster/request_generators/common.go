@@ -35,10 +35,10 @@ func (self *RequestCommon) PrepareRequest(content_type string,
 	header_args map[string]string,
 	method string, uri string,
 	body string, host string, req *fasthttp.Request) {
-
+	u := url.URL{Path:uri}
 	req.Header.SetContentType(content_type)
 	req.Header.SetMethod(method)
-	req.Header.SetRequestURI(uri)
+	req.Header.SetRequestURI(u.EscapedPath())
 	req.Header.SetHost(host)
 	for k, v := range header_args {
 		req.Header.Set(k, v)
