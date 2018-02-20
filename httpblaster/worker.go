@@ -319,7 +319,8 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 				request_generators.ReleaseResponse(response)
 			}
 		}
-		if response.Response.StatusCode() & 400 != 0 && dump_requests{
+		if response.Response.StatusCode() >= 400 &&
+			response.Response.StatusCode() < 500 && dump_requests{
 			//dump request
 			r:= fasthttp.AcquireRequest()
 			r.SetBody(submit_request.Request.Body())
