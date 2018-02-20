@@ -115,7 +115,10 @@ func (w *worker) open_connection() {
 	} else {
 		w.conn = conn
 	}
-	w.br = bufio.NewReaderSize(w.conn, 1024*1024)
+	w.br = bufio.NewReader(w.conn)
+	if w.br == nil{
+		log.Errorf("Reader is nil, conn: %v", conn)
+	}
 	w.bw = bufio.NewWriter(w.conn)
 }
 

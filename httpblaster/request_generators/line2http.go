@@ -12,20 +12,20 @@ import (
 	"sync"
 )
 
-type Line2SHttpGenerator struct {
+type Line2HttpGenerator struct {
 	RequestCommon
 	workload config.Workload
 }
 
-func (self *Line2SHttpGenerator) UseCommon(c RequestCommon) {
+func (self *Line2HttpGenerator) UseCommon(c RequestCommon) {
 
 }
 
-func (self *Line2SHttpGenerator) generate_request(ch_lines chan string,
+func (self *Line2HttpGenerator) generate_request(ch_lines chan string,
 	ch_req chan *Request,
 	host string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var contentType string = "application/json"
+	var contentType string = "application/text"
 	for r := range ch_lines {
 		req := AcquireRequest()
 		self.PrepareRequest(contentType, self.workload.Header, "PUT",
@@ -35,7 +35,7 @@ func (self *Line2SHttpGenerator) generate_request(ch_lines chan string,
 	log.Println("generate_request Done")
 }
 
-func (self *Line2SHttpGenerator) generate(ch_req chan *Request, payload string, host string) {
+func (self *Line2HttpGenerator) generate(ch_req chan *Request, payload string, host string) {
 	defer close(ch_req)
 	ch_lines := make(chan string, 10000)
 	wg := sync.WaitGroup{}
@@ -76,7 +76,7 @@ func (self *Line2SHttpGenerator) generate(ch_req chan *Request, payload string, 
 	log.Println("generators done")
 }
 
-func (self *Line2SHttpGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response, worker_qd int) chan *Request {
+func (self *Line2HttpGenerator) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response, worker_qd int) chan *Request {
 	self.workload = wl
 	if self.workload.Header == nil {
 		self.workload.Header = make(map[string]string)
