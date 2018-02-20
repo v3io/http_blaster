@@ -23,6 +23,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -32,12 +33,17 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path"
+	"path/filepath"
 	"sync"
 	"time"
 )
 
 const DialTimeout = 60 * time.Second
 const RequestTimeout = 600 * time.Second
+
+var once sync.Once
+var dump_dir string
 
 type worker_results struct {
 	count  uint64
@@ -66,6 +72,7 @@ type worker struct {
 	retry_codes         map[int]interface{}
 	retry_count         int
 	timer               *time.Timer
+	id                  int
 }
 
 func (w *worker) send_request(req *request_generators.Request) (error, time.Duration, *request_generators.Response) {
@@ -116,7 +123,7 @@ func (w *worker) open_connection() {
 		w.conn = conn
 	}
 	w.br = bufio.NewReader(w.conn)
-	if w.br == nil{
+	if w.br == nil {
 		log.Errorf("Reader is nil, conn: %v", conn)
 	}
 	w.bw = bufio.NewWriter(w.conn)
@@ -194,12 +201,13 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 		end := time.Now()
 		w.ch_duration <- end.Sub(start)
 	}()
+
 	w.timer.Reset(timeout)
 	select {
 	case duration := <-w.ch_duration:
 		return nil, duration
 	case err := <-w.ch_error:
-		log.Debugf("rerquest completed with error:%s", err.Error())
+		log.Debugf("request completed with error:%s", err.Error())
 		return err, timeout
 	case <-w.timer.C:
 		log.Printf("Error: request didn't complete on timeout url:%s", req.URI().String())
@@ -208,16 +216,68 @@ func (w *worker) send(req *fasthttp.Request, resp *fasthttp.Response,
 	return nil, timeout
 }
 
+func (w *worker) dump_requests(ch_dump chan *fasthttp.Request, dump_location string,
+	sync_dump *sync.WaitGroup) {
+
+	once.Do(func() {
+		t := time.Now()
+		dump_dir = path.Join(dump_location, fmt.Sprintf("BlasterDump-%v", t.Format("2006-01-02-150405")))
+		err := os.Mkdir(dump_dir, 0777)
+		if err != nil {
+			log.Errorf("Fail to create dump dir %v:%v", dump_dir, err.Error())
+		}
+	})
+	defer sync_dump.Done()
+
+	i := 0
+	for r := range ch_dump {
+		file_name := fmt.Sprintf("w%v_request_%v", w.id, i)
+		file_path := filepath.Join(dump_dir, file_name)
+		log.Info("generating dump file ", file_path)
+		i++
+		file, err := os.Create(file_path)
+		if err != nil {
+			log.Errorf("Fail to open file %v for request dump: %v", file_path, err.Error())
+		} else {
+			rdump := &request_generators.RequestDump{}
+			rdump.Host = string(r.Host())
+			rdump.Method = string(r.Header.Method())
+			rdump.Body = string(r.Body())
+			rdump.URI = r.URI().String()
+			rdump.Headers = make(map[string]string)
+			r.Header.VisitAll(func(key, value []byte) {
+				rdump.Headers[string(key)] = string(value)
+			})
+			jsonStr, err := json.Marshal(rdump)
+			if err != nil {
+				log.Errorf("Fail to dump request %v", err.Error())
+			}
+			log.Debug("Write dump request")
+			file.Write(jsonStr)
+			file.Close()
+		}
+	}
+}
+
 func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
 	wg *sync.WaitGroup, release_req bool,
 	ch_latency chan time.Duration,
-	ch_statuses chan int) {
+	ch_statuses chan int,
+	dump_requests bool,
+	dump_location string) {
 	defer wg.Done()
 	var onceSetRequest sync.Once
 	var oncePrepare sync.Once
 	var request *request_generators.Request
-	var submit_request *request_generators.Request = request_generators.AcquireRequest()
+	submit_request := request_generators.AcquireRequest()
 	var req_type sync.Once
+	var ch_dump chan *fasthttp.Request
+	var sync_dump sync.WaitGroup
+	if dump_requests {
+		ch_dump = make(chan *fasthttp.Request, 100)
+		sync_dump.Add(1)
+		go w.dump_requests(ch_dump, dump_location, &sync_dump)
+	}
 
 	prepareRequest := func() {
 		request.Request.Header.CopyTo(&submit_request.Request.Header)
@@ -260,6 +320,14 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 				request_generators.ReleaseResponse(response)
 			}
 		}
+		if response.Response.StatusCode() >= 400 &&
+			response.Response.StatusCode() < 500 && dump_requests {
+			//dump request
+			r := fasthttp.AcquireRequest()
+			r.SetBody(submit_request.Request.Body())
+			submit_request.Request.CopyTo(r)
+			ch_dump <- r
+		}
 		if ch_resp != nil {
 			ch_resp <- response
 		} else {
@@ -269,10 +337,15 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 			request_generators.ReleaseRequest(req)
 		}
 	}
+	if dump_requests {
+		log.Info("wait for dump routine to end")
+		close(ch_dump)
+		sync_dump.Wait()
+	}
 	w.close_connection()
 }
 
-func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retry_count int, pem_file string) *worker {
+func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retry_count int, pem_file string, id int) *worker {
 	if host == "" {
 		return nil
 	}
@@ -285,7 +358,7 @@ func NewWorker(host string, tls_client bool, lazy int, retry_codes []int, retry_
 		retry_count = 1
 	}
 	worker := worker{host: host, is_tls_client: tls_client, retry_codes: retry_codes_map,
-		retry_count: retry_count, pem_file: pem_file}
+		retry_count: retry_count, pem_file: pem_file, id: id}
 	worker.results.codes = make(map[int]uint64)
 	worker.results.min = time.Duration(time.Second * 10)
 	worker.open_connection()

@@ -66,6 +66,8 @@ type Executor struct {
 	Ch_get_latency chan time.Duration
 	Ch_put_latency chan time.Duration
 	Ch_statuses    chan int
+	DumpFailures   bool
+	DumpLocation   string
 }
 
 func (self *Executor) load_request_generator() (chan *request_generators.Request,
@@ -106,6 +108,9 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	case request_generators.LINE2HTTP:
 		req_gen = &request_generators.Line2HttpGenerator{}
 		break
+	case request_generators.REPLAY:
+		req_gen = &request_generators.Replay{}
+		break
 	case request_generators.STREAM_GET:
 		req_gen = &request_generators.StreamGetGenerator{}
 		ch_response = make(chan *request_generators.Response)
@@ -142,7 +147,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 
 		server := fmt.Sprintf("%s:%s", host_address, self.Globals.Port)
 		w := NewWorker(server, self.Globals.TLSMode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
-			self.Globals.RetryCount, self.Globals.PemFile)
+			self.Globals.RetryCount, self.Globals.PemFile, i)
 		self.workers = append(self.workers, w)
 		var ch_latency chan time.Duration
 		if self.Workload.Type == "GET" {
@@ -151,7 +156,8 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 			ch_latency = self.Ch_put_latency
 		}
 
-		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag, ch_latency, self.Ch_statuses)
+		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag, ch_latency,
+			self.Ch_statuses, self.DumpFailures, self.DumpLocation)
 	}
 	ended := make(chan bool)
 	go func() {

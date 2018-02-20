@@ -2,9 +2,9 @@ package igz_data
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 )
 
 type IgzType string
@@ -65,13 +65,13 @@ func NewEmdItem() *IgzEmdItem {
 	return i
 }
 
-
 type IgzEmdItemUpdate struct {
 	//TableName           string
-	UpdateMode 	    string
-	UpdateExpression    string
+	UpdateMode       string
+	UpdateExpression string
 	//Key  map[string]map[string]interface{}
 }
+
 //
 //func (self *IgzEmdItemUpdate) InsertKey(key string, value_type IgzType, value interface{}) error {
 //	if _, ok := self.Key[key]; ok {

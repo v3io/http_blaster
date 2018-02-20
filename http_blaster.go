@@ -57,30 +57,36 @@ var (
 	LatencyCollectorPut tui.LatencyCollector
 	StatusesCollector   tui.StatusesCollector
 	term_ui             *tui.Term_ui
+	dump_failures       bool   = true
+	dump_location       string = "."
 )
 
 const AppVersion = "3.0.0"
 
 func init() {
 	const (
-		default_conf         = "example.toml"
-		usage_conf           = "conf file path"
-		usage_version        = "show version"
-		default_showversion  = false
-		usage_results_file   = "results file path"
-		default_results_file = "example.results"
-		usage_log_file       = "enable stdout to log"
-		default_log_file     = true
-		default_worker_qd    = 10000
-		usage_worker_qd      = "queue depth for worker requests"
-		usage_verbose        = "print debug logs"
-		default_verbose      = false
-		usage_memprofile     = "write mem profile to file"
-		default_memprofile   = false
-		usage_cpuprofile     = "write cpu profile to file"
-		default_cpuprofile   = false
-		usage_enable_ui      = "enable terminal ui"
-		default_enable_ui    = false
+		default_conf          = "example.toml"
+		usage_conf            = "conf file path"
+		usage_version         = "show version"
+		default_showversion   = false
+		usage_results_file    = "results file path"
+		default_results_file  = "example.results"
+		usage_log_file        = "enable stdout to log"
+		default_log_file      = true
+		default_worker_qd     = 10000
+		usage_worker_qd       = "queue depth for worker requests"
+		usage_verbose         = "print debug logs"
+		default_verbose       = false
+		usage_memprofile      = "write mem profile to file"
+		default_memprofile    = false
+		usage_cpuprofile      = "write cpu profile to file"
+		default_cpuprofile    = false
+		usage_enable_ui       = "enable terminal ui"
+		default_enable_ui     = false
+		usage_dump_failures   = "enable 4xx status requests dump to file"
+		defaule_dump_failures = false
+		usage_dump_location   = "location of dump requests"
+		default_dump_location = "."
 	)
 	flag.StringVar(&conf_file, "conf", default_conf, usage_conf)
 	flag.StringVar(&conf_file, "c", default_conf, usage_conf+" (shorthand)")
@@ -92,6 +98,8 @@ func init() {
 	flag.BoolVar(&verbose, "v", default_verbose, usage_verbose)
 	flag.IntVar(&worker_qd, "q", default_worker_qd, usage_worker_qd)
 	flag.BoolVar(&enable_ui, "u", default_enable_ui, usage_enable_ui)
+	flag.BoolVar(&dump_failures, "f", defaule_dump_failures, usage_dump_failures)
+	flag.StringVar(&dump_location, "l", default_dump_location, usage_dump_location)
 }
 
 func get_workload_id() int {
@@ -171,7 +179,9 @@ func generate_executors(term_ui *tui.Term_ui) {
 			TermUi:         term_ui,
 			Ch_get_latency: ch_get_latency,
 			Ch_put_latency: ch_put_latency,
-			Ch_statuses:    ch_statuses}
+			Ch_statuses:    ch_statuses,
+			DumpFailures:   dump_failures,
+			DumpLocation:   dump_location}
 		executors = append(executors, e)
 	}
 }

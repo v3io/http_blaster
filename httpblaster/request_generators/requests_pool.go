@@ -17,29 +17,6 @@ type Response struct {
 	Response *fasthttp.Response
 }
 
-//
-//var (
-//	instance *request_pool
-//	once sync.Once
-//)
-//
-//type request_pool struct {
-//}
-//
-//func RequestPool() *request_pool {
-//	once.Do(func() {
-//		instance = &request_pool{}
-//	})
-//	return instance
-//}
-//
-//func (self *request_pool) NewRequest(request *fasthttp.Request,
-//	cookie interface{}) Request {
-//	return Request{Request: request, Cookie: cookie}
-//}
-//
-//
-
 var (
 	requestPool  sync.Pool
 	responsePool sync.Pool
