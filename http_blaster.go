@@ -33,8 +33,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"encoding/gob"
-	"github.com/valyala/fasthttp"
 )
 
 var (
@@ -66,7 +64,6 @@ var (
 const AppVersion = "3.0.0"
 
 func init() {
-	gob.Register(fasthttp.Request{})
 	const (
 		default_conf          = "example.toml"
 		usage_conf            = "conf file path"
@@ -103,7 +100,6 @@ func init() {
 	flag.BoolVar(&enable_ui, "u", default_enable_ui, usage_enable_ui)
 	flag.BoolVar(&dump_failures, "f", defaule_dump_failures, usage_dump_failures)
 	flag.StringVar(&dump_location, "l", default_dump_location, usage_dump_location)
-
 }
 
 func get_workload_id() int {
