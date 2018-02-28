@@ -80,7 +80,7 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 					var items_j items_s
 					err := jsoniter.Unmarshal(line, &items_j)
 					if err != nil {
-						log.Println("Unable to Unmarshal line:", line)
+						log.Println("Unable to Unmarshal line:", string(line))
 						panic(err)
 					}
 					items := items_j.Items
@@ -88,6 +88,10 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 						item_name := i["__name"]["S"]
 						collection_id := i["__collection_id"]["N"]
 						dir_name := collection_ids[collection_id]
+						if dir_name == nil{
+							log.Errorf("Fail to get dir name for collection id: %v", collection_id)
+							continue
+						}
 						for _, attr := range self.emd_ignore_attrs {
 							delete(i, attr)
 						}
@@ -102,8 +106,6 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 							payload.WriteString(`{"Item": `)
 							payload.Write(j)
 							payload.WriteString(`}`)
-							//u := url.URL{}
-							//u.Path = self.base_uri + dir_name.(string) + item_name
 							ch_items <- &BackupItem{Uri: self.base_uri + dir_name.(string) + item_name,
 								Payload: payload.Bytes()}
 						}
