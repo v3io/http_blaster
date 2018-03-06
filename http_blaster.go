@@ -61,7 +61,7 @@ var (
 	dump_location       string = "."
 )
 
-const AppVersion = "3.0.1"
+const AppVersion = "3.0.2"
 
 func init() {
 	const (
