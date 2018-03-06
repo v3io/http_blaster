@@ -64,7 +64,7 @@ type items_s struct {
 	EvaluatedItems   int
 	NumItems         int
 	NextMarker       string
-	Items            []map[string]map[string]string //interface{}
+	Items            []map[string]map[string]interface{}
 }
 
 func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_ids map[string]interface{}) chan *BackupItem {
@@ -87,7 +87,7 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 					for _, i := range items {
 						item_name := i["__name"]["S"]
 						collection_id := i["__collection_id"]["N"]
-						dir_name := collection_ids[collection_id]
+						dir_name := collection_ids[collection_id.(string)]
 						if dir_name == nil{
 							log.Errorf("Fail to get dir name for collection id: %v", collection_id)
 							continue
@@ -106,7 +106,7 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 							payload.WriteString(`{"Item": `)
 							payload.Write(j)
 							payload.WriteString(`}`)
-							ch_items <- &BackupItem{Uri: self.base_uri + dir_name.(string) + item_name,
+							ch_items <- &BackupItem{Uri: self.base_uri + dir_name.(string) + item_name.(string),
 								Payload: payload.Bytes()}
 						}
 					}
