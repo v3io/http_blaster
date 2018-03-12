@@ -9,7 +9,7 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"io/ioutil"
 	"regexp"
-	"strconv"
+	//"strconv"
 	"strings"
 )
 
@@ -260,12 +260,13 @@ func ConvertValue(t IgzType, v string) (error, IgzType, interface{}) {
 	case T_NUMBER:
 		return nil, T_NUMBER, v
 	case T_DOUBLE:
-		r, e := strconv.ParseFloat(v, 64)
-		if e != nil {
-			panic(e)
-		}
-		val := fmt.Sprintf("%.1f", r)
-		return e, T_NUMBER, val
+		//r, e := strconv.ParseFloat(v, 64)
+		//if e != nil {
+		//	panic(e)
+		//}
+		//val := fmt.Sprintf("%.1f", r)
+		//return e, T_NUMBER, val
+		return nil, T_NUMBER, v
 	default:
 		return errors.New(fmt.Sprintf("missing type conversion %v", t)), T_STRING, ""
 	}
