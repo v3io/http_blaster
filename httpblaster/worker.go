@@ -37,6 +37,7 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+	"net/http"
 )
 
 const DialTimeout = 60 * time.Second
@@ -302,26 +303,35 @@ func (w *worker) run_worker(ch_resp chan *request_generators.Response, ch_req ch
 
 		var response *request_generators.Response
 		var err error
+		var d time.Duration
 	LOOP:
 		for i := 0; i < w.retry_count; i++ {
-			var d time.Duration
 			err, d, response = w.send_request(submit_request)
 			if err != nil {
 				//retry on error
 				request_generators.ReleaseResponse(response)
 				continue
-			} else if _, ok := w.retry_codes[response.Response.StatusCode()]; !ok {
-				//not subject to retry
+			} else if response.Response.StatusCode() >= http.StatusBadRequest {
+				if _, ok := w.retry_codes[response.Response.StatusCode()]; !ok {
+					//not subject to retry
+					ch_statuses <- response.Response.StatusCode()
+					ch_latency <- d
+					break LOOP
+				} else if i+1 < w.retry_count {
+					//not the last loop
+					request_generators.ReleaseResponse(response)
+				}
 				ch_statuses <- response.Response.StatusCode()
 				ch_latency <- d
+			} else{
 				break LOOP
-			} else if i+1 < w.retry_count {
-				//not the last loop
-				request_generators.ReleaseResponse(response)
 			}
 		}
-		if response.Response.StatusCode() >= 400 &&
-			response.Response.StatusCode() < 500 && dump_requests {
+		ch_statuses <- response.Response.StatusCode()
+		ch_latency <- d
+		if response.Response.StatusCode() >= http.StatusBadRequest &&
+			response.Response.StatusCode() < http.StatusInternalServerError &&
+				dump_requests {
 			//dump request
 			r := fasthttp.AcquireRequest()
 			r.SetBody(submit_request.Request.Body())
