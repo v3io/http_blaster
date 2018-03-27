@@ -88,7 +88,7 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 						item_name := i["__name"]["S"]
 						collection_id := i["__collection_id"]["N"]
 						dir_name := collection_ids[collection_id.(string)]
-						if dir_name == nil{
+						if dir_name == nil {
 							log.Errorf("Fail to get dir name for collection id: %v", collection_id)
 							continue
 						}
