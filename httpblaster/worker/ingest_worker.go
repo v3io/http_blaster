@@ -1,3 +1,5 @@
+package worker
+
 /*
 Copyright 2016 Iguazio.io Systems Ltd.
 
@@ -17,7 +19,6 @@ illegal under applicable law, and the grant of the foregoing license
 under the Apache 2.0 license is conditioned upon your compliance with
 such restriction.
 */
-package worker
 
 import (
 	"encoding/json"
@@ -36,11 +37,14 @@ import (
 var once sync.Once
 var dump_dir string
 
-type Worker struct {
+type IngestWorker struct {
 	WorkerBase
 }
 
-func (w *Worker) dump_requests(ch_dump chan *fasthttp.Request, dump_location string,
+func (w *IngestWorker) UseBase(c WorkerBase) {
+
+}
+func (w *IngestWorker) dump_requests(ch_dump chan *fasthttp.Request, dump_location string,
 	sync_dump *sync.WaitGroup) {
 
 	once.Do(func() {
@@ -83,7 +87,7 @@ func (w *Worker) dump_requests(ch_dump chan *fasthttp.Request, dump_location str
 	}
 }
 
-func (w *Worker) RunWorker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
+func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
 	wg *sync.WaitGroup, release_req bool,
 	ch_latency chan time.Duration,
 	ch_statuses chan int,
@@ -97,6 +101,11 @@ func (w *Worker) RunWorker(ch_resp chan *request_generators.Response, ch_req cha
 	var req_type sync.Once
 	var ch_dump chan *fasthttp.Request
 	var sync_dump sync.WaitGroup
+
+	do_once.Do(func() {
+		log.Info("Running Ingestion workers")
+	})
+
 	if dump_requests {
 		ch_dump = make(chan *fasthttp.Request, 100)
 		sync_dump.Add(1)
@@ -134,18 +143,18 @@ func (w *Worker) RunWorker(ch_resp chan *request_generators.Response, ch_req cha
 				//retry on error
 				request_generators.ReleaseResponse(response)
 				continue
-			} else if response.Response.StatusCode() >= http.StatusBadRequest {
+			} else{
+				ch_statuses <- response.Response.StatusCode()
+				ch_latency <- d
+			}
+			if response.Response.StatusCode() >= http.StatusBadRequest {
 				if _, ok := w.retry_codes[response.Response.StatusCode()]; !ok {
 					//not subject to retry
-					ch_statuses <- response.Response.StatusCode()
-					ch_latency <- d
 					break LOOP
 				} else if i+1 < w.retry_count {
 					//not the last loop
 					request_generators.ReleaseResponse(response)
 				}
-				ch_statuses <- response.Response.StatusCode()
-				ch_latency <- d
 			} else {
 				break LOOP
 			}
