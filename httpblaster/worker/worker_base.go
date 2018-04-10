@@ -142,8 +142,7 @@ func (w *WorkerBase) send(req *fasthttp.Request, resp *fasthttp.Response,
 	return nil, timeout
 }
 
-func (w *WorkerBase) send_request(req *request_generators.Request) (error, time.Duration, *request_generators.Response) {
-	response := request_generators.AcquireResponse()
+func (w *WorkerBase) send_request(req *request_generators.Request, response *request_generators.Response) (error, time.Duration) {
 	var (
 		code     int
 		err      error
@@ -175,7 +174,7 @@ func (w *WorkerBase) send_request(req *request_generators.Request) (error, time.
 		w.restart_connection()
 	}
 
-	return err, duration, response
+	return err, duration
 }
 
 func (w *WorkerBase) Init(lazy int) {

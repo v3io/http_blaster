@@ -138,7 +138,8 @@ func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_r
 		var d time.Duration
 	LOOP:
 		for i := 0; i < w.retry_count; i++ {
-			err, d, response = w.send_request(submit_request)
+			response := request_generators.AcquireResponse()
+			err, d = w.send_request(submit_request, response)
 			if err != nil {
 				//retry on error
 				request_generators.ReleaseResponse(response)

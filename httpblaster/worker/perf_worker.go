@@ -51,6 +51,8 @@ func (w *PerfWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req
 		log.Info("Running Performance workers")
 	})
 
+	response := request_generators.AcquireResponse()
+	defer request_generators.ReleaseResponse(response)
 	for req := range ch_req {
 		req_type.Do(func() {
 			w.Results.Method = string(req.Request.Header.Method())
@@ -63,20 +65,16 @@ func (w *PerfWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req
 			submit_request.Request.SetHost(w.host)
 		})
 
-		err, d, response := w.send_request(submit_request)
+		err, d := w.send_request(submit_request, response)
 
 		if err != nil{
-			log.Errorf("send request faild %s", err.Error())
+			log.Errorf("send request failed %s", err.Error())
 		}
 
 		ch_statuses <- response.Response.StatusCode()
 		ch_latency <- d
 
-		request_generators.ReleaseResponse(response)
-
-		if release_req {
-			request_generators.ReleaseRequest(req)
-		}
+		response.Response.Reset()
 	}
 
 	w.close_connection()
