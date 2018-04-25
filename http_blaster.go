@@ -427,7 +427,7 @@ func dump_latencies_histograms() {
 	prefix_get := "GetHist"
 	prefix_put := "PutHist"
 	title := "type \t usec \t\t\t percentage\n"
-	strout := "\nLatency Histograms:\n"
+	strout := "Latency Histograms:\n"
 	vs_get, ls_get := LatencyCollectorGet.GetResults()
 	if len(vs_get) >0 {
 		strout += "Get latency histogram:\n"
