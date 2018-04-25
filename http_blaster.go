@@ -410,9 +410,9 @@ func enable_tui() chan struct{} {
 				case <-ch_done:
 					return
 				case <-tick:
-					//term_ui.Update_put_latency_chart(LatencyCollectorPut.Get())
-					//term_ui.Update_get_latency_chart(LatencyCollectorGet.Get())
-					//term_ui.Update_status_codes(StatusesCollector.Get())
+					term_ui.Update_put_latency_chart(LatencyCollectorPut.Get())
+					term_ui.Update_get_latency_chart(LatencyCollectorGet.Get())
+					term_ui.Update_status_codes(StatusesCollector.Get())
 					term_ui.Refresh_log()
 					term_ui.Render()
 				}
