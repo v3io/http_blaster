@@ -33,6 +33,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"strconv"
 )
 
 var (
@@ -409,9 +410,9 @@ func enable_tui() chan struct{} {
 				case <-ch_done:
 					return
 				case <-tick:
-					term_ui.Update_put_latency_chart(LatencyCollectorPut.Get())
-					term_ui.Update_get_latency_chart(LatencyCollectorGet.Get())
-					term_ui.Update_status_codes(StatusesCollector.Get())
+					//term_ui.Update_put_latency_chart(LatencyCollectorPut.Get())
+					//term_ui.Update_get_latency_chart(LatencyCollectorGet.Get())
+					//term_ui.Update_status_codes(StatusesCollector.Get())
 					term_ui.Refresh_log()
 					term_ui.Render()
 				}
@@ -423,20 +424,32 @@ func enable_tui() chan struct{} {
 }
 
 func dump_latencies_histograms() {
-	log.Println("Get latency histogram")
+	prefix_get := "GetHist"
+	prefix_put := "PutHist"
+	title := "type \t usec \t\t\t percentage\n"
+	strout := "\nLatency Histograms:\n"
 	vs_get, ls_get := LatencyCollectorGet.Get()
-	for i, v := range vs_get {
-		if ls_get[i] != 0 {
-			log.Println(fmt.Sprintf("%v %v", v, ls_get[i]))
+	if len(vs_get) >0 {
+		strout += "Get latency histogram:\n"
+		strout += title
+		for i, v := range vs_get {
+			value, _ := strconv.ParseFloat(v, 64)
+			strout += fmt.Sprintf("%s: %.3f \t\t %.4f%%\n", prefix_get, value, ls_get[i])
 		}
 	}
-	log.Println("Put latency histogram")
 	vs_put, ls_put := LatencyCollectorPut.Get()
-	for i, v := range vs_put {
-		if ls_put[i] != 0 {
-			log.Println(fmt.Sprintf("%v %v", v, ls_put[i]))
+	if len(vs_put) >0 {
+		strout += "Put latency histogram:\n"
+		strout += title
+
+		for i, v := range vs_put {
+			if ls_put[i] != 0 {
+				value, _ := strconv.ParseFloat(v, 64)
+				strout += fmt.Sprintf("%s:%.3f \t\t %.4f%%\n", prefix_put, value, ls_get[i])
+			}
 		}
 	}
+	log.Println(strout)
 }
 
 func dump_status_code_histogram() {
