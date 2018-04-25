@@ -428,7 +428,7 @@ func dump_latencies_histograms() {
 	prefix_put := "PutHist"
 	title := "type \t usec \t\t\t percentage\n"
 	strout := "\nLatency Histograms:\n"
-	vs_get, ls_get := LatencyCollectorGet.Get()
+	vs_get, ls_get := LatencyCollectorGet.GetResults()
 	if len(vs_get) >0 {
 		strout += "Get latency histogram:\n"
 		strout += title
@@ -437,7 +437,7 @@ func dump_latencies_histograms() {
 			strout += fmt.Sprintf("%s: %.3f \t\t %.4f%%\n", prefix_get, value, ls_get[i])
 		}
 	}
-	vs_put, ls_put := LatencyCollectorPut.Get()
+	vs_put, ls_put := LatencyCollectorPut.GetResults()
 	if len(vs_put) >0 {
 		strout += "Put latency histogram:\n"
 		strout += title

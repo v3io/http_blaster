@@ -25,11 +25,14 @@ func (self *LatencyCollector) Add(v time.Duration) {
 	self.ch_values <- v
 }
 
-func (self *LatencyCollector) Get() ([]string, []float64) {
+func (self *LatencyCollector) Get() ([]string, []int) {
 	return self.WeighHist.BarArray()
-
 }
 
+func (self *LatencyCollector) GetResults() ([]string, []float64) {
+	return self.WeighHist.GetHistAsArray()
+
+}
 
 func (self *LatencyCollector) GetQuantile(q float64) (float64) {
 	return self.WeighHist.CDF(q)

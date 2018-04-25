@@ -20,7 +20,7 @@ func (self *StatusesCollector) New(n int, alpha float64) chan int {
 	return self.ch_values
 }
 
-func (self *StatusesCollector) Get() ([]string, []float64) {
+func (self *StatusesCollector) Get() ([]string, []int) {
 	return self.WeighHist.BarArray()
 
 }
