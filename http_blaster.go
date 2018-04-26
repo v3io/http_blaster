@@ -23,6 +23,7 @@ import (
 	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"github.com/Gurpartap/logrus-stack"
 	"github.com/v3io/http_blaster/httpblaster"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/tui"
@@ -355,6 +356,7 @@ func configure_log() {
 		TimestampFormat: "2006/01/02-15:04:05"})
 	if verbose {
 		log.SetLevel(log.DebugLevel)
+		log.AddHook(logrus_stack.StandardHook())
 	} else {
 		log.SetLevel(log.InfoLevel)
 	}
@@ -428,6 +430,7 @@ func dump_latencies_histograms() {
 	prefix_put := "PutHist"
 	title := "type \t usec \t\t\t percentage\n"
 	strout := "Latency Histograms:\n"
+	log.Println("LatencyCollectorGet")
 	vs_get, ls_get := LatencyCollectorGet.GetResults()
 	if len(vs_get) >0 {
 		strout += "Get latency histogram:\n"
@@ -445,7 +448,7 @@ func dump_latencies_histograms() {
 		for i, v := range vs_put {
 			if ls_put[i] != 0 {
 				value, _ := strconv.ParseFloat(v, 64)
-				strout += fmt.Sprintf("%s:%.3f \t\t %.4f%%\n", prefix_put, value, ls_get[i])
+				strout += fmt.Sprintf("%s:%.3f \t\t %.4f%%\n", prefix_put, value, ls_put[i])
 			}
 		}
 	}
