@@ -23,6 +23,7 @@ import (
 	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"github.com/Gurpartap/logrus-stack"
 	"github.com/v3io/http_blaster/httpblaster"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/tui"
@@ -33,6 +34,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"strconv"
 )
 
 var (
@@ -61,7 +63,7 @@ var (
 	dump_location       string = "."
 )
 
-const AppVersion = "3.0.2"
+const AppVersion = "3.0.3"
 
 func init() {
 	const (
@@ -354,6 +356,7 @@ func configure_log() {
 		TimestampFormat: "2006/01/02-15:04:05"})
 	if verbose {
 		log.SetLevel(log.DebugLevel)
+		log.AddHook(logrus_stack.StandardHook())
 	} else {
 		log.SetLevel(log.InfoLevel)
 	}
@@ -423,20 +426,33 @@ func enable_tui() chan struct{} {
 }
 
 func dump_latencies_histograms() {
-	log.Println("Get latency histogram")
-	vs_get, ls_get := LatencyCollectorGet.Get()
-	for i, v := range vs_get {
-		if ls_get[i] != 0 {
-			log.Println(fmt.Sprintf("%v %v", v, ls_get[i]))
+	prefix_get := "GetHist"
+	prefix_put := "PutHist"
+	title := "type \t usec \t\t\t percentage\n"
+	strout := "Latency Histograms:\n"
+	log.Println("LatencyCollectorGet")
+	vs_get, ls_get := LatencyCollectorGet.GetResults()
+	if len(vs_get) >0 {
+		strout += "Get latency histogram:\n"
+		strout += title
+		for i, v := range vs_get {
+			value, _ := strconv.ParseFloat(v, 64)
+			strout += fmt.Sprintf("%s: %.3f \t\t %.4f%%\n", prefix_get, value, ls_get[i])
 		}
 	}
-	log.Println("Put latency histogram")
-	vs_put, ls_put := LatencyCollectorPut.Get()
-	for i, v := range vs_put {
-		if ls_put[i] != 0 {
-			log.Println(fmt.Sprintf("%v %v", v, ls_put[i]))
+	vs_put, ls_put := LatencyCollectorPut.GetResults()
+	if len(vs_put) >0 {
+		strout += "Put latency histogram:\n"
+		strout += title
+
+		for i, v := range vs_put {
+			if ls_put[i] != 0 {
+				value, _ := strconv.ParseFloat(v, 64)
+				strout += fmt.Sprintf("%s:%.3f \t\t %.4f%%\n", prefix_put, value, ls_put[i])
+			}
 		}
 	}
+	log.Println(strout)
 }
 
 func dump_status_code_histogram() {

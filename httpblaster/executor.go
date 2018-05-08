@@ -26,6 +26,7 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/request_generators"
 	"github.com/v3io/http_blaster/httpblaster/tui"
+	"github.com/v3io/http_blaster/httpblaster/worker"
 	"strconv"
 	"strings"
 	"sync"
@@ -58,7 +59,7 @@ type Executor struct {
 	//Port                  string
 	TLS_mode       bool
 	results        executor_result
-	workers        []*worker
+	workers        []worker.Worker
 	Start_time     time.Time
 	Data_bfr       []byte
 	WorkerQd       int
@@ -128,6 +129,14 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	return ch_req, release_req, ch_response
 }
 
+func (self *Executor)GetWorkerType() worker.WorkerType  {
+	gen_type := strings.ToLower(self.Workload.Generator)
+	if gen_type == request_generators.PERFORMANCE{
+		return worker.PERFORMANCE_WORKER
+	}
+	return worker.INGESTION_WORKER
+}
+
 func (self *Executor) run(wg *sync.WaitGroup) error {
 	defer wg.Done()
 	self.Start_time = time.Now()
@@ -146,8 +155,10 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		}
 
 		server := fmt.Sprintf("%s:%s", host_address, self.Globals.Port)
-		w := NewWorker(server, self.Globals.TLSMode, self.Workload.Lazy, self.Globals.RetryOnStatusCodes,
-			self.Globals.RetryCount, self.Globals.PemFile, i)
+		w := worker.NewWorker(self.GetWorkerType(),
+			server, self.Globals.TLSMode, self.Workload.Lazy,
+				self.Globals.RetryOnStatusCodes,
+				self.Globals.RetryCount, self.Globals.PemFile, i)
 		self.workers = append(self.workers, w)
 		var ch_latency chan time.Duration
 		if self.Workload.Type == "GET" {
@@ -156,7 +167,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 			ch_latency = self.Ch_put_latency
 		}
 
-		go w.run_worker(ch_response, ch_req, &workers_wg, release_req_flag, ch_latency,
+		go w.RunWorker(ch_response, ch_req, &workers_wg, release_req_flag, ch_latency,
 			self.Ch_statuses, self.DumpFailures, self.DumpLocation)
 	}
 	ended := make(chan bool)
@@ -175,10 +186,11 @@ LOOP:
 				var put_req_count uint64 = 0
 				var get_req_count uint64 = 0
 				for _, w := range self.workers {
-					if w.results.method == `PUT` {
-						put_req_count += w.results.count
+					wresults := w.GetResults()
+					if w.GetResults().Method == `PUT` {
+						put_req_count += wresults.Count
 					} else {
-						get_req_count += w.results.count
+						get_req_count += wresults.Count
 					}
 				}
 				self.TermUi.Update_requests(time.Now().Sub(self.Start_time), put_req_count, get_req_count)
@@ -194,20 +206,21 @@ LOOP:
 	self.results.Iops = 0
 
 	for _, w := range self.workers {
-		self.results.ConRestarts += w.connection_restarts
-		self.results.ErrorsCount += w.error_count
+		wresults := w.GetResults()
+		self.results.ConRestarts += wresults.ConnectionRestarts
+		self.results.ErrorsCount += wresults.ErrorCount
 
-		self.results.Total += w.results.count
-		if w.results.min < self.results.Min {
-			self.results.Min = w.results.min
+		self.results.Total += wresults.Count
+		if w.GetResults().Min < self.results.Min {
+			self.results.Min = wresults.Min
 		}
-		if w.results.max > self.results.Max {
-			self.results.Max = w.results.max
+		if w.GetResults().Max > self.results.Max {
+			self.results.Max = wresults.Max
 		}
 
 		self.results.Avg +=
-			time.Duration(float64(w.results.count) / float64(self.results.Total) * float64(w.results.avg))
-		for k, v := range w.results.codes {
+			time.Duration(float64(wresults.Count) / float64(self.results.Total) * float64(wresults.Avg))
+		for k, v := range wresults.Codes {
 			self.results.Statuses[k] += v
 		}
 	}

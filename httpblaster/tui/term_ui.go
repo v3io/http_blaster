@@ -194,7 +194,7 @@ func (self *Term_ui) ui_set_put_latency_bar_chart(x, y, w, h int) *ui.BarChart {
 	bc.BarWidth = 8
 	data := []int{}
 	bclabels := []string{}
-	bc.BorderLabel = "put Latency ms"
+	bc.BorderLabel = "put Latency us"
 	bc.Data = data
 	bc.Width = w
 	bc.Height = h
@@ -211,7 +211,7 @@ func (self *Term_ui) ui_set_get_latency_bar_chart(x, y, w, h int) *ui.BarChart {
 	bc.BarWidth = 8
 	data := []int{}
 	bclabels := []string{}
-	bc.BorderLabel = "get Latency ms"
+	bc.BorderLabel = "get Latency us"
 	bc.Data = data
 	bc.Width = w
 	bc.Height = h
