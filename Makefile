@@ -17,7 +17,7 @@
 
 # Go parameters
 GOCMD=go
-GOBUILD=$(GOCMD) build
+GOBUILD=$(GOCMD) build -a
 GOGET=$(GOCMD) get
 GOCLEAN=$(GOCMD) clean
 GOINSTALL=$(GOCMD) install
