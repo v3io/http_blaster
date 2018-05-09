@@ -77,16 +77,15 @@ func (self *PerformanceGenerator) clone_request(req *fasthttp.Request) *Request 
 }
 
 func (self *PerformanceGenerator) single_file_submitter(ch_req chan *Request, req *fasthttp.Request, done chan struct{}) {
-
 	var generated int = 0
-	request := self.clone_request(req)
-	request.Request.SetHost(self.Host)
 LOOP:
 	for {
 		select {
 		case <-done:
 			break LOOP
 		default:
+			request := self.clone_request(req)
+			request.Request.SetHost(self.Host)
 			if self.workload.Count == 0 {
 				ch_req <- request
 				generated += 1

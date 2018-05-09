@@ -42,9 +42,6 @@ func (w *PerfWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req
 	dump_requests bool,
 	dump_location string) {
 	defer wg.Done()
-	var oncePrepare sync.Once
-	var request *request_generators.Request
-	submit_request := request_generators.AcquireRequest()
 	var req_type sync.Once
 
 	do_once.Do(func() {
@@ -57,15 +54,7 @@ func (w *PerfWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req
 		req_type.Do(func() {
 			w.Results.Method = string(req.Request.Header.Method())
 		})
-
-		oncePrepare.Do(func() {
-			request = req
-			request.Request.Header.CopyTo(&submit_request.Request.Header)
-			submit_request.Request.AppendBody(request.Request.Body())
-			submit_request.Request.SetHost(w.host)
-		})
-
-		err, d := w.send_request(submit_request, response)
+		err, d := w.send_request(req, response)
 
 		if err != nil{
 			log.Errorf("send request failed %s", err.Error())
@@ -73,7 +62,7 @@ func (w *PerfWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req
 
 		ch_statuses <- response.Response.StatusCode()
 		ch_latency <- d
-
+		request_generators.ReleaseRequest(req)
 		response.Response.Reset()
 	}
 
