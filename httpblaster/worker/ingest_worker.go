@@ -133,16 +133,15 @@ func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_r
 			oncePrepare.Do(prepareRequest)
 		}
 
-		var response *request_generators.Response
 		var err error
 		var d time.Duration
+		response := request_generators.AcquireResponse()
 	LOOP:
 		for i := 0; i < w.retry_count; i++ {
-			response := request_generators.AcquireResponse()
 			err, d = w.send_request(submit_request, response)
 			if err != nil {
 				//retry on error
-				request_generators.ReleaseResponse(response)
+				response.Response.Reset()
 				continue
 			} else{
 				ch_statuses <- response.Response.StatusCode()
@@ -154,7 +153,7 @@ func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_r
 					break LOOP
 				} else if i+1 < w.retry_count {
 					//not the last loop
-					request_generators.ReleaseResponse(response)
+					response.Response.Reset()
 				}
 			} else {
 				break LOOP
