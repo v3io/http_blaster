@@ -35,6 +35,7 @@ import (
 	"sync/atomic"
 	"time"
 	"strconv"
+	"github.com/v3io/http_blaster/httpblaster/histogram"
 )
 
 var (
@@ -55,8 +56,10 @@ var (
 	worker_qd           int  = 10000
 	verbose             bool = false
 	enable_ui           bool
-	LatencyCollectorGet tui.LatencyCollector
-	LatencyCollectorPut tui.LatencyCollector
+	ch_put_latency		chan time.Duration
+	ch_get_latency		chan time.Duration
+	LatencyCollectorGet histogram.LatencyHist// tui.LatencyCollector
+	LatencyCollectorPut histogram.LatencyHist//tui.LatencyCollector
 	StatusesCollector   tui.StatusesCollector
 	term_ui             *tui.Term_ui
 	dump_failures       bool   = true
@@ -163,8 +166,8 @@ func load_test_Config() {
 }
 
 func generate_executors(term_ui *tui.Term_ui) {
-	ch_put_latency := LatencyCollectorPut.New(160, 1)
-	ch_get_latency := LatencyCollectorGet.New(160, 1)
+	ch_put_latency = LatencyCollectorPut.New()
+	ch_get_latency = LatencyCollectorGet.New()
 	ch_statuses := StatusesCollector.New(160, 1)
 
 	for Name, workload := range cfg.Workloads {
@@ -200,6 +203,8 @@ func wait_for_completion() {
 	log.Println("Wait for executors to finish")
 	ex_group.Wait()
 	end_time = time.Now()
+	close(ch_get_latency)
+	close(ch_put_latency)
 }
 
 func wait_for_ui_completion(ch_done chan struct{}) {
@@ -396,7 +401,7 @@ func exit(err_code int) {
 func handle_exit() {
 	if err := recover(); err != nil {
 		log.Println(err)
-		os.Exit(1)
+		log.Exit(1)
 	}
 }
 
@@ -412,8 +417,8 @@ func enable_tui() chan struct{} {
 				case <-ch_done:
 					return
 				case <-tick:
-					term_ui.Update_put_latency_chart(LatencyCollectorPut.Get())
-					term_ui.Update_get_latency_chart(LatencyCollectorGet.Get())
+					//term_ui.Update_put_latency_chart(LatencyCollectorPut.Get())
+					//term_ui.Update_get_latency_chart(LatencyCollectorGet.Get())
 					term_ui.Update_status_codes(StatusesCollector.Get())
 					term_ui.Refresh_log()
 					term_ui.Render()
@@ -428,17 +433,20 @@ func enable_tui() chan struct{} {
 func dump_latencies_histograms() {
 	prefix_get := "GetHist"
 	prefix_put := "PutHist"
-	title := "type \t usec \t\t\t percentage\n"
+	title := "type \t usec \t\t percentage\n"
 	strout := "Latency Histograms:\n"
 	log.Println("LatencyCollectorGet")
 	vs_get, ls_get := LatencyCollectorGet.GetResults()
 	if len(vs_get) >0 {
 		strout += "Get latency histogram:\n"
 		strout += title
+		//total := float64(0)
 		for i, v := range vs_get {
-			value, _ := strconv.ParseFloat(v, 64)
-			strout += fmt.Sprintf("%s: %.3f \t\t %.4f%%\n", prefix_get, value, ls_get[i])
+			//value, _ := strconv.ParseFloat(v, 64)
+			//total += ls_get[i]
+			strout += fmt.Sprintf("%s: %s \t\t %3.4f%%\n", prefix_get, v,ls_get[i])
 		}
+		//strout += fmt.Sprintf("total: %v", total)
 	}
 	vs_put, ls_put := LatencyCollectorPut.GetResults()
 	if len(vs_put) >0 {
@@ -448,7 +456,7 @@ func dump_latencies_histograms() {
 		for i, v := range vs_put {
 			if ls_put[i] != 0 {
 				value, _ := strconv.ParseFloat(v, 64)
-				strout += fmt.Sprintf("%s:%.3f \t\t %.4f%%\n", prefix_put, value, ls_put[i])
+				strout += fmt.Sprintf("%s:%.3f \t\t\t %.4f%%\n", prefix_put, value, value+100, ls_put[i])
 			}
 		}
 	}
@@ -473,7 +481,7 @@ func main() {
 	log.Println("Starting http_blaster")
 
 	defer handle_exit()
-	defer close_log_file()
+	//defer close_log_file()
 	defer stop_cpu_profile()
 	defer write_mem_profile()
 
