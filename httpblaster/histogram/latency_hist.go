@@ -2,9 +2,10 @@ package histogram
 
 import (
 	"time"
-	"strconv"
 	"sync"
 	log "github.com/sirupsen/logrus"
+	"fmt"
+	"sort"
 )
 
 type LatencyHist struct {
@@ -43,11 +44,19 @@ func (self *LatencyHist)New()chan time.Duration {
 func (self *LatencyHist) GetResults() ([]string, []float64) {
 	log.Debugln("get latency hist")
 	self.wg.Wait()
+	var keys []int
+	for k := range self.hist {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+
 	log.Debugln("latency hist wait released")
 	res_strings := [] string{}
 	res_values := []float64{}
-	for k,v := range self.hist{
-		res_strings = append(res_strings, strconv.Itoa(k*100) )
+	for k := range keys{
+		v := self.hist[k]
+		res_strings = append(res_strings, fmt.Sprintf("%5d - %5d",
+			k*100, (k+1)*100) )
 		res_values = append(res_values,float64(v * 100) / float64(self.count))
 	}
 	return res_strings, res_values

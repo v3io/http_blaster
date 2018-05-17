@@ -34,7 +34,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"strconv"
 	"github.com/v3io/http_blaster/httpblaster/histogram"
 )
 
@@ -455,8 +454,7 @@ func dump_latencies_histograms() {
 
 		for i, v := range vs_put {
 			if ls_put[i] != 0 {
-				value, _ := strconv.ParseFloat(v, 64)
-				strout += fmt.Sprintf("%s:%.3f \t\t\t %.4f%%\n", prefix_put, value, value+100, ls_put[i])
+				strout += fmt.Sprintf("%s: %s \t\t %3.4f%%\n", prefix_put, v,ls_put[i])
 			}
 		}
 	}
