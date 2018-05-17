@@ -49,15 +49,15 @@ func (self *LatencyHist) GetResults() ([]string, []float64) {
 		keys = append(keys, k)
 	}
 	sort.Ints(keys)
-
 	log.Debugln("latency hist wait released")
 	res_strings := [] string{}
-	res_values := []float64{}
-	for k := range keys{
+	res_values := [] float64{}
+	for _,k := range keys{
 		v := self.hist[k]
 		res_strings = append(res_strings, fmt.Sprintf("%5d - %5d",
 			k*100, (k+1)*100) )
-		res_values = append(res_values,float64(v * 100) / float64(self.count))
+		value := float64(v * 100) / float64(self.count)
+		res_values = append(res_values,value)
 	}
 	return res_strings, res_values
 }
