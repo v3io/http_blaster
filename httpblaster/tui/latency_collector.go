@@ -34,19 +34,17 @@ func (self *LatencyCollector) GetResults() ([]string, []float64) {
 
 }
 
-func (self *LatencyCollector) GetQuantile(q float64) (float64) {
+func (self *LatencyCollector) GetQuantile(q float64) float64 {
 	return self.WeighHist.CDF(q)
 
 }
 
-
-func (self *LatencyCollector) GetCount() (float64) {
+func (self *LatencyCollector) GetCount() float64 {
 	return self.WeighHist.Count()
 
 }
 
-
-func (self *LatencyCollector) String() (string) {
+func (self *LatencyCollector) String() string {
 	return self.WeighHist.String()
 
 }

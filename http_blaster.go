@@ -22,8 +22,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/Gurpartap/logrus-stack"
+	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/tui"
@@ -34,38 +34,39 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	"github.com/v3io/http_blaster/httpblaster/histogram"
+	//"github.com/v3io/http_blaster/httpblaster/histogram"
+	"sort"
 )
 
 var (
-	start_time          time.Time
-	end_time            time.Time
-	wl_id               int32 = -1
-	conf_file           string
-	results_file        string
-	showVersion         bool
-	dataBfr             []byte
-	cpu_profile         = false
-	mem_profile         = false
-	cfg                 config.TomlConfig
-	executors           []*httpblaster.Executor
-	ex_group            sync.WaitGroup
-	enable_log          bool
-	log_file            *os.File
-	worker_qd           int  = 10000
-	verbose             bool = false
-	enable_ui           bool
-	ch_put_latency		chan time.Duration
-	ch_get_latency		chan time.Duration
-	LatencyCollectorGet histogram.LatencyHist// tui.LatencyCollector
-	LatencyCollectorPut histogram.LatencyHist//tui.LatencyCollector
-	StatusesCollector   tui.StatusesCollector
-	term_ui             *tui.Term_ui
-	dump_failures       bool   = true
-	dump_location       string = "."
+	start_time     time.Time
+	end_time       time.Time
+	wl_id          int32 = -1
+	conf_file      string
+	results_file   string
+	showVersion    bool
+	dataBfr        []byte
+	cpu_profile    = false
+	mem_profile    = false
+	cfg            config.TomlConfig
+	executors      []*httpblaster.Executor
+	ex_group       sync.WaitGroup
+	enable_log     bool
+	log_file       *os.File
+	worker_qd      int  = 10000
+	verbose        bool = false
+	enable_ui      bool
+	ch_put_latency chan time.Duration
+	ch_get_latency chan time.Duration
+	//LatencyCollectorGet histogram.LatencyHist// tui.LatencyCollector
+	//LatencyCollectorPut histogram.LatencyHist//tui.LatencyCollector
+	//StatusesCollector   tui.StatusesCollector
+	term_ui       *tui.Term_ui
+	dump_failures bool   = true
+	dump_location string = "."
 )
 
-const AppVersion = "3.0.3"
+const AppVersion = "3.0.5"
 
 func init() {
 	const (
@@ -165,9 +166,9 @@ func load_test_Config() {
 }
 
 func generate_executors(term_ui *tui.Term_ui) {
-	ch_put_latency = LatencyCollectorPut.New()
-	ch_get_latency = LatencyCollectorGet.New()
-	ch_statuses := StatusesCollector.New(160, 1)
+	//ch_put_latency = LatencyCollectorPut.New()
+	//ch_get_latency = LatencyCollectorGet.New()
+	//ch_statuses := StatusesCollector.New(160, 1)
 
 	for Name, workload := range cfg.Workloads {
 		log.Println("Adding executor for ", Name)
@@ -183,9 +184,9 @@ func generate_executors(term_ui *tui.Term_ui) {
 			TermUi:         term_ui,
 			Ch_get_latency: ch_get_latency,
 			Ch_put_latency: ch_put_latency,
-			Ch_statuses:    ch_statuses,
-			DumpFailures:   dump_failures,
-			DumpLocation:   dump_location}
+			//Ch_statuses:    ch_statuses,
+			DumpFailures: dump_failures,
+			DumpLocation: dump_location}
 		executors = append(executors, e)
 	}
 }
@@ -202,8 +203,8 @@ func wait_for_completion() {
 	log.Println("Wait for executors to finish")
 	ex_group.Wait()
 	end_time = time.Now()
-	close(ch_get_latency)
-	close(ch_put_latency)
+	//close(ch_get_latency)
+	///close(ch_put_latency)
 }
 
 func wait_for_ui_completion(ch_done chan struct{}) {
@@ -418,7 +419,7 @@ func enable_tui() chan struct{} {
 				case <-tick:
 					//term_ui.Update_put_latency_chart(LatencyCollectorPut.Get())
 					//term_ui.Update_get_latency_chart(LatencyCollectorGet.Get())
-					term_ui.Update_status_codes(StatusesCollector.Get())
+					//term_ui.Update_status_codes(StatusesCollector.Get())
 					term_ui.Refresh_log()
 					term_ui.Render()
 				}
@@ -430,46 +431,90 @@ func enable_tui() chan struct{} {
 }
 
 func dump_latencies_histograms() {
-	prefix_get := "GetHist"
-	prefix_put := "PutHist"
-	title := "type \t usec \t\t percentage\n"
-	strout := "Latency Histograms:\n"
-	log.Println("LatencyCollectorGet")
-	vs_get, ls_get := LatencyCollectorGet.GetResults()
-	if len(vs_get) >0 {
-		strout += "Get latency histogram:\n"
-		strout += title
-		//total := float64(0)
-		for i, v := range vs_get {
-			//value, _ := strconv.ParseFloat(v, 64)
-			//total += ls_get[i]
-			strout += fmt.Sprintf("%s: %s \t\t %3.4f%%\n", prefix_get, v,ls_get[i])
-		}
-		//strout += fmt.Sprintf("total: %v", total)
-	}
-	vs_put, ls_put := LatencyCollectorPut.GetResults()
-	if len(vs_put) >0 {
-		strout += "Put latency histogram:\n"
-		strout += title
+	latency_get := make(map[int64]int)
+	latency_put := make(map[int64]int)
+	total_get := 0
+	total_put := 0
 
-		for i, v := range vs_put {
-			if ls_put[i] != 0 {
-				strout += fmt.Sprintf("%s: %s \t\t %3.4f%%\n", prefix_put, v,ls_put[i])
+	for _, e := range executors {
+		hist := e.LatencyHist()
+		if e.GetType() == "GET" {
+			for k, v := range hist {
+				latency_get[k] += v
+				total_get += v
+			}
+		} else {
+			for k, v := range hist {
+				latency_put[k] += v
+				total_put += v
 			}
 		}
 	}
-	log.Println(strout)
+	dump_latency_histogram(latency_get, total_get, "GET")
+	dump_latency_histogram(latency_put, total_put, "PUT")
+
 }
 
-func dump_status_code_histogram() {
-	log.Println("Status codes:")
-	labels, values := StatusesCollector.Get()
-	for i, v := range labels {
-		if values[i] != 0 {
-			log.Println(fmt.Sprintf("%v %v%%", v, values[i]))
+func remap_latency_histogram(hist map[int64]int) map[int64]int {
+	res := make(map[int64]int)
+	for k, v := range hist {
+		if k > 10000 { //1 sec
+			res[10000] += v
+		} else if k > 5000 { //500 mili
+			res[5000] += v
+		} else if k > 1000 { // 100mili
+			res[1000] += v
+		} else if k > 100 { //10 mili
+			res[100] += v
+		} else if k > 50 { //5 mili
+			res[50] += v
+		} else if k > 20 { //2 mili
+			res[20] += v
+		} else if k > 10 { //1 mili
+			res[10] += v
+		} else { //below 1 mili
+			res[k] += v
 		}
 	}
+	return res
 }
+
+func dump_latency_histogram(histogram map[int64]int, total int, req_type string) ([]string, []float64) {
+	var keys []int
+	var prefix string
+	title := "type \t usec \t\t percentage\n"
+	if req_type == "GET" {
+		prefix = "GetHist"
+	} else {
+		prefix = "PutHist"
+	}
+	strout := fmt.Sprintf("%s Latency Histograms:\n", prefix)
+	hist := remap_latency_histogram(histogram)
+	for k := range hist {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+	log.Debugln("latency hist wait released")
+	res_strings := []string{}
+	res_values := []float64{}
+
+	for _, k := range keys {
+		v := hist[int64(k)]
+		res_strings = append(res_strings, fmt.Sprintf("%5d", k*100))
+		value := float64(v*100) / float64(total)
+		res_values = append(res_values, value)
+	}
+
+	if len(res_strings) > 0 {
+		strout += title
+		for i, v := range res_strings {
+			strout += fmt.Sprintf("%s: %s \t\t %3.4f%%\n", prefix, v, res_values[i])
+		}
+	}
+	log.Println(strout)
+	return res_strings, res_values
+}
+
 
 func main() {
 	parse_cmd_line_args()
@@ -478,7 +523,7 @@ func main() {
 	configure_log()
 	log.Println("Starting http_blaster")
 
-	defer handle_exit()
+	//defer handle_exit()
 	//defer close_log_file()
 	defer stop_cpu_profile()
 	defer write_mem_profile()
@@ -489,7 +534,7 @@ func main() {
 	wait_for_completion()
 	log.Println("Executors done!")
 	dump_latencies_histograms()
-	dump_status_code_histogram()
+	//dump_status_code_histogram()
 	err_code := report()
 	log.Println("Done with error code ", err_code)
 	wait_for_ui_completion(ch_done)

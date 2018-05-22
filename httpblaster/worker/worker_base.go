@@ -8,18 +8,21 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"github.com/v3io/http_blaster/httpblaster/histogram"
 	"github.com/v3io/http_blaster/httpblaster/request_generators"
 	"github.com/valyala/fasthttp"
 	"io/ioutil"
 	"net"
 	"os"
-	"time"
 	"sync"
+	"time"
 )
 
 const DialTimeout = 60 * time.Second
 const RequestTimeout = 600 * time.Second
+
 var do_once sync.Once
+
 type WorkerBase struct {
 	host          string
 	conn          net.Conn
@@ -35,6 +38,7 @@ type WorkerBase struct {
 	retry_count   int
 	timer         *time.Timer
 	id            int
+	hist          *histogram.LatencyHist
 }
 
 func (w *WorkerBase) open_connection() {
@@ -131,6 +135,7 @@ func (w *WorkerBase) send(req *fasthttp.Request, resp *fasthttp.Response,
 	w.timer.Reset(timeout)
 	select {
 	case duration := <-w.ch_duration:
+		w.hist.Add(duration)
 		return nil, duration
 	case err := <-w.ch_error:
 		log.Debugf("request completed with error:%s", err.Error())
@@ -191,6 +196,10 @@ func (w *WorkerBase) GetResults() worker_results {
 	return w.Results
 }
 
+func (w *WorkerBase) GetHist() map[int64]int {
+	return w.hist.GetHistMap()
+}
+
 func NewWorker(worker_type WorkerType, host string, tls_client bool, lazy int, retry_codes []int, retry_count int, pem_file string, id int) Worker {
 	if host == "" {
 		return nil
@@ -204,12 +213,14 @@ func NewWorker(worker_type WorkerType, host string, tls_client bool, lazy int, r
 		retry_count = 1
 	}
 	var worker Worker
+	hist := &histogram.LatencyHist{}
+	hist.New()
 	if worker_type == PERFORMANCE_WORKER {
 		worker = &PerfWorker{WorkerBase{host: host, is_tls_client: tls_client, retry_codes: retry_codes_map,
-			retry_count: retry_count, pem_file: pem_file, id: id}}
-	}else{
+			retry_count: retry_count, pem_file: pem_file, id: id, hist: hist}}
+	} else {
 		worker = &IngestWorker{WorkerBase{host: host, is_tls_client: tls_client, retry_codes: retry_codes_map,
-			retry_count: retry_count, pem_file: pem_file, id: id}}
+			retry_count: retry_count, pem_file: pem_file, id: id, hist: hist}}
 	}
 	worker.Init(lazy)
 	return worker

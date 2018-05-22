@@ -66,9 +66,9 @@ type Executor struct {
 	TermUi         *tui.Term_ui
 	Ch_get_latency chan time.Duration
 	Ch_put_latency chan time.Duration
-	Ch_statuses    chan int
-	DumpFailures   bool
-	DumpLocation   string
+	//Ch_statuses    chan int
+	DumpFailures bool
+	DumpLocation string
 }
 
 func (self *Executor) load_request_generator() (chan *request_generators.Request,
@@ -129,12 +129,16 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	return ch_req, release_req, ch_response
 }
 
-func (self *Executor)GetWorkerType() worker.WorkerType  {
+func (self *Executor) GetWorkerType() worker.WorkerType {
 	gen_type := strings.ToLower(self.Workload.Generator)
-	if gen_type == request_generators.PERFORMANCE{
+	if gen_type == request_generators.PERFORMANCE {
 		return worker.PERFORMANCE_WORKER
 	}
 	return worker.INGESTION_WORKER
+}
+
+func (self *Executor) GetType() string {
+	return self.Workload.Type
 }
 
 func (self *Executor) run(wg *sync.WaitGroup) error {
@@ -157,18 +161,20 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		server := fmt.Sprintf("%s:%s", host_address, self.Globals.Port)
 		w := worker.NewWorker(self.GetWorkerType(),
 			server, self.Globals.TLSMode, self.Workload.Lazy,
-				self.Globals.RetryOnStatusCodes,
-				self.Globals.RetryCount, self.Globals.PemFile, i)
+			self.Globals.RetryOnStatusCodes,
+			self.Globals.RetryCount, self.Globals.PemFile, i)
 		self.workers = append(self.workers, w)
-		var ch_latency chan time.Duration
-		if self.Workload.Type == "GET" {
-			ch_latency = self.Ch_get_latency
-		} else {
-			ch_latency = self.Ch_put_latency
-		}
+		//var ch_latency chan time.Duration
+		//if self.Workload.Type == "GET" {
+		//	ch_latency = self.Ch_get_latency
+		//} else {
+		//	ch_latency = self.Ch_put_latency
+		//}
 
-		go w.RunWorker(ch_response, ch_req, &workers_wg, release_req_flag, ch_latency,
-			self.Ch_statuses, self.DumpFailures, self.DumpLocation)
+		go w.RunWorker(ch_response, ch_req,
+			&workers_wg, release_req_flag, // ch_latency,
+			//self.Ch_statuses,
+			self.DumpFailures, self.DumpLocation)
 	}
 	ended := make(chan bool)
 	go func() {
@@ -239,10 +245,6 @@ LOOP:
 func (self *Executor) Start(wg *sync.WaitGroup) error {
 	self.results.Statuses = make(map[int]uint64)
 	log.Info("at executor start ", self.Workload)
-	//self.host = self.Globals.Server
-	//self.port = self.Globals.Port
-	//self.tls_mode = self.Globals.TLSMode
-	//self.Globals.StatusCodesAcceptance = self.Globals.StatusCodesAcceptance
 	go func() {
 		self.run(wg)
 	}()
@@ -288,4 +290,15 @@ func (self *Executor) Report() (executor_result, error) {
 		return self.results, errors.New("executor completed with errors")
 	}
 	return self.results, nil
+}
+
+func (self *Executor) LatencyHist() map[int64]int {
+	res := make(map[int64]int)
+	for _, w := range self.workers {
+		hist := w.GetHist()
+		for k, v := range hist {
+			res[k] += v
+		}
+	}
+	return res
 }

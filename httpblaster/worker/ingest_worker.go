@@ -89,8 +89,8 @@ func (w *IngestWorker) dump_requests(ch_dump chan *fasthttp.Request, dump_locati
 
 func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
 	wg *sync.WaitGroup, release_req bool,
-	ch_latency chan time.Duration,
-	ch_statuses chan int,
+	//ch_latency chan time.Duration,
+	//ch_statuses chan int,
 	dump_requests bool,
 	dump_location string) {
 	defer wg.Done()
@@ -134,18 +134,18 @@ func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_r
 		}
 
 		var err error
-		var d time.Duration
+		//var d time.Duration
 		response := request_generators.AcquireResponse()
 	LOOP:
 		for i := 0; i < w.retry_count; i++ {
-			err, d = w.send_request(submit_request, response)
+			err, _ = w.send_request(submit_request, response)
 			if err != nil {
 				//retry on error
 				response.Response.Reset()
 				continue
-			} else{
-				ch_statuses <- response.Response.StatusCode()
-				ch_latency <- d
+			} else {
+				//ch_statuses <- response.Response.StatusCode()
+				//ch_latency <- d
 			}
 			if response.Response.StatusCode() >= http.StatusBadRequest {
 				if _, ok := w.retry_codes[response.Response.StatusCode()]; !ok {
@@ -159,8 +159,8 @@ func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_r
 				break LOOP
 			}
 		}
-		ch_statuses <- response.Response.StatusCode()
-		ch_latency <- d
+		//ch_statuses <- response.Response.StatusCode()
+		//ch_latency <- d
 		if response.Response.StatusCode() >= http.StatusBadRequest &&
 			response.Response.StatusCode() < http.StatusInternalServerError &&
 			dump_requests {
@@ -184,5 +184,6 @@ func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_r
 		close(ch_dump)
 		sync_dump.Wait()
 	}
+	w.hist.Close()
 	w.close_connection()
 }
