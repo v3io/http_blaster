@@ -454,6 +454,7 @@ func dump_latencies_histograms() {
 	dump_latency_histogram(latency_put, total_put, "PUT")
 
 }
+
 func remap_latency_histogram(hist map[int64]int) map[int64]int {
 	res := make(map[int64]int)
 	for k, v := range hist {
@@ -499,8 +500,7 @@ func dump_latency_histogram(histogram map[int64]int, total int, req_type string)
 
 	for _, k := range keys {
 		v := hist[int64(k)]
-		res_strings = append(res_strings, fmt.Sprintf("%5d - %5d",
-			k*100, (k+1)*100))
+		res_strings = append(res_strings, fmt.Sprintf("%5d", k*100))
 		value := float64(v*100) / float64(total)
 		res_values = append(res_values, value)
 	}
@@ -515,49 +515,6 @@ func dump_latency_histogram(histogram map[int64]int, total int, req_type string)
 	return res_strings, res_values
 }
 
-/*
-func dump_latencies_histograms() {
-	prefix_get := "GetHist"
-	prefix_put := "PutHist"
-	title := "type \t usec \t\t percentage\n"
-	strout := "Latency Histograms:\n"
-	log.Println("LatencyCollectorGet")
-	vs_get, ls_get := LatencyCollectorGet.GetResults()
-	if len(vs_get) >0 {
-		strout += "Get latency histogram:\n"
-		strout += title
-		//total := float64(0)
-		for i, v := range vs_get {
-			//value, _ := strconv.ParseFloat(v, 64)
-			//total += ls_get[i]
-			strout += fmt.Sprintf("%s: %s \t\t %3.4f%%\n", prefix_get, v,ls_get[i])
-		}
-		//strout += fmt.Sprintf("total: %v", total)
-	}
-	vs_put, ls_put := LatencyCollectorPut.GetResults()
-	if len(vs_put) >0 {
-		strout += "Put latency histogram:\n"
-		strout += title
-
-		for i, v := range vs_put {
-			if ls_put[i] != 0 {
-				strout += fmt.Sprintf("%s: %s \t\t %3.4f%%\n", prefix_put, v,ls_put[i])
-			}
-		}
-	}
-	log.Println(strout)
-}
-*/
-
-//func dump_status_code_histogram() {
-//	log.Println("Status codes:")
-//	labels, values := StatusesCollector.Get()
-//	for i, v := range labels {
-//		if values[i] != 0 {
-//			log.Println(fmt.Sprintf("%v %v%%", v, values[i]))
-//		}
-//	}
-//}
 
 func main() {
 	parse_cmd_line_args()
