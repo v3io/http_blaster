@@ -56,7 +56,7 @@ func (w *PerfWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req
 		})
 		err, _ := w.send_request(req, response)
 
-		if err != nil{
+		if err != nil {
 			log.Errorf("send request failed %s", err.Error())
 		}
 

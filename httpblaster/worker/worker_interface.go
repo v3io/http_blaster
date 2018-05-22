@@ -10,7 +10,7 @@ type Worker interface {
 	UseBase(c WorkerBase)
 	Init(lazy int)
 	GetResults() worker_results
-	GetHist()  map[int64]int
+	GetHist() map[int64]int
 	RunWorker(ch_resp chan *request_generators.Response,
 		ch_req chan *request_generators.Request,
 		wg *sync.WaitGroup,

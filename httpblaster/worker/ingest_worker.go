@@ -143,7 +143,7 @@ func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_r
 				//retry on error
 				response.Response.Reset()
 				continue
-			} else{
+			} else {
 				//ch_statuses <- response.Response.StatusCode()
 				//ch_latency <- d
 			}

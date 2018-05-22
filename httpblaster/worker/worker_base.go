@@ -8,19 +8,21 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"github.com/v3io/http_blaster/httpblaster/histogram"
 	"github.com/v3io/http_blaster/httpblaster/request_generators"
 	"github.com/valyala/fasthttp"
 	"io/ioutil"
 	"net"
 	"os"
-	"time"
 	"sync"
-	"github.com/v3io/http_blaster/httpblaster/histogram"
+	"time"
 )
 
 const DialTimeout = 60 * time.Second
 const RequestTimeout = 600 * time.Second
+
 var do_once sync.Once
+
 type WorkerBase struct {
 	host          string
 	conn          net.Conn
@@ -36,7 +38,7 @@ type WorkerBase struct {
 	retry_count   int
 	timer         *time.Timer
 	id            int
-	hist 		  *histogram.LatencyHist
+	hist          *histogram.LatencyHist
 }
 
 func (w *WorkerBase) open_connection() {
@@ -194,7 +196,7 @@ func (w *WorkerBase) GetResults() worker_results {
 	return w.Results
 }
 
-func (w *WorkerBase)GetHist()  map[int64]int{
+func (w *WorkerBase) GetHist() map[int64]int {
 	return w.hist.GetHistMap()
 }
 
@@ -216,7 +218,7 @@ func NewWorker(worker_type WorkerType, host string, tls_client bool, lazy int, r
 	if worker_type == PERFORMANCE_WORKER {
 		worker = &PerfWorker{WorkerBase{host: host, is_tls_client: tls_client, retry_codes: retry_codes_map,
 			retry_count: retry_count, pem_file: pem_file, id: id, hist: hist}}
-	}else{
+	} else {
 		worker = &IngestWorker{WorkerBase{host: host, is_tls_client: tls_client, retry_codes: retry_codes_map,
 			retry_count: retry_count, pem_file: pem_file, id: id, hist: hist}}
 	}
