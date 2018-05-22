@@ -24,7 +24,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/v3io/http_blaster/httpblaster/request_generators"
 	"sync"
-	"time"
+	//"time"
 )
 
 type PerfWorker struct {
@@ -37,8 +37,8 @@ func (w *PerfWorker) UseBase(c WorkerBase) {
 
 func (w *PerfWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
 	wg *sync.WaitGroup, release_req bool,
-	ch_latency chan time.Duration,
-	ch_statuses chan int,
+	//ch_latency chan time.Duration,
+	//ch_statuses chan int,
 	dump_requests bool,
 	dump_location string) {
 	defer wg.Done()
@@ -54,17 +54,18 @@ func (w *PerfWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req
 		req_type.Do(func() {
 			w.Results.Method = string(req.Request.Header.Method())
 		})
-		err, d := w.send_request(req, response)
+		err, _ := w.send_request(req, response)
 
 		if err != nil{
 			log.Errorf("send request failed %s", err.Error())
 		}
 
-		ch_statuses <- response.Response.StatusCode()
-		ch_latency <- d
+		//ch_statuses <- response.Response.StatusCode()
+		//ch_latency <- d
 		request_generators.ReleaseRequest(req)
 		response.Response.Reset()
 	}
-
+	log.Debugln("closing hist")
+	w.hist.Close()
 	w.close_connection()
 }
