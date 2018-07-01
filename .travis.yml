@@ -1,7 +1,7 @@
 language: go
 
 go:
-    - 1.8
+    - 1.9.x
     - tip
 
 go_import_path: github.com/v3io/http_blaster
