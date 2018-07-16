@@ -24,9 +24,9 @@ import (
 	"fmt"
 	"github.com/Gurpartap/logrus-stack"
 	log "github.com/sirupsen/logrus"
-	"github.com/v3io/http_blaster/httpblaster"
-	"github.com/v3io/http_blaster/httpblaster/config"
-	"github.com/v3io/http_blaster/httpblaster/tui"
+	"github.com/aviaIguazio/http_blaster/httpblaster"
+	"github.com/aviaIguazio/http_blaster/httpblaster/config"
+	"github.com/aviaIguazio/http_blaster/httpblaster/tui"
 	"io"
 	"math/rand"
 	"os"
@@ -34,7 +34,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	//"github.com/v3io/http_blaster/httpblaster/histogram"
+	//"github.com/aviaIguazio/http_blaster/httpblaster/histogram"
 	"sort"
 )
 
