@@ -3,8 +3,8 @@ package request_generators
 import (
 	"encoding/csv"
 	log "github.com/sirupsen/logrus"
-	"github.com/aviaIguazio/http_blaster/httpblaster/config"
-	"github.com/aviaIguazio/http_blaster/httpblaster/igz_data"
+	"github.com/v3io/http_blaster/httpblaster/config"
+	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"io"
 	"os"
 	"runtime"

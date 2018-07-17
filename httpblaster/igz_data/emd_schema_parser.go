@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"github.com/buger/jsonparser"
 	"github.com/nu7hatch/gouuid"
-	"github.com/aviaIguazio/http_blaster/httpblaster/config"
+	"github.com/v3io/http_blaster/httpblaster/config"
 	"io/ioutil"
-	"regexp"
-	//"strconv"
+	"regexp"	
 	"strings"
 )
 
@@ -24,8 +23,8 @@ type SchemaSettings struct {
 	KeyFields    string
 	KeyFormat    string
 	UpdateFields string
-	LsetName string
-	Time string
+	TSDBName string
+	TSDBTime string
 	TSDBValue  string
 	TSDBAttributes string
 
@@ -52,16 +51,19 @@ type EmdSchemaParser struct {
 	update_fields_indexs []int
 	updateMode           string
 	updateExpression     string
-	lset_name 			 string
-	lset_name_index		 int
+	tsdb_name 			 string
+	tsdb_name_index		 int
 	tsdb_value 			 string
-	tsdb_index		 	 int
-	tsdb_attributes map[string]int
+	tsdb_value_index	 int
+	tsdb_attributes 	 string
+	tsdb_attributes_map  map[string]int
+
 }
 
 func (self *EmdSchemaParser) LoadSchema(file_path, update_mode, update_expression string) error {
 
 	self.values_map = make(map[int]SchemaValue)
+	self.tsdb_attributes_map = make(map[string]int)
 	plan, _ := ioutil.ReadFile(file_path)
 	err := json.Unmarshal(plan, &self.JsonSchema)
 	if err != nil {
@@ -74,15 +76,17 @@ func (self *EmdSchemaParser) LoadSchema(file_path, update_mode, update_expressio
 	self.schema_key_fields = settings.KeyFields
 	self.updateMode = update_mode
 	self.updateExpression = update_expression
-	self.lset_name =settings.LsetName
+	self.tsdb_name =settings.TSDBName
 	self.tsdb_value =settings.TSDBValue
+	self.tsdb_attributes = settings.TSDBAttributes
 
 
 	for _, v := range columns {
 		self.values_map[v.Index] = v
 	}
 	self.GetKeyIndexes()
-	self.GetLsetNameIndex()
+	self.MapTSDBAttributesIndexes()
+	self.GetTSDBNameIndex()
 	self.GetTSDBValueIndex()
 	if len(self.updateExpression) > 0 {
 		self.GetUpdateExpressionIndexes()
@@ -116,10 +120,10 @@ func (self *EmdSchemaParser) GetKeyIndexes() {
 	}
 }
 
-func (self *EmdSchemaParser) GetLsetNameIndex() {
+func (self *EmdSchemaParser) GetTSDBNameIndex() {
 		for _, v := range self.values_map {
-			if v.Name == self.lset_name {
-				self.lset_name_index = v.Index
+			if v.Name == self.tsdb_name {
+				self.tsdb_name_index = v.Index
 			}
 		}
 	}
@@ -127,12 +131,20 @@ func (self *EmdSchemaParser) GetLsetNameIndex() {
 func (self *EmdSchemaParser) GetTSDBValueIndex() {
 	for _, v := range self.values_map {
 		if v.Name == self.tsdb_value {
-			self.tsdb_index = v.Index
+			self.tsdb_value_index = v.Index
 		}
 	}
 }
 
-
+func (self *EmdSchemaParser) MapTSDBAttributesIndexes() {
+	attributes := strings.Split(self.tsdb_attributes, ",")
+	for _, att := range attributes {
+		for _, v := range self.values_map {
+			if v.Name == att {
+				self.tsdb_attributes_map[att] = v.Index			}
+		}
+	}
+}
 
 func (self *EmdSchemaParser) GetFieldsIndexes(fields, delimiter string) []int {
 	keys := strings.Split(fields, delimiter)
@@ -207,9 +219,9 @@ func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 
 func (self *EmdSchemaParser) TSDBFromCSVRecord(vals []string) string {
 	tsdb_item := NewTSDBItem()
-	tsdb_item.InsertLsetName(T_STRING,vals[self.lset_name_index])
+	tsdb_item.InsertTSDBName(self.tsdb_attributes_map,vals,T_STRING,vals[self.tsdb_name_index])
 	tsdb_item.InsertKey("key", T_STRING, self.KeyFromCSVRecord(vals))
-	tsdb_item.InsertValue("value",T_STRING,vals[self.tsdb_index])
+	tsdb_item.InsertValue("value",T_STRING,vals[self.tsdb_value_index])
 	/*for i, v := range vals {
 		if val , ok :=self.values_map[i] ; ok  {
 			err, igz_type, value := ConvertValue(val.Type, v)

@@ -5,35 +5,14 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	//"github.com/v3io/v3io-tsdb/pkg/utils"
 	"strconv"
 	"github.com/v3io/v3io-tsdb/pkg/utils"
+	"time"
 )
 
-/*type IgzType string
-
-const (
-	T_BLOB       IgzType = "B"
-	T_BOOL               = "BOOL"
-	T_ATTR_LIST          = "L"
-	T_ATTR_MAP           = "M"
-	T_NUMBER             = "N"
-	T_NUMBER_SET         = "NS"
-	T_NULL               = "NULL"
-	T_UNIX_TIME          = "UT"
-	T_TIME_STAMP         = "TS"
-	T_STRING             = "S"
-	T_STRING_SET         = "SS"
-	T_DOUBLE             = "D"
-)
-*/
 type IgzTSDBItem struct {
-	//TableName           string
-	//ConditionExpression string
-	//Key  map[string]map[string]interface{}
 	Lset utils.Labels
 	Time string
-	//Value map[string]map[string]interface{}
 	Value float64
 }
 
@@ -42,15 +21,29 @@ func (self *IgzTSDBItem) ToJsonString() string {
 	return string(body)
 }
 
-func (self *IgzTSDBItem) InsertLsetName(value_type IgzType, value interface{}) error {
+func (self *IgzTSDBItem) InsertTSDBName(attributes_map map[string]int,vals []string,value_type IgzType, value interface{}) error {
+
 	strVal := value.(string)
+
 	self.Lset = utils.Labels{{Name: "__name__",Value:strVal}}
+	for key, val := range attributes_map {
+		lable := utils.Label{Name: key, Value: vals[val]}
+		self.Lset=  append(self.Lset,lable)
+		}
 	return nil
 }
 
 func (self *IgzTSDBItem) InsertKey(key string, value_type IgzType, value interface{}) error {
 	strVal := value.(string)
-	self.Time = strVal
+
+	_,err := time.Parse( time.RFC3339,strVal)
+	if err != nil	{
+
+		self.Time=strconv.FormatInt(time.Now().Unix() , 10)
+	}	else{
+		self.Time = strVal
+	}
+
 	return nil
 }
 
@@ -66,39 +59,17 @@ func (self *IgzTSDBItem) InsertValue(attr_name string, value_type IgzType, value
 
 func NewTSDBItem() *IgzTSDBItem {
 	i := &IgzTSDBItem{}
-	//i.Key = make(map[string]map[string]interface{})
-	//i.Value = make(map[string]map[string]interface{})
 	return i
 }
 
 type IgzTSDBItemUpdate struct {
-	//TableName           string
 	UpdateMode       string
 	UpdateExpression string
-	//Key  map[string]map[string]interface{}
 }
-
-//
-//func (self *IgzTSDBItemUpdate) InsertKey(key string, value_type IgzType, value interface{}) error {
-//	if _, ok := self.Key[key]; ok {
-//		err := fmt.Sprintf("Key %s Override existing key %v", key, self.Key)
-//		log.Error(err)
-//		return errors.New(err)
-//	}
-//	self.Key[key] = make(map[string]interface{})
-//	self.Key[key][string(value_type)] = value
-//	return nil
-//}
 
 func (self *IgzTSDBItemUpdate) ToJsonString() string {
 	body, _ := json.Marshal(self)
 	return string(body)
-}
-
-func NewTSDBItemUpdate() *IgzTSDBItemUpdate {
-	i := &IgzTSDBItemUpdate{}
-	//i.Key = make(map[string]map[string]interface{})
-	return i
 }
 
 type IgzTSDBItemQuery struct {
@@ -121,12 +92,6 @@ func (self *IgzTSDBItemQuery) InsertKey(key string, value_type IgzType, value in
 	self.Key[key] = make(map[string]interface{})
 	self.Key[key][string(value_type)] = value
 	return nil
-}
-
-func NewTSDBItemQuery() *IgzTSDBItemQuery {
-	q := &IgzTSDBItemQuery{}
-	q.Key = make(map[string]map[string]interface{})
-	return q
 }
 
 type IgzTSDBItemsQuery struct {
@@ -168,20 +133,8 @@ func (self *IgzTSDBItemsQuery) InsertEndingKey(key string, value_type IgzType, v
 	return nil
 }
 
-func NewTSDBItemsQuery() *IgzTSDBItemQuery {
-	q := &IgzTSDBItemQuery{}
-	q.Key = make(map[string]map[string]interface{})
-	return q
-}
 
 func (item IgzTSDBItem) ConvertToTSDBItem() *IgzTSDBItem{
 	returnItem := IgzTSDBItem{}
-	/*for i, v := range item.Key {
-		if val , ok :=item.Key[i] ; ok  {
-			returnItem.Time = val
-		}
-	}*/
-
-
 	return  &returnItem
 }
