@@ -4,7 +4,7 @@ go:
     - 1.9.x
     - tip
 
-go_import_path: github.com/aviaIguazio/http_blaster
+go_import_path: github.com/v3io/http_blaster
 env:
   global:
     - VERSION=$(echo $TRAVIS_TAG)
