@@ -2,10 +2,9 @@
   "SETTINGS": {
     "Format": "csv",
     "Separator": "|",
-    "KeyFields": "Time_Sequence",
-    "KeyFormat": "%v",
+    "TSDBTime": "Time_Sequence",
     "TSDBName" : "Broker_ID",
-    "TSDBValue" : "Total_New_Orders",
+    "TSDBValue" : "Total_Orders",
     "TSDBAttributes" : "Status_Flag,Active_Status"
   },
   "COLUMNS": [
@@ -25,6 +24,12 @@
       "Index": 4,
       "Type": "S",
       "Name": "Status_Flag",
+      "Nullable": true
+    },
+    {
+      "Index": 10,
+      "Type": "N",
+      "Name": "Total_Orders",
       "Nullable": true
     },
     {

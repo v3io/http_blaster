@@ -26,7 +26,7 @@ type SchemaSettings struct {
 	TSDBName string
 	TSDBTime string
 	TSDBValue  string
-	TSDBAttributes string
+	TSDBLables string
 
 }
 
@@ -53,6 +53,8 @@ type EmdSchemaParser struct {
 	updateExpression     string
 	tsdb_name 			 string
 	tsdb_name_index		 int
+	tsdb_time 			 string
+	tsdb_time_index 	 int
 	tsdb_value 			 string
 	tsdb_value_index	 int
 	tsdb_attributes 	 string
@@ -76,16 +78,17 @@ func (self *EmdSchemaParser) LoadSchema(file_path, update_mode, update_expressio
 	self.schema_key_fields = settings.KeyFields
 	self.updateMode = update_mode
 	self.updateExpression = update_expression
+	self.tsdb_time =settings.TSDBTime
 	self.tsdb_name =settings.TSDBName
 	self.tsdb_value =settings.TSDBValue
-	self.tsdb_attributes = settings.TSDBAttributes
+	self.tsdb_attributes = settings.TSDBLables
 
 
 	for _, v := range columns {
 		self.values_map[v.Index] = v
 	}
 	self.GetKeyIndexes()
-	self.MapTSDBAttributesIndexes()
+	self.MapTSDBLablesIndexes()
 	self.GetTSDBNameIndex()
 	self.GetTSDBValueIndex()
 	if len(self.updateExpression) > 0 {
@@ -136,7 +139,7 @@ func (self *EmdSchemaParser) GetTSDBValueIndex() {
 	}
 }
 
-func (self *EmdSchemaParser) MapTSDBAttributesIndexes() {
+func (self *EmdSchemaParser) MapTSDBLablesIndexes() {
 	attributes := strings.Split(self.tsdb_attributes, ",")
 	for _, att := range attributes {
 		for _, v := range self.values_map {
@@ -219,18 +222,7 @@ func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 
 func (self *EmdSchemaParser) TSDBFromCSVRecord(vals []string) string {
 	tsdb_item := NewTSDBItem()
-	tsdb_item.InsertTSDBName(self.tsdb_attributes_map,vals,T_STRING,vals[self.tsdb_name_index])
-	tsdb_item.InsertKey("key", T_STRING, self.KeyFromCSVRecord(vals))
-	tsdb_item.InsertValue("value",T_STRING,vals[self.tsdb_value_index])
-	/*for i, v := range vals {
-		if val , ok :=self.values_map[i] ; ok  {
-			err, igz_type, value := ConvertValue(val.Type, v)
-			if err != nil {
-				panic(fmt.Sprintf("conversion error %d %v %v", i, v, self.values_map[i]))
-			}
-			tsdb_item.InsertValue(self.values_map[i].Name, igz_type, value)
-		}
-	}*/
+	tsdb_item.GenerateStruct(vals,self)
 	return string(tsdb_item.ToJsonString())
 }
 

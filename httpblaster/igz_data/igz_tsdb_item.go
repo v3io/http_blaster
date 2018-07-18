@@ -16,6 +16,13 @@ type IgzTSDBItem struct {
 	Value float64
 }
 
+func (self *IgzTSDBItem) GenerateStruct(vals []string,parser *EmdSchemaParser){
+	self.InsertTSDBName(parser.tsdb_attributes_map,vals,T_STRING,vals[parser.tsdb_name_index])
+	self.InsertTime(vals ,parser)
+	self.InsertValue(vals[parser.tsdb_value_index])
+}
+
+
 func (self *IgzTSDBItem) ToJsonString() string {
 	body, _ := json.Marshal(self)
 	return string(body)
@@ -38,7 +45,7 @@ func (self *IgzTSDBItem) InsertKey(key string, value_type IgzType, value interfa
 
 	_,err := time.Parse( time.RFC3339,strVal)
 	if err != nil	{
-
+		//fix convert
 		self.Time=strconv.FormatInt(time.Now().Unix() , 10)
 	}	else{
 		self.Time = strVal
@@ -47,14 +54,28 @@ func (self *IgzTSDBItem) InsertKey(key string, value_type IgzType, value interfa
 	return nil
 }
 
-func (self *IgzTSDBItem) InsertValue(attr_name string, value_type IgzType, value interface{}) error {
-	strVal := value.(string)
+
+func (self *IgzTSDBItem) InsertTime(vals []string,parser *EmdSchemaParser) error {
+	for i, v := range parser.values_map {
+		if v.Name == parser.tsdb_time {
+			parser.tsdb_time_index = i
+		}
+	}
+	input := vals[parser.tsdb_time_index]
+	//add validation on time
+	self.Time=  input
+	return nil
+}
+
+
+
+
+func (self *IgzTSDBItem) InsertValue(strVal string){
 	f, err := strconv.ParseFloat(strVal, 64)
 	if err!=nil {
-		panic(err.Error())
+		panic(fmt.Sprintf("conversion error to float %v %v", strVal))
 	}
 	self.Value=f
-	return nil
 }
 
 func NewTSDBItem() *IgzTSDBItem {

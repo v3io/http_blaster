@@ -2,7 +2,7 @@ title = "Workload example"
 
 [global]
     Duration = "160s"
-    server="192.168.206.22"
+    server="localhost"
     port="44001"
     TLSMode=false
     [global.StatusCodesAcceptance]
@@ -17,10 +17,9 @@ title = "Workload example"
         container="1"
         Target="t1/"
         workers=1
-        #payload="examples/payloads/order-book-sample.csv"
-        #schema="examples/schemas/tsdb_schema_example.json"
-        payload="/Users/aviasulin/Downloads/stocks1.csv"
-        schema="examples/schemas/stocks_schema_example.json"
+        payload="examples/payloads/order-book-sample.csv"
+        schema="examples/schemas/tsdb_schema_example.json"
+
 
 
 

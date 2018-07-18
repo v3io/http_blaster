@@ -31,7 +31,9 @@ func (self *Csv2TSDB) generate_request(ch_records chan []string, ch_req chan *Re
 	if e != nil {
 		panic(e)
 	}
+
 	for r := range ch_records {
+
 		vals := parser.TSDBFromCSVRecord(r)
 		json_payload := vals
 		req := AcquireRequest()
