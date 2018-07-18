@@ -1,4 +1,11 @@
 package httpblaster
+/*
+import (
+	"testing"
+	"io/ioutil"
+	"path"
+)
+
 
 import (
 	"bytes"
@@ -204,3 +211,4 @@ func Test_PUT_Multi_Worker(t *testing.T) {
 	}
 	t.Logf("total number of requests %d", uint64(count)*wl.req_count)
 }
+*/

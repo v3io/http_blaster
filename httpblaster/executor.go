@@ -85,6 +85,8 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 			release_req = false
 		}
 		break
+
+
 	case request_generators.LINE2STREAM:
 		req_gen = &request_generators.Line2StreamGenerator{}
 		break
@@ -115,6 +117,9 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	case request_generators.STREAM_GET:
 		req_gen = &request_generators.StreamGetGenerator{}
 		ch_response = make(chan *request_generators.Response)
+	case request_generators.CSV2TSDB:
+		req_gen = &request_generators.Csv2TSDB{}
+		break
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
