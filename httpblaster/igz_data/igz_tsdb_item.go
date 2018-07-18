@@ -17,7 +17,8 @@ type IgzTSDBItem struct {
 }
 
 func (self *IgzTSDBItem) GenerateStruct(vals []string,parser *EmdSchemaParser){
-	self.InsertTSDBName(parser.tsdb_attributes_map,vals,T_STRING,vals[parser.tsdb_name_index])
+	//self.InsertTSDBName(parser.tsdb_attributes_map,vals,T_STRING,vals[parser.tsdb_name_index])
+	self.InsertTSDBName(vals,parser)
 	self.InsertTime(vals ,parser)
 	self.InsertValue(vals[parser.tsdb_value_index])
 }
@@ -28,12 +29,18 @@ func (self *IgzTSDBItem) ToJsonString() string {
 	return string(body)
 }
 
-func (self *IgzTSDBItem) InsertTSDBName(attributes_map map[string]int,vals []string,value_type IgzType, value interface{}) error {
-
-	strVal := value.(string)
-
-	self.Lset = utils.Labels{{Name: "__name__",Value:strVal}}
-	for key, val := range attributes_map {
+//func (self *IgzTSDBItem) InsertTSDBName(attributes_map map[string]int,vals []string,value_type IgzType, value interface{}) error {
+func (self *IgzTSDBItem) InsertTSDBName(vals []string,parser *EmdSchemaParser) error {
+	for i, v := range parser.values_map {
+		if v.Name == parser.tsdb_time {
+			parser.tsdb_time_index = i
+		}
+	}
+	input := vals[parser.tsdb_name_index]
+	//add validation on time
+	self.Time=  input
+	self.Lset = utils.Labels{{Name: "__name__",Value:input}}
+	for key, val := range parser.tsdb_attributes_map {
 		lable := utils.Label{Name: key, Value: vals[val]}
 		self.Lset=  append(self.Lset,lable)
 		}

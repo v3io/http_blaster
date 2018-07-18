@@ -5,7 +5,7 @@
     "TSDBTime": "Time_Sequence",
     "TSDBName" : "Broker_ID",
     "TSDBValue" : "Total_Orders",
-    "TSDBAttributes" : "Status_Flag,Active_Status"
+    "TSDBLables" : "Status_Flag,Active_Status"
   },
   "COLUMNS": [
     {
