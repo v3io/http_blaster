@@ -8,8 +8,7 @@ import (
 	"github.com/nu7hatch/gouuid"
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"io/ioutil"
-	"regexp"
-	//"strconv"
+	"regexp"	
 	"strings"
 )
 
@@ -24,6 +23,11 @@ type SchemaSettings struct {
 	KeyFields    string
 	KeyFormat    string
 	UpdateFields string
+	TSDBName string
+	TSDBTime string
+	TSDBValue  string
+	TSDBLables string
+
 }
 
 type SchemaValue struct {
@@ -47,11 +51,21 @@ type EmdSchemaParser struct {
 	update_fields_indexs []int
 	updateMode           string
 	updateExpression     string
+	tsdb_name 			 string
+	tsdb_name_index		 int
+	tsdb_time 			 string
+	tsdb_time_index 	 int
+	tsdb_value 			 string
+	tsdb_value_index	 int
+	tsdb_attributes 	 string
+	tsdb_attributes_map  map[string]int
+
 }
 
 func (self *EmdSchemaParser) LoadSchema(file_path, update_mode, update_expression string) error {
 
 	self.values_map = make(map[int]SchemaValue)
+	self.tsdb_attributes_map = make(map[string]int)
 	plan, _ := ioutil.ReadFile(file_path)
 	err := json.Unmarshal(plan, &self.JsonSchema)
 	if err != nil {
@@ -64,11 +78,19 @@ func (self *EmdSchemaParser) LoadSchema(file_path, update_mode, update_expressio
 	self.schema_key_fields = settings.KeyFields
 	self.updateMode = update_mode
 	self.updateExpression = update_expression
+	self.tsdb_time =settings.TSDBTime
+	self.tsdb_name =settings.TSDBName
+	self.tsdb_value =settings.TSDBValue
+	self.tsdb_attributes = settings.TSDBLables
+
 
 	for _, v := range columns {
 		self.values_map[v.Index] = v
 	}
 	self.GetKeyIndexes()
+	self.MapTSDBLablesIndexes()
+	self.GetTSDBNameIndex()
+	self.GetTSDBValueIndex()
 	if len(self.updateExpression) > 0 {
 		self.GetUpdateExpressionIndexes()
 	}
@@ -101,6 +123,32 @@ func (self *EmdSchemaParser) GetKeyIndexes() {
 	}
 }
 
+func (self *EmdSchemaParser) GetTSDBNameIndex() {
+		for _, v := range self.values_map {
+			if v.Name == self.tsdb_name {
+				self.tsdb_name_index = v.Index
+			}
+		}
+	}
+
+func (self *EmdSchemaParser) GetTSDBValueIndex() {
+	for _, v := range self.values_map {
+		if v.Name == self.tsdb_value {
+			self.tsdb_value_index = v.Index
+		}
+	}
+}
+
+func (self *EmdSchemaParser) MapTSDBLablesIndexes() {
+	attributes := strings.Split(self.tsdb_attributes, ",")
+	for _, att := range attributes {
+		for _, v := range self.values_map {
+			if v.Name == att {
+				self.tsdb_attributes_map[att] = v.Index			}
+		}
+	}
+}
+
 func (self *EmdSchemaParser) GetFieldsIndexes(fields, delimiter string) []int {
 	keys := strings.Split(fields, delimiter)
 	indexArray := make([]int, 1)
@@ -123,7 +171,8 @@ func (self *EmdSchemaParser) KeyFromCSVRecord(vals []string) string {
 	}
 	//when 1 key, return the key
 	if len(self.schema_key_indexs) == 1 {
-		return vals[0]
+		//fix bug of returning always key in position 0
+		return vals[self.schema_key_indexs[0]]
 	}
 	//when more the one key, generate formatted key
 	var keys []interface{}
@@ -134,17 +183,47 @@ func (self *EmdSchemaParser) KeyFromCSVRecord(vals []string) string {
 	return key
 }
 
+func (self *EmdSchemaParser) nameIndexFromCSVRecord(vals []string) string {
+	//when no keys, generate random
+	if len(self.schema_key_indexs) == 0 {
+		u, _ := uuid.NewV4()
+		return u.String()
+	}
+	//when 1 key, return the key
+	if len(self.schema_key_indexs) == 1 {
+		//fix bug of returning always key in position 0
+		return vals[self.schema_key_indexs[0]]
+	}
+	//when more the one key, generate formatted key
+	var keys []interface{}
+	for _, i := range self.schema_key_indexs {
+		keys = append(keys, vals[i])
+	}
+	key := fmt.Sprintf(self.schema_key_format, keys...)
+	return key
+}
+
+
+
 func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 	emd_item := NewEmdItem()
 	emd_item.InsertKey("key", T_STRING, self.KeyFromCSVRecord(vals))
 	for i, v := range vals {
-		err, igz_type, value := ConvertValue(self.values_map[i].Type, v)
-		if err != nil {
-			panic(fmt.Sprintf("conversion error %d %v %v", i, v, self.values_map[i]))
+		if val , ok :=self.values_map[i] ; ok  {
+			err, igz_type, value := ConvertValue(val.Type, v)
+			if err != nil {
+				panic(fmt.Sprintf("conversion error %d %v %v", i, v, self.values_map[i]))
+			}
+			emd_item.InsertItemAttr(self.values_map[i].Name, igz_type, value)
 		}
-		emd_item.InsertItemAttr(self.values_map[i].Name, igz_type, value)
 	}
 	return string(emd_item.ToJsonString())
+}
+
+func (self *EmdSchemaParser) TSDBFromCSVRecord(vals []string) string {
+	tsdb_item := NewTSDBItem()
+	tsdb_item.GenerateStruct(vals,self)
+	return string(tsdb_item.ToJsonString())
 }
 
 func (self *EmdSchemaParser) EmdUpdateFromCSVRecord(vals []string) string {

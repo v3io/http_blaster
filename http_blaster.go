@@ -34,7 +34,6 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-	//"github.com/v3io/http_blaster/httpblaster/histogram"
 	"sort"
 )
 

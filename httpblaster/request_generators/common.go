@@ -21,6 +21,7 @@ const (
 	RESTORE     = "restore"
 	LINE2HTTP   = "line2http"
 	REPLAY      = "replay"
+	CSV2TSDB      = "csv2tsdb"
 )
 
 type RequestCommon struct {
