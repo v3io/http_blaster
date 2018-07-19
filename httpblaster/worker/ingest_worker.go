@@ -59,7 +59,7 @@ func (w *IngestWorker) dump_requests(ch_dump chan *fasthttp.Request, dump_locati
 
 	i := 0
 	for r := range ch_dump {
-		file_name := fmt.Sprintf("w%v_request_%v", w.id, i)
+		file_name := fmt.Sprintf("w%v_request_%v-%v", w.id, i, w.executor_name)
 		file_path := filepath.Join(dump_dir, file_name)
 		log.Info("generating dump file ", file_path)
 		i++
@@ -87,7 +87,8 @@ func (w *IngestWorker) dump_requests(ch_dump chan *fasthttp.Request, dump_locati
 	}
 }
 
-func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
+func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response,
+	ch_req chan *request_generators.Request,
 	wg *sync.WaitGroup, release_req bool,
 	//ch_latency chan time.Duration,
 	//ch_statuses chan int,
@@ -165,6 +166,7 @@ func (w *IngestWorker) RunWorker(ch_resp chan *request_generators.Response, ch_r
 			response.Response.StatusCode() < http.StatusInternalServerError &&
 			dump_requests {
 			//dump request
+			log.Errorf("Failed to send request: status:%v body:%v", response.Response.StatusCode(), response.Response.Body())
 			r := fasthttp.AcquireRequest()
 			r.SetBody(submit_request.Request.Body())
 			submit_request.Request.CopyTo(r)

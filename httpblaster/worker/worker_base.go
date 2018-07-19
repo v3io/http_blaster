@@ -39,6 +39,7 @@ type WorkerBase struct {
 	timer         *time.Timer
 	id            int
 	hist          *histogram.LatencyHist
+	executor_name string
 }
 
 func (w *WorkerBase) open_connection() {
@@ -200,7 +201,9 @@ func (w *WorkerBase) GetHist() map[int64]int {
 	return w.hist.GetHistMap()
 }
 
-func NewWorker(worker_type WorkerType, host string, tls_client bool, lazy int, retry_codes []int, retry_count int, pem_file string, id int) Worker {
+func NewWorker(worker_type WorkerType, host string,
+	tls_client bool, lazy int, retry_codes []int,
+		retry_count int, pem_file string, id int, executor_name string) Worker {
 	if host == "" {
 		return nil
 	}
@@ -217,10 +220,10 @@ func NewWorker(worker_type WorkerType, host string, tls_client bool, lazy int, r
 	hist.New()
 	if worker_type == PERFORMANCE_WORKER {
 		worker = &PerfWorker{WorkerBase{host: host, is_tls_client: tls_client, retry_codes: retry_codes_map,
-			retry_count: retry_count, pem_file: pem_file, id: id, hist: hist}}
+			retry_count: retry_count, pem_file: pem_file, id: id, hist: hist, executor_name:executor_name}}
 	} else {
 		worker = &IngestWorker{WorkerBase{host: host, is_tls_client: tls_client, retry_codes: retry_codes_map,
-			retry_count: retry_count, pem_file: pem_file, id: id, hist: hist}}
+			retry_count: retry_count, pem_file: pem_file, id: id, hist: hist, executor_name:executor_name}}
 	}
 	worker.Init(lazy)
 	return worker
