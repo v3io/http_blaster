@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"github.com/v3io/v3io-tsdb/pkg/utils"
 	"time"
+	//"go/parser"
 )
 
 type IgzTSDBItem struct {
@@ -16,11 +17,13 @@ type IgzTSDBItem struct {
 	Value float64
 }
 
-func (self *IgzTSDBItem) GenerateStruct(vals []string,parser *EmdSchemaParser){
+func (self *IgzTSDBItem) GenerateStruct(vals []string,parser *EmdSchemaParser) error{
 	//self.InsertTSDBName(parser.tsdb_attributes_map,vals,T_STRING,vals[parser.tsdb_name_index])
+
 	self.InsertTSDBName(vals,parser)
 	self.InsertTime(vals ,parser)
 	self.InsertValue(vals[parser.tsdb_value_index])
+	return nil
 }
 
 
@@ -31,14 +34,20 @@ func (self *IgzTSDBItem) ToJsonString() string {
 
 //func (self *IgzTSDBItem) InsertTSDBName(attributes_map map[string]int,vals []string,value_type IgzType, value interface{}) error {
 func (self *IgzTSDBItem) InsertTSDBName(vals []string,parser *EmdSchemaParser) error {
-	for i, v := range parser.values_map {
-		if v.Name == parser.tsdb_time {
-			parser.tsdb_time_index = i
+	parser.tsdb_name_index= -1
+	for _, v := range parser.values_map {
+		if v.Name == parser.tsdb_name {
+			parser.tsdb_name_index = v.Index
 		}
 	}
-	input := vals[parser.tsdb_name_index]
+	input :=""
+	if parser.tsdb_name_index > 0 {
+		input = vals[parser.tsdb_name_index]
+	}	else {
+	input = parser.tsdb_name
+	}
 	//add validation on time
-	self.Time=  input
+	self.Time= input
 	self.Lset = utils.Labels{{Name: "__name__",Value:input}}
 	for key, val := range parser.tsdb_attributes_map {
 		lable := utils.Label{Name: key, Value: vals[val]}
@@ -63,9 +72,9 @@ func (self *IgzTSDBItem) InsertKey(key string, value_type IgzType, value interfa
 
 
 func (self *IgzTSDBItem) InsertTime(vals []string,parser *EmdSchemaParser) error {
-	for i, v := range parser.values_map {
+	for _, v := range parser.values_map {
 		if v.Name == parser.tsdb_time {
-			parser.tsdb_time_index = i
+			parser.tsdb_time_index = v.Index
 		}
 	}
 	input := vals[parser.tsdb_time_index]

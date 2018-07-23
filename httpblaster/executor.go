@@ -120,6 +120,10 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	case request_generators.CSV2TSDB:
 		req_gen = &request_generators.Csv2TSDB{}
 		break
+	case request_generators.STATS2TSDB:
+		req_gen = &request_generators.Stats2TSDB{}
+		break
+
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
