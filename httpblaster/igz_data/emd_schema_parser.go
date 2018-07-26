@@ -221,14 +221,14 @@ func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 }
 
 func (self *EmdSchemaParser) TSDBFromCSVRecord(vals []string) string {
-	tsdb_item := NewTSDBItem()
+	tsdb_item := IgzTSDBItem{}
 	tsdb_item.GenerateStruct(vals,self)
 	return string(tsdb_item.ToJsonString())
 }
 
 
 func (self *EmdSchemaParser) TSDBItemsFromCSVRecord(vals []string) []string{
-	tsdb_item := NewTSDBItem()
+	tsdb_item := IgzTSDBItem{}
 	tsdb_item.GenerateStruct(vals,self)
 	//return string(tsdb_item.ToJsonString())
 	return nil
