@@ -1,0 +1,36 @@
+{
+  "SETTINGS": {
+    "Format": "csv",
+    "Separator": ",",
+    "TSDBTime": "timestamp",
+    "TSDBName" : "level_0",
+    "TSDBValue" : "close",
+    "TSDBLables" : ""
+  },
+  "COLUMNS": [
+    {
+      "Index": 0,
+      "Type": "N",
+      "Name": "row_num",
+      "Nullable": true
+    },
+    {
+    "Index": 1,
+    "Type": "S",
+    "Name": "timestamp",
+    "Nullable": true
+    },
+    {
+      "Index": 2,
+      "Type": "S",
+      "Name": "level_0",
+      "Nullable": true
+    },
+    {
+      "Index": 3,
+      "Type": "N",
+      "Name": "close",
+      "Nullable": true
+    }
+  ]
+}

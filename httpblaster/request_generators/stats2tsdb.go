@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	"time"
 	//"strconv"
 
 )
@@ -42,7 +41,7 @@ func (self *Stats2TSDB) generate_request(ch_records chan []string, ch_req chan *
 		//vals := parser.TSDBFromCSVRecord(r)
 
 		//json_payload := vals
-		time.Sleep(1 * time.Second)
+
 		json_payload:=gen.GenerateRandomData()
 		for _, payload :=range json_payload{
 			req := AcquireRequest()

@@ -3,7 +3,7 @@ title = "Workload example"
 [global]
     Duration = "160s"
     server="192.168.206.22"
-    port="44001"
+    port="44002"
     TLSMode=false
     [global.StatusCodesAcceptance]
         200 = 100.0 # upto 100% return status of 200

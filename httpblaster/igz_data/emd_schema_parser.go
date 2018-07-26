@@ -221,19 +221,13 @@ func (self *EmdSchemaParser) EmdFromCSVRecord(vals []string) string {
 }
 
 func (self *EmdSchemaParser) TSDBFromCSVRecord(vals []string) string {
-//	TSDBValues := strings.Split(self.tsdb_value, ",")
-//	for i := range TSDBValues{
-
-//	}
-
 	tsdb_item := NewTSDBItem()
 	tsdb_item.GenerateStruct(vals,self)
 	return string(tsdb_item.ToJsonString())
 }
 
 
-func (self *EmdSchemaParser) TSDBItemsFromCSVRecord(vals []string) []IgzTSDBItem {
-
+func (self *EmdSchemaParser) TSDBItemsFromCSVRecord(vals []string) []string{
 	tsdb_item := NewTSDBItem()
 	tsdb_item.GenerateStruct(vals,self)
 	//return string(tsdb_item.ToJsonString())

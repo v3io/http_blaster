@@ -18,8 +18,6 @@ type IgzTSDBItem struct {
 }
 
 func (self *IgzTSDBItem) GenerateStruct(vals []string,parser *EmdSchemaParser) error{
-	//self.InsertTSDBName(parser.tsdb_attributes_map,vals,T_STRING,vals[parser.tsdb_name_index])
-
 	self.InsertTSDBName(vals,parser)
 	self.InsertTime(vals ,parser)
 	self.InsertValue(vals[parser.tsdb_value_index])
@@ -41,7 +39,7 @@ func (self *IgzTSDBItem) InsertTSDBName(vals []string,parser *EmdSchemaParser) e
 		}
 	}
 	input :=""
-	if parser.tsdb_name_index > 0 {
+	if parser.tsdb_name_index > -1 {
 		input = vals[parser.tsdb_name_index]
 	}	else {
 	input = parser.tsdb_name

@@ -52,18 +52,6 @@ func (self *MemoryGenerator) GenrateJsonArray(v *mem.VirtualMemoryStat) []string
 	  	  f ,_ := getFloat(vl)
 		  arr = append(arr, self.GenerateJsonByVal(s,f))
 	  	}
-
-
-
-
-/*	activePayload:= self.GenerateJsonByVal(float64(v.Active))
-	  arr =append(arr, activePayload)
-	  availiblePayload:= self.GenerateJsonByVal(float64(v.Available))
-	  arr =append(arr, availiblePayload)
-      totalPayload:= self.GenerateJsonByVal(float64(v.Total))
-      arr =append(arr, totalPayload)
-*/
-
 	return arr
 }
 
