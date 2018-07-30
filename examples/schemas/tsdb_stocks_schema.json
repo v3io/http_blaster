@@ -3,33 +3,33 @@
     "Format": "csv",
     "Separator": ",",
     "TSDBTime": "timestamp",
-    "TSDBName" : "level_0",
-    "TSDBValue" : "close",
-    "TSDBLables" : ""
+    "TSDBName" : "name",
+    "TSDBValue" : "value",
+    "TSDBLables" : "label"
   },
   "COLUMNS": [
     {
       "Index": 0,
-      "Type": "N",
-      "Name": "row_num",
+      "Type": "S",
+      "Name": "label",
       "Nullable": true
     },
     {
-    "Index": 1,
-    "Type": "S",
-    "Name": "timestamp",
-    "Nullable": true
+      "Index": 1,
+      "Type": "S",
+      "Name": "name",
+      "Nullable": true
     },
     {
       "Index": 2,
-      "Type": "S",
-      "Name": "level_0",
+      "Type": "N",
+      "Name": "value",
       "Nullable": true
     },
     {
       "Index": 3,
       "Type": "N",
-      "Name": "close",
+      "Name": "timestamp",
       "Nullable": true
     }
   ]

@@ -2,8 +2,8 @@ title = "Workload example"
 
 [global]
     Duration = "160s"
-    server="192.168.206.22"
-    port="44002"
+    server="192.168.206.2"
+    port="44001"
     TLSMode=false
     [global.StatusCodesAcceptance]
         200 = 100.0 # upto 100% return status of 200
@@ -11,14 +11,13 @@ title = "Workload example"
         205 = 100.0
 
 [workloads]
-    [workloads.load_to_t1]
-        name="load_to_t1"
+    [workloads.load_stats_to_tsdb]
+        name="stats_to_tsdb"
         Generator="stats2tsdb"
         container="1"
         Target="t1/"
         workers=1
-        payload="examples/payloads/order-book-sample.csv"
-        schema="examples/schemas/tsdb_schema_example.json"
+
 
 
 

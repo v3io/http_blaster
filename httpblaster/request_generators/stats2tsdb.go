@@ -27,12 +27,12 @@ func (self *Stats2TSDB) UseCommon(c RequestCommon) {
 func (self *Stats2TSDB) generate_request(ch_records chan []string, ch_req chan *Request, host string,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
-	parser := igz_data.EmdSchemaParser{}
+//	parser := igz_data.EmdSchemaParser{}
 	var contentType string = "text/html"
-	e := parser.LoadSchema(self.workload.Schema, "", "")
-	if e != nil {
-		panic(e)
-	}
+//	e := parser.LoadSchema(self.workload.Schema, "", "")
+//	if e != nil {
+//		panic(e)
+//	}
 	gen :=data_generator.MemoryGenerator{}
 	for true{
 	//for r := range ch_records {
@@ -61,10 +61,10 @@ func (self *Stats2TSDB) generate(ch_req chan *Request, payload string, host stri
 	defer close(ch_req)
 	var ch_records chan []string = make(chan []string, 1000)
 	parser := igz_data.EmdSchemaParser{}
-	e := parser.LoadSchema(self.workload.Schema, "", "")
-	if e != nil {
-		panic(e)
-	}
+//	e := parser.LoadSchema(self.workload.Schema, "", "")
+//	if e != nil {
+//		panic(e)
+//	}
 
 	wg := sync.WaitGroup{}
 	wg.Add(runtime.NumCPU())

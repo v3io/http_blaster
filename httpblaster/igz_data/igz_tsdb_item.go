@@ -23,6 +23,15 @@ type IgzTSDBItems struct {
 }
 
 
+func (self *IgzTSDBItem) GenerateStructs(vals []string,parser *EmdSchemaParser) ([]IgzTSDBItem,error){
+	//names := parser.tsdb_name
+	self.InsertTSDBName(vals,parser)
+	self.InsertTime(vals ,parser)
+	self.InsertValue(vals[parser.tsdb_value_index])
+	return nil,nil
+}
+
+
 func (self *IgzTSDBItem) GenerateStruct(vals []string,parser *EmdSchemaParser) error{
 	self.InsertTSDBName(vals,parser)
 	self.InsertTime(vals ,parser)

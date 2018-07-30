@@ -8,10 +8,10 @@ import (
 	"github.com/v3io/v3io-tsdb/pkg/utils"
 	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"encoding/json"
-	"bytes"
 	"os"
-	//"reflect"
 	"reflect"
+	//"github.com/shirou/gopsutil/disk"
+	//"github.com/shirou/gopsutil/cpu"
 )
 
 
@@ -24,6 +24,13 @@ type MemoryGenerator struct{
 
 func  (self *MemoryGenerator) GenerateRandomData() []string{
 	v, _ := mem.VirtualMemory()
+	//cpuStat, _ := cpu.Info()
+	//println(cpuStat)
+	//percentage, _ := cpu.Percent(time.Second,false)
+	//println(percentage)
+	//diskStat, _ := disk.Usage("/")
+	//diskStat.String()
+
 
 	payloads :=self.GenrateJsonArray(v)
 	fmt.Println(payloads)
@@ -58,7 +65,7 @@ func (self *MemoryGenerator) GenrateJsonArray(v *mem.VirtualMemoryStat) []string
 
 
 
-
+/*
 func (self *MemoryGenerator) ToJson() string{
 	v, err := json.Marshal(&self)
 	if err != nil {
@@ -66,7 +73,7 @@ func (self *MemoryGenerator) ToJson() string{
 	}
 	return string(v)
 
-}
+
 
 func (self *MemoryGenerator) ConvertToByteArray() {
 	reqBodyBytes := new(bytes.Buffer)
@@ -74,7 +81,7 @@ func (self *MemoryGenerator) ConvertToByteArray() {
 
 	reqBodyBytes.Bytes() // this is the []byte
 
-}
+}}*/
 
 func GetHostname() string {
 	name, err := os.Hostname()
@@ -98,12 +105,12 @@ func getFloat(unk interface{}) (float64, error) {
 
 
 
-func  (self *MemoryGenerator) LoopThroughStruct(){
+/*func  (self *MemoryGenerator) LoopThroughStruct(){
 
 	v, _ := mem.VirtualMemory()
 	stat, _ := json.Marshal(v)
 	fmt.Println(stat)
-}
+}*/
 
 
 

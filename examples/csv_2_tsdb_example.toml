@@ -17,7 +17,7 @@ title = "Workload example"
         container="1"
         Target="t1/"
         workers=1000
-        payload="examples/payloads/convertedStocks.csv"
+        payload="examples/payloads/stocks.csv"
         schema="examples/schemas/tsdb_stocks_schema.json"
 
 
