@@ -15,6 +15,7 @@ title = "Workload example"
         name="stats_to_tsdb"
         Generator="stats2tsdb"
         container="1"
+        lazy=10
         Target="t1/"
         workers=1
 

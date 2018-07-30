@@ -39,7 +39,7 @@ func  (self *MemoryGenerator) GenerateRandomData() []string{
 
 func  (self *MemoryGenerator) GenerateJsonByVal(colName string,val float64) string{
 	item :=igz_data.IgzTSDBItem{}
-	item.Time =  strconv.FormatInt(time.Now().Unix() ,10)
+	item.Time =  strconv.FormatInt(time.Now().UnixNano() / int64(time.Millisecond),10)
 	item.Value=float64(val)
 	//item.Lset=utils.Labels{{Name: "__name__",Value:colName}}
 	item.Lset=utils.Labels{{Name: "__name__",Value:"memo"}}
