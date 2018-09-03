@@ -85,6 +85,8 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 			release_req = false
 		}
 		break
+
+
 	case request_generators.LINE2STREAM:
 		req_gen = &request_generators.Line2StreamGenerator{}
 		break
@@ -115,6 +117,9 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 	case request_generators.STREAM_GET:
 		req_gen = &request_generators.StreamGetGenerator{}
 		ch_response = make(chan *request_generators.Response)
+	case request_generators.CSV2TSDB:
+		req_gen = &request_generators.Csv2TSDB{}
+		break
 	default:
 		panic(fmt.Sprintf("unknown request generator %s", self.Workload.Generator))
 	}
@@ -162,7 +167,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		w := worker.NewWorker(self.GetWorkerType(),
 			server, self.Globals.TLSMode, self.Workload.Lazy,
 			self.Globals.RetryOnStatusCodes,
-			self.Globals.RetryCount, self.Globals.PemFile, i)
+			self.Globals.RetryCount, self.Globals.PemFile, i, self.Workload.Name)
 		self.workers = append(self.workers, w)
 		//var ch_latency chan time.Duration
 		//if self.Workload.Type == "GET" {
@@ -174,7 +179,8 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		go w.RunWorker(ch_response, ch_req,
 			&workers_wg, release_req_flag, // ch_latency,
 			//self.Ch_statuses,
-			self.DumpFailures, self.DumpLocation)
+			self.DumpFailures,
+			self.DumpLocation)
 	}
 	ended := make(chan bool)
 	go func() {

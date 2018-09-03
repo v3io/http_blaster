@@ -35,7 +35,8 @@ func (w *PerfWorker) UseBase(c WorkerBase) {
 
 }
 
-func (w *PerfWorker) RunWorker(ch_resp chan *request_generators.Response, ch_req chan *request_generators.Request,
+func (w *PerfWorker) RunWorker(ch_resp chan *request_generators.Response,
+	ch_req chan *request_generators.Request,
 	wg *sync.WaitGroup, release_req bool,
 	//ch_latency chan time.Duration,
 	//ch_statuses chan int,

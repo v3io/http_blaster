@@ -1,0 +1,56 @@
+{
+  "SETTINGS": {
+    "Format": "csv",
+    "Separator": "|",
+    "TSDBTime": "Time_Sequence",
+    "TSDBName" : "Broker_ID",
+    "TSDBValue" : "Total_Orders",
+    "TSDBLables" : "Status_Flag,Active_Status"
+  },
+  "COLUMNS": [
+    {
+      "Index": 2,
+      "Type": "S",
+      "Name": "Time_Sequence",
+      "Nullable": true
+    },
+    {
+      "Index": 3,
+      "Type": "N",
+      "Name": "Exchange_Transaction_ID",
+      "Nullable": true
+    },
+    {
+      "Index": 4,
+      "Type": "S",
+      "Name": "Status_Flag",
+      "Nullable": true
+    },
+    {
+      "Index": 10,
+      "Type": "N",
+      "Name": "Total_Orders",
+      "Nullable": true
+    },
+    {
+      "Index": 18,
+      "Type": "S",
+      "Name": "Active_Status",
+      "Nullable": true
+    },
+    {
+      "Index": 20,
+      "Type": "N",
+      "Name": "Total_New_Orders",
+      "Nullable": true
+    },
+    {
+      "Index": 34,
+      "Type": "S",
+      "Name": "Broker_ID",
+      "Nullable": true
+    }
+
+
+  ]
+}
