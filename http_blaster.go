@@ -66,7 +66,7 @@ var (
 	max_concurrent_workloads int = 1000
 )
 
-const AppVersion = "3.0.6"
+const AppVersion = "3.0.7"
 
 func init() {
 	const (
