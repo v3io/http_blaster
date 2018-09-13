@@ -63,6 +63,7 @@ var (
 	term_ui       *tui.Term_ui
 	dump_failures bool   = true
 	dump_location string = "."
+	max_concurrent_workloads int = 1000
 )
 
 const AppVersion = "3.0.6"
@@ -91,6 +92,8 @@ func init() {
 		defaule_dump_failures = false
 		usage_dump_location   = "location of dump requests"
 		default_dump_location = "."
+		default_max_concurrent_workloads = 1000
+		usage_max_concurrent_workloads ="max concurrent workloads"
 	)
 	flag.StringVar(&conf_file, "conf", default_conf, usage_conf)
 	flag.StringVar(&conf_file, "c", default_conf, usage_conf+" (shorthand)")
@@ -104,6 +107,7 @@ func init() {
 	flag.BoolVar(&enable_ui, "u", default_enable_ui, usage_enable_ui)
 	flag.BoolVar(&dump_failures, "f", defaule_dump_failures, usage_dump_failures)
 	flag.StringVar(&dump_location, "l", default_dump_location, usage_dump_location)
+	flag.IntVar(&max_concurrent_workloads, "n", default_max_concurrent_workloads, usage_max_concurrent_workloads)
 }
 
 func get_workload_id() int {
@@ -191,10 +195,13 @@ func generate_executors(term_ui *tui.Term_ui) {
 }
 
 func start_executors() {
-	ex_group.Add(len(executors))
 	start_time = time.Now()
-	for _, e := range executors {
+	for i, e := range executors {
+		ex_group.Add(1)
 		e.Start(&ex_group)
+		if i > 0 && i % max_concurrent_workloads == 0{
+			wait_for_completion()
+		}
 	}
 }
 
@@ -259,6 +266,8 @@ func report() int {
 	var overall_put_iops uint64 = 0
 	var overall_get_avg_lat time.Duration = 0
 	var overall_put_avg_lat time.Duration = 0
+	var overall_get_executors int = 0
+	var overall_put_executors int = 0
 	errors := make([]error, 0)
 	duration := end_time.Sub(start_time)
 	for _, executor := range executors {
@@ -268,9 +277,10 @@ func report() int {
 		}
 		overall_requests += results.Total
 		if executor.Workload.Type == "GET" {
+			overall_get_executors ++
 			overall_get_requests += results.Total
 			overall_get_iops += results.Iops
-			overall_get_avg_lat += time.Duration(float64(results.Avg) * float64(results.Total))
+			overall_get_avg_lat += results.Avg
 			if overall_get_lat_max < results.Max {
 				overall_get_lat_max = results.Max
 			}
@@ -281,9 +291,10 @@ func report() int {
 				overall_get_lat_min = results.Min
 			}
 		} else {
+			overall_put_executors++
 			overall_put_requests += results.Total
 			overall_put_iops += results.Iops
-			overall_put_avg_lat += time.Duration(float64(results.Avg) * float64(results.Total))
+			overall_put_avg_lat += results.Avg
 			if overall_put_lat_max < results.Max {
 				overall_put_lat_max = results.Max
 			}
@@ -297,12 +308,11 @@ func report() int {
 
 		overall_iops += results.Iops
 	}
-
 	if overall_get_requests != 0 {
-		overall_get_avg_lat = time.Duration(float64(overall_get_avg_lat) / float64(overall_get_requests))
+		overall_get_avg_lat = time.Duration(float64(overall_get_avg_lat) / float64(overall_get_executors))
 	}
 	if overall_put_requests != 0 {
-		overall_put_avg_lat = time.Duration(float64(overall_put_avg_lat) / float64(overall_put_requests))
+		overall_put_avg_lat = time.Duration(float64(overall_put_avg_lat) / float64(overall_put_executors))
 	}
 
 	report_executor_result(results_file)

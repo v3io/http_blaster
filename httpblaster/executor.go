@@ -171,7 +171,7 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		w := worker.NewWorker(self.GetWorkerType(),
 			server, self.Globals.TLSMode, self.Workload.Lazy,
 			self.Globals.RetryOnStatusCodes,
-			self.Globals.RetryCount, self.Globals.PemFile, i)
+			self.Globals.RetryCount, self.Globals.PemFile, i, self.Workload.Name)
 		self.workers = append(self.workers, w)
 		//var ch_latency chan time.Duration
 		//if self.Workload.Type == "GET" {
@@ -183,7 +183,8 @@ func (self *Executor) run(wg *sync.WaitGroup) error {
 		go w.RunWorker(ch_response, ch_req,
 			&workers_wg, release_req_flag, // ch_latency,
 			//self.Ch_statuses,
-			self.DumpFailures, self.DumpLocation)
+			self.DumpFailures,
+			self.DumpLocation)
 	}
 	ended := make(chan bool)
 	go func() {
