@@ -31,6 +31,7 @@ import (
 	"math/rand"
 	"os"
 	"runtime/pprof"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -66,7 +67,7 @@ var (
 	max_concurrent_workloads int = 1000
 )
 
-const AppVersion = "3.0.6"
+const AppVersion = "3.0.8"
 
 func init() {
 	const (
@@ -354,6 +355,16 @@ func report() int {
 	f.WriteString(fmt.Sprintf("overall_lat_max=%vusec\n", overall_put_lat_max.Nanoseconds()/1e3))
 	f.WriteString(fmt.Sprintf("overall_lat_avg=%vusec\n", overall_put_avg_lat.Nanoseconds()/1e3))
 
+	getKeys, getValues, putKeys, putVlaues := dump_latencies_histograms()
+	f.WriteString(fmt.Sprintf("\n[get hist]\n"))
+	for i, v := range getKeys {
+		f.WriteString(fmt.Sprintf("%s=%3.4f\n", strings.TrimSpace(v), getValues[i]))
+	}
+	f.WriteString(fmt.Sprintf("\n[put hist]\n"))
+	for i, v := range putKeys {
+		f.WriteString(fmt.Sprintf("%s=%3.4f\n", v, putVlaues[i]))
+	}
+
 	if len(errors) > 0 {
 		for _, e := range errors {
 			log.Println(e)
@@ -439,7 +450,7 @@ func enable_tui() chan struct{} {
 	return nil
 }
 
-func dump_latencies_histograms() {
+func dump_latencies_histograms() ([]string, []float64, []string, []float64){
 	latency_get := make(map[int64]int)
 	latency_put := make(map[int64]int)
 	total_get := 0
@@ -459,8 +470,9 @@ func dump_latencies_histograms() {
 			}
 		}
 	}
-	dump_latency_histogram(latency_get, total_get, "GET")
-	dump_latency_histogram(latency_put, total_put, "PUT")
+	getKeys, getValues :=  dump_latency_histogram(latency_get, total_get, "GET")
+	putKeys, putValues := dump_latency_histogram(latency_put, total_put, "PUT")
+	return getKeys, getValues, putKeys, putValues
 
 }
 
@@ -509,7 +521,7 @@ func dump_latency_histogram(histogram map[int64]int, total int, req_type string)
 
 	for _, k := range keys {
 		v := hist[int64(k)]
-		res_strings = append(res_strings, fmt.Sprintf("%5d", k*100))
+		res_strings = append(res_strings, fmt.Sprintf("%d", k*100))
 		value := float64(v*100) / float64(total)
 		res_values = append(res_values, value)
 	}
@@ -517,7 +529,7 @@ func dump_latency_histogram(histogram map[int64]int, total int, req_type string)
 	if len(res_strings) > 0 {
 		strout += title
 		for i, v := range res_strings {
-			strout += fmt.Sprintf("%s: %s \t\t %3.4f%%\n", prefix, v, res_values[i])
+			strout += fmt.Sprintf("%s: %5s \t\t %3.4f%%\n", prefix, v, res_values[i])
 		}
 	}
 	log.Println(strout)
@@ -542,7 +554,6 @@ func main() {
 	start_executors()
 	wait_for_completion()
 	log.Println("Executors done!")
-	dump_latencies_histograms()
 	//dump_status_code_histogram()
 	err_code := report()
 	log.Println("Done with error code ", err_code)
