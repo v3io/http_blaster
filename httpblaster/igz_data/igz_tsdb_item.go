@@ -2,12 +2,14 @@ package igz_data
 
 import (
 	"encoding/json"
-	"errors"
+//	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+//	log "github.com/sirupsen/logrus"
 	"strconv"
 	"github.com/v3io/v3io-tsdb/pkg/utils"
-	"time"
+
+	//"go/parser"
+
 )
 
 type IgzTSDBItem struct {
@@ -16,11 +18,25 @@ type IgzTSDBItem struct {
 	Value float64
 }
 
-func (self *IgzTSDBItem) GenerateStruct(vals []string,parser *EmdSchemaParser){
-	//self.InsertTSDBName(parser.tsdb_attributes_map,vals,T_STRING,vals[parser.tsdb_name_index])
+type IgzTSDBItems struct {
+	Items []IgzTSDBItem
+}
+
+
+func (self *IgzTSDBItem) GenerateStructs(vals []string,parser *EmdSchemaParser) ([]IgzTSDBItem,error){
+	//names := parser.tsdb_name
 	self.InsertTSDBName(vals,parser)
 	self.InsertTime(vals ,parser)
 	self.InsertValue(vals[parser.tsdb_value_index])
+	return nil,nil
+}
+
+
+func (self *IgzTSDBItem) GenerateStruct(vals []string,parser *EmdSchemaParser) error{
+	self.InsertTSDBName(vals,parser)
+	self.InsertTime(vals ,parser)
+	self.InsertValue(vals[parser.tsdb_value_index])
+	return nil
 }
 
 
@@ -29,17 +45,21 @@ func (self *IgzTSDBItem) ToJsonString() string {
 	return string(body)
 }
 
-//func (self *IgzTSDBItem) InsertTSDBName(attributes_map map[string]int,vals []string,value_type IgzType, value interface{}) error {
 func (self *IgzTSDBItem) InsertTSDBName(vals []string,parser *EmdSchemaParser) error {
-	for i, v := range parser.values_map {
-		if v.Name == parser.tsdb_time {
-			parser.tsdb_time_index = i
-		}
+	//parser.tsdb_name_index= -1
+	//for _, v := range parser.values_map {
+	//	if v.Name == parser.tsdb_name {
+	//		parser.tsdb_name_index = v.Index
+	//	}
+	//}
+	parser.tsdb_name_index=GetIndexByValue(parser.values_map,parser.tsdb_name)
+	input :=""
+	if parser.tsdb_name_index > -1 {
+		input = vals[parser.tsdb_name_index]
+	}	else {
+	input = parser.tsdb_name
 	}
-	input := vals[parser.tsdb_name_index]
-	//add validation on time
-	self.Time=  input
-	self.Lset = utils.Labels{{Name: "__name__",Value:input}}
+	self.InsertName(input)
 	for key, val := range parser.tsdb_attributes_map {
 		lable := utils.Label{Name: key, Value: vals[val]}
 		self.Lset=  append(self.Lset,lable)
@@ -47,35 +67,25 @@ func (self *IgzTSDBItem) InsertTSDBName(vals []string,parser *EmdSchemaParser) e
 	return nil
 }
 
-func (self *IgzTSDBItem) InsertKey(key string, value_type IgzType, value interface{}) error {
-	strVal := value.(string)
-
-	_,err := time.Parse( time.RFC3339,strVal)
-	if err != nil	{
-		//fix convert
-		self.Time=strconv.FormatInt(time.Now().Unix() , 10)
-	}	else{
-		self.Time = strVal
-	}
-
-	return nil
-}
-
-
 func (self *IgzTSDBItem) InsertTime(vals []string,parser *EmdSchemaParser) error {
-	for i, v := range parser.values_map {
+	for _, v := range parser.values_map {
 		if v.Name == parser.tsdb_time {
-			parser.tsdb_time_index = i
+			parser.tsdb_time_index = v.Index
 		}
 	}
 	input := vals[parser.tsdb_time_index]
 	//add validation on time
-	self.Time=  input
+	self.InsertTimeString(input)
 	return nil
 }
 
+func (self *IgzTSDBItem) InsertTimeString(strVal string){
+	self.Time=strVal
+}
 
-
+func (self *IgzTSDBItem) InsertName(strVal string){
+	self.Lset = utils.Labels{{Name: "__name__",Value:strVal}}
+}
 
 func (self *IgzTSDBItem) InsertValue(strVal string){
 	f, err := strconv.ParseFloat(strVal, 64)
@@ -85,32 +95,16 @@ func (self *IgzTSDBItem) InsertValue(strVal string){
 	self.Value=f
 }
 
-func NewTSDBItem() *IgzTSDBItem {
-	i := &IgzTSDBItem{}
-	return i
+func GetIndexByValue(vals map[int]SchemaValue,val string) (int){
+	for _, v := range vals {
+		if v.Name == val {
+			return v.Index
+		}
+	}
+	return -1
 }
 
-type IgzTSDBItemUpdate struct {
-	UpdateMode       string
-	UpdateExpression string
-}
-
-func (self *IgzTSDBItemUpdate) ToJsonString() string {
-	body, _ := json.Marshal(self)
-	return string(body)
-}
-
-type IgzTSDBItemQuery struct {
-	TableName       string
-	AttributesToGet string
-	Key             map[string]map[string]interface{}
-}
-
-func (self *IgzTSDBItemQuery) ToJsonString() string {
-	body, _ := json.Marshal(self)
-	return string(body)
-}
-
+/*
 func (self *IgzTSDBItemQuery) InsertKey(key string, value_type IgzType, value interface{}) error {
 	if _, ok := self.Key[key]; ok {
 		err := fmt.Sprintf("Key %s Override existing key %v", key, self.Key)
@@ -121,48 +115,4 @@ func (self *IgzTSDBItemQuery) InsertKey(key string, value_type IgzType, value in
 	self.Key[key][string(value_type)] = value
 	return nil
 }
-
-type IgzTSDBItemsQuery struct {
-	TableName        string
-	AttributesToGet  string
-	Limit            int
-	FilterExpression string
-	Segment          int
-	TotalSegment     int
-	Marker           string
-	StartingKey      map[string]map[string]interface{}
-	EndingKey        map[string]map[string]interface{}
-}
-
-func (self *IgzTSDBItemsQuery) ToJsonString() string {
-	body, _ := json.Marshal(self)
-	return string(body)
-}
-
-func (self *IgzTSDBItemsQuery) InsertStartingKey(key string, value_type IgzType, value interface{}) error {
-	if _, ok := self.StartingKey[key]; ok {
-		err := fmt.Sprintf("Key %s Override existing key %v", key, self.StartingKey)
-		log.Error(err)
-		return errors.New(err)
-	}
-	self.StartingKey[key] = make(map[string]interface{})
-	self.StartingKey[key][string(value_type)] = value
-	return nil
-}
-
-func (self *IgzTSDBItemsQuery) InsertEndingKey(key string, value_type IgzType, value interface{}) error {
-	if _, ok := self.EndingKey[key]; ok {
-		err := fmt.Sprintf("Key %s Override existing key %v", key, self.EndingKey)
-		log.Error(err)
-		return errors.New(err)
-	}
-	self.EndingKey[key] = make(map[string]interface{})
-	self.EndingKey[key][string(value_type)] = value
-	return nil
-}
-
-
-func (item IgzTSDBItem) ConvertToTSDBItem() *IgzTSDBItem{
-	returnItem := IgzTSDBItem{}
-	return  &returnItem
-}
+*/

@@ -3,9 +3,9 @@
     "Format": "csv",
     "Separator": "|",
     "TSDBTime": "Time_Sequence",
-    "TSDBName" : "Broker_ID",
+    "TSDBName" : "Status_Flag",
     "TSDBValue" : "Total_Orders",
-    "TSDBLables" : "Status_Flag,Active_Status"
+    "TSDBLables" : "Active_Status"
   },
   "COLUMNS": [
     {
