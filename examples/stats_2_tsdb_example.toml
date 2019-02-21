@@ -2,8 +2,8 @@ title = "Workload example"
 
 [global]
     Duration = "160s"
-    server="127.0.0.1"
-    port="44001"
+    server="192.168.206.1"
+    port="46739"
     TLSMode=false
     [global.StatusCodesAcceptance]
         200 = 100.0 # upto 100% return status of 200
@@ -13,6 +13,7 @@ title = "Workload example"
 [workloads]
     [workloads.load_stats_to_tsdb]
         name="stats_to_tsdb"
+       	count=-1
         Generator="stats2tsdb"
         container="1"
         lazy=10

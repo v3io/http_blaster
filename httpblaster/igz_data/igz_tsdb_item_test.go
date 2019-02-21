@@ -1,16 +1,16 @@
-package httpblaster
+package igz_data
 
 import (
 	"testing"
-	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"math/rand"
 	"strconv"
+
 	"github.com/stretchr/testify/assert"
 	"time"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-var item = igz_data.IgzTSDBItem{}
+var item = IgzTSDBItem{}
 
 func init() {
 	/* load test data */
