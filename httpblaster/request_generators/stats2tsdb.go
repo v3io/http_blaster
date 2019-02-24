@@ -4,6 +4,7 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/data_generator"
 	"runtime"
+	"strconv"
 	"sync"
 )
 
@@ -25,7 +26,7 @@ func (self *Stats2TSDB) generate_request(ch_records chan []string, ch_req chan *
 		for i:=0;i<wl.Count ; i++ {
 
 			var contentType string = "text/html"
-			json_payload := gen.GenerateRandomData(cpuNumber)
+			json_payload := gen.GenerateRandomData(strconv.FormatInt(int64(i), 10))
 			for _, payload := range json_payload {
 				req := AcquireRequest()
 				self.PrepareRequest(contentType, self.workload.Header, "PUT",

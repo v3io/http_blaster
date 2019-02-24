@@ -20,7 +20,7 @@ type MemoryGenerator struct{
 	Active     uint64
 }
 
-func  (self *MemoryGenerator) GenerateRandomData(cpuNumber int) []string{
+func  (self *MemoryGenerator) GenerateRandomData(cpuNumber string) []string{
 	//stats, _ := cpu.Info()
 	//fmt.Println(stats)
 	v, _ := mem.VirtualMemory()
@@ -29,7 +29,7 @@ func  (self *MemoryGenerator) GenerateRandomData(cpuNumber int) []string{
 	return payloads
 }
 
-func  (self *MemoryGenerator) GenerateJsonByVal(timestamp string,colName string,val float64 , cpuNumber int) string{
+func  (self *MemoryGenerator) GenerateJsonByVal(timestamp string,colName string,val float64 , cpuNumber string) string{
 	//item :=igz_data.IgzTSDBItem{}
 	item :=igz_data.IgzTSDBItemV2{}
 	item.InsertMetric("memory")
@@ -42,11 +42,13 @@ func  (self *MemoryGenerator) GenerateJsonByVal(timestamp string,colName string,
 }
 
 
-func (self *MemoryGenerator) GenerateJsonArray(v *mem.VirtualMemoryStat,cpuNumber int) []string{
+func (self *MemoryGenerator) GenerateJsonArray(v *mem.VirtualMemoryStat,cpuNumber string) []string{
 	  timestamp :=  NowAsUnixMilli()
 	  arr :=  []string{}
 	  val := make(map[string]interface{})
-	  json.Unmarshal([]byte(v.String()), &val)
+	if err := json.Unmarshal([]byte(v.String()), &val) ; err!=nil {
+		panic(err)
+	}
 	  for s,vl := range val{
 	  	  f ,_ := getFloat(vl)
 		  arr = append(arr, self.GenerateJsonByVal(timestamp,s,f,cpuNumber))
