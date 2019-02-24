@@ -1,0 +1,30 @@
+title = "Workload example"
+
+[global]
+    Duration = "160s"
+    server="127.0.0.1"
+    port="8081"
+    TLSMode=false
+    [global.StatusCodesAcceptance]
+        200 = 100.0 # upto 100% return status of 200
+        204 = 100.0
+        205 = 100.0
+
+[workloads]
+    [workloads.load_stats_to_tsdb]
+        name="stats_to_tsdb"
+       	count=-1
+        Generator="stats2tsdb"
+        container="1"
+        lazy=10
+        Target="t1/"
+        workers=1
+
+
+
+
+
+
+
+
+

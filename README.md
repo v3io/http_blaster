@@ -1,4 +1,7 @@
-# http_blaster - go http load tool
+
+<p align="center"><img width=auto height=auto src="img/HTTP%20Blaster%20hand%20over%20small.png"></p>
+
+---
 
 [![Build Status](https://travis-ci.org/v3io/http_blaster.svg?branch=master)](https://travis-ci.org/v3io/http_blaster)
 
