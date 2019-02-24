@@ -1,6 +1,7 @@
 package igz_data
 
 import (
+	"fmt"
 	"testing"
 	"math/rand"
 	"strconv"
@@ -9,34 +10,45 @@ import (
 	"time"
 )
 
+var item2 = IgzTSDBItem{}
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-var item = IgzTSDBItem{}
+var metric = randSeq(10)
+var lables = map[string]string{"dc": "7",	"hostname":   "myhosts"}
+var timestamp = NowAsUnixMilli()
+var float_val = randFloat(0,rand.Float64())
+var lable_key = "lable"
+var lable_val = "lable_value"
 
 func init() {
+	item2.InsertMetric(metric)
+	item2.InsertLable(lable_key,lable_val)
+	item2.InsertSample(timestamp, float_val)
+
+	fmt.Println(item2.Samples)
 	/* load test data */
 }
 
-func Test_get_index_by_value(t *testing.T) {
+func Test_igz_tsdb_item_v2_init(t *testing.T) {
+	assert.Equal(t, metric, item2.Metric, "they should be equal")
 }
 
-func Test_igz_tsdb_item_add_value(t *testing.T) {
-	value := rand.Float64()
-	strValue := strconv.FormatFloat(value, 'f', -1, 64)
-	item.InsertValue(strValue)
-	assert.Equal(t, value, item.Value, "they should be equal")
+func Test_igz_tsdb_item_v2_lables(t *testing.T) {
+	assert.Equal(t, lable_val, item2.Labels[lable_key], "they should be equal")
 }
 
-func Test_igz_tsdb_item_add_name(t *testing.T) {
-	name := randSeq(10)
-	item.InsertName(name)
-	outputStr :=item.Lset.Get("__name__")
-	assert.Equal(t, name, outputStr, "they should be equal")
+func Test_igz_tsdb_item_v2_sample(t *testing.T) {
+	assert.Equal(t, timestamp, item2.Samples[0].T, "they should be equal")
+	assert.Equal(t, float_val, item2.Samples[0].V["n"], "they should be equal")
 }
 
-func Test_igz_tsdb_item_add_time(t *testing.T) {
-	timeStr := randomTimestamp()
-	item.InsertTimeString(timeStr)
-	assert.Equal(t, timeStr, item.Time, "they should be equal")
+func Test__igz_tsdb_item_v2_convert(t *testing.T) {
+	print(item2.ToJsonString())
+}
+
+func NowAsUnixMilli() string {
+	ts := time.Now().UnixNano() / 1e6
+	ts_str := strconv.FormatInt(ts, 10)
+	return ts_str
 }
 
 func randSeq(n int) string {
@@ -47,11 +59,10 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func randomTimestamp() string {
-	randomNow := strconv.FormatInt(time.Now().UnixNano() / int64(time.Millisecond),10)
-	return randomNow
+func randFloat(min, max float64) float64 {
+	res := min + rand.Float64() * (max - min)
+	return res
 }
-
 
 
 

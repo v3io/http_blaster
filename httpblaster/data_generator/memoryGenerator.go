@@ -31,14 +31,14 @@ func  (self *MemoryGenerator) GenerateRandomData(cpuNumber string) []string{
 
 func  (self *MemoryGenerator) GenerateJsonByVal(timestamp string,colName string,val float64 , cpuNumber string) string{
 	//item :=igz_data.IgzTSDBItem{}
-	item :=igz_data.IgzTSDBItemV2{}
+	item :=igz_data.IgzTSDBItem{}
 	item.InsertMetric("memory")
 	item.InsertLable("type",colName)
 	item.InsertLable("hostname",GetHostname())
 	item.InsertLable("cpu",string(cpuNumber))
 
 	item.InsertSample(timestamp,val)
-	return item.ConvertJsonString()
+	return item.ToJsonString()
 }
 
 
