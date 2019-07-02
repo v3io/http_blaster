@@ -1,4 +1,4 @@
-package test
+package httpblaster
 
 import (
 	"encoding/csv"
@@ -9,6 +9,11 @@ import (
 	"testing"
 	//"go/parser"
 	"strings"
+
+
+	"github.com/v3io/v3io-tsdb/pkg/utils"
+	"encoding/json"
+	"fmt"
 )
 
 
@@ -80,7 +85,7 @@ func Test_tsdb_Schema_Parser(t *testing.T) {
 			log.Println(j)
 			line_count++
 			if line_count%1024 == 0 {
-				//log.Printf("line: %d from file %s was submitted", line_count)
+				log.Printf("line: %d from file %s was submitted", line_count, f)
 			}
 		}
 	}
@@ -88,21 +93,21 @@ func Test_tsdb_Schema_Parser(t *testing.T) {
 
 
 }
-//
-//func Test_tsdb_to_json(t *testing.T) {
-//	item := igz_data.IgzTSDBItem{}
-//	item.Labels = utils.Labels{{Name: "__name__", Value: "name"}}
-//	item.Time = "1529659800000"
-//	item.Value = 1
-//	item2 := igz_data.IgzTSDBItem{}
-//	item2.Lset = utils.Labels{{Name: "__name__", Value: "name2"}}
-//	item2.Time = "1529659900000"
-//	item2.Value = 2
-//
-//	items := []igz_data.IgzTSDBItem{item, item2}
-//	body, _ := json.Marshal(items)
-//	fmt.Println(string(body))
-//}
+
+func Test_tsdb_to_json(t *testing.T) {
+	item := igz_data.IgzTSDBItem{}
+	item.Lset = utils.Labels{{Name: "__name__", Value: "name"}}
+	item.Time = "1529659800000"
+	item.Value = 1
+	item2 := igz_data.IgzTSDBItem{}
+	item2.Lset = utils.Labels{{Name: "__name__", Value: "name2"}}
+	item2.Time = "1529659900000"
+	item2.Value = 2
+
+	items := []igz_data.IgzTSDBItem{item, item2}
+	body, _ := json.Marshal(items)
+	fmt.Println(string(body))
+}
 
 
 

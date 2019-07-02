@@ -65,11 +65,6 @@ func NewEmdItem() *IgzEmdItem {
 	return i
 }
 
-func (self *IgzEmdItem) InitItem()  {
-	self.Key = make(map[string]map[string]interface{})
-	self.Item = make(map[string]map[string]interface{})
-}
-
 type IgzEmdItemUpdate struct {
 	//TableName           string
 	UpdateMode       string
