@@ -1,4 +1,4 @@
-package httpblaster
+package test
 
 import (
 	"github.com/v3io/http_blaster/httpblaster/igz_data"

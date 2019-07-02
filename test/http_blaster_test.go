@@ -1,4 +1,4 @@
-package httpblaster
+package test
 /*
 import (
 	"testing"
