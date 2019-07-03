@@ -1,20 +1,18 @@
 package data_generator
 
 import (
-	"github.com/shirou/gopsutil/mem"
-	"fmt"
-	"strconv"
-	"time"
-	"github.com/v3io/v3io-tsdb/pkg/utils"
-	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"encoding/json"
+	"fmt"
+	"strings"
+
+	//"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
+	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"os"
 	"reflect"
-	//"github.com/shirou/gopsutil/disk"
-	//"github.com/shirou/gopsutil/cpu"
+	"strconv"
+	"time"
 )
-
-
 
 type MemoryGenerator struct{
 	Total      uint64
@@ -22,66 +20,42 @@ type MemoryGenerator struct{
 	Active     uint64
 }
 
-func  (self *MemoryGenerator) GenerateRandomData() []string{
+func  (self *MemoryGenerator) GenerateRandomData(cpuNumber string) []string{
+	//stats, _ := cpu.Info()
+	//fmt.Println(stats)
 	v, _ := mem.VirtualMemory()
-	//cpuStat, _ := cpu.Info()
-	//println(cpuStat)
-	//percentage, _ := cpu.Percent(time.Second,false)
-	//println(percentage)
-	//diskStat, _ := disk.Usage("/")
-	//diskStat.String()
-
-
-	payloads :=self.GenrateJsonArray(v)
-	fmt.Println(payloads)
+	payloads :=self.GenerateJsonArray(v ,cpuNumber)
+	fmt.Println(strings.Join(payloads, ", "))
 	return payloads
 }
 
-func  (self *MemoryGenerator) GenerateJsonByVal(colName string,val float64) string{
+func  (self *MemoryGenerator) GenerateJsonByVal(timestamp string,colName string,val float64 , cpuNumber string) string{
+	//item :=igz_data.IgzTSDBItem{}
 	item :=igz_data.IgzTSDBItem{}
-	item.Time =  strconv.FormatInt(time.Now().UnixNano() / int64(time.Millisecond),10)
-	item.Value=float64(val)
-	//item.Lset=utils.Labels{{Name: "__name__",Value:colName}}
-	item.Lset=utils.Labels{{Name: "__name__",Value:"memo"}}
-	lable := utils.Label{Name: "host", Value:GetHostname() }
-	item.Lset=  append(item.Lset,lable)
-	collable := utils.Label{Name: "type", Value:colName }
-	item.Lset=  append(item.Lset,collable)
+	item.InsertMetric("memory")
+	item.InsertLable("type",colName)
+	item.InsertLable("hostname",GetHostname())
+	item.InsertLable("cpu",string(cpuNumber))
+
+	item.InsertSample(timestamp,val)
 	return item.ToJsonString()
 }
 
 
-func (self *MemoryGenerator) GenrateJsonArray(v *mem.VirtualMemoryStat) []string{
+func (self *MemoryGenerator) GenerateJsonArray(v *mem.VirtualMemoryStat,cpuNumber string) []string{
+	  timestamp :=  NowAsUnixMilli()
 	  arr :=  []string{}
 	  val := make(map[string]interface{})
-	  json.Unmarshal([]byte(v.String()), &val)
+	if err := json.Unmarshal([]byte(v.String()), &val) ; err!=nil {
+		panic(err)
+	}
 	  for s,vl := range val{
 	  	  f ,_ := getFloat(vl)
-		  arr = append(arr, self.GenerateJsonByVal(s,f))
+		  arr = append(arr, self.GenerateJsonByVal(timestamp,s,f,cpuNumber))
 	  	}
 	return arr
 }
 
-
-
-
-/*
-func (self *MemoryGenerator) ToJson() string{
-	v, err := json.Marshal(&self)
-	if err != nil {
-		fmt.Println("There was an error:", err)
-	}
-	return string(v)
-
-
-
-func (self *MemoryGenerator) ConvertToByteArray() {
-	reqBodyBytes := new(bytes.Buffer)
-	json.NewEncoder(reqBodyBytes).Encode(self)
-
-	reqBodyBytes.Bytes() // this is the []byte
-
-}}*/
 
 func GetHostname() string {
 	name, err := os.Hostname()
@@ -103,14 +77,8 @@ func getFloat(unk interface{}) (float64, error) {
 	return fv.Float(), nil
 }
 
-
-
-/*func  (self *MemoryGenerator) LoopThroughStruct(){
-
-	v, _ := mem.VirtualMemory()
-	stat, _ := json.Marshal(v)
-	fmt.Println(stat)
-}*/
-
-
-
+func NowAsUnixMilli() string {
+	ts := time.Now().UnixNano() / 1e6
+	ts_str := strconv.FormatInt(ts, 10)
+	return ts_str
+}

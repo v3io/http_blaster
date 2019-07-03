@@ -67,7 +67,7 @@ var (
 	max_concurrent_workloads int = 1000
 )
 
-const AppVersion = "3.0.8"
+const AppVersion = "3.0.9"
 
 func init() {
 	const (
@@ -147,7 +147,7 @@ func write_mem_profile() {
 func parse_cmd_line_args() {
 	flag.Parse()
 	if showVersion {
-		log.Printf("Running Version %s", AppVersion)
+		fmt.Println(AppVersion)
 		os.Exit(0)
 	}
 }
