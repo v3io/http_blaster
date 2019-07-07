@@ -33,9 +33,13 @@ func randomBase64String(l int) string {
 	return str[:l] // strip 1 extra character we get from odd length results
 }
 
+func (self *Fake) Init() {
+	gofakeit.Seed(0)
+}
+
 func (self *Fake) GenerateRandomData() string {
 	self.Key = randomBase64String(16)
-	gofakeit.Seed(0)
+
 	self.Name = gofakeit.Name()                                         // Markus Moen
 	self.Email = gofakeit.Email()                                       // alaynawuckert@kozey.biz
 	self.Phone = gofakeit.Phone()                                       // (570)245-7485
@@ -56,7 +60,7 @@ func (self *Fake) ConvertToIgzEmdItemJson() string {
 	emdItem := igz_data.IgzEmdItem{}
 	emdItem.ToJsonString()
 	emdItem.InitItem()
-	emdItem.InsertKey("name", igz_data.T_STRING, self.Key)
+	emdItem.InsertKey("key", igz_data.T_STRING, self.Key)
 	emdItem.InsertItemAttr("Name", igz_data.T_STRING, self.Name)
 	log.Info(emdItem.ToJsonString())
 	return emdItem.ToJsonString()

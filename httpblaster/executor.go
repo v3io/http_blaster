@@ -123,7 +123,7 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 		req_gen = &request_generators.Stats2TSDB{}
 		break
 	case request_generators.FAKER2KV:
-		req_gen = &request_generators.Faker2kv{}
+		req_gen = &request_generators.Faker2KV{}
 		break
 
 	default:

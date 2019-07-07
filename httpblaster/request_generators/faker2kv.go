@@ -3,9 +3,12 @@ package request_generators
 import (
 	"github.com/v3io/http_blaster/httpblaster/config"
 	"github.com/v3io/http_blaster/httpblaster/data_generator"
+	"github.com/v3io/http_blaster/httpblaster/utils"
 	"runtime"
 	"sync"
 )
+
+var faker = data_generator.Fake{}
 
 type Faker2KV struct {
 	workload config.Workload
@@ -19,7 +22,7 @@ func (self *Faker2KV) UseCommon(c RequestCommon) {
 func (self *Faker2KV) generate_request(ch_records chan []string, ch_req chan *Request, host string,
 	wg *sync.WaitGroup, cpuNumber int, wl config.Workload) {
 	defer wg.Done()
-	var faker = data_generator.Fake{}
+	faker.Init()
 	for i := 0; i < wl.Count; i++ {
 
 		var contentType string = "text/html"
@@ -46,6 +49,8 @@ func (self *Faker2KV) generate(ch_req chan *Request, payload string, host string
 }
 
 func (self *Faker2KV) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response, worker_qd int) chan *Request {
+	// generating partition
+	part := self.GenerateCurrentPartition()
 
 	self.workload = wl
 
@@ -54,11 +59,15 @@ func (self *Faker2KV) GenerateRequests(global config.Global, wl config.Workload,
 	}
 	self.workload.Header["X-v3io-function"] = "PutItem"
 
-	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target)
+	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target+part)
 
 	ch_req := make(chan *Request, worker_qd)
 
 	go self.generate(ch_req, self.workload.Payload, host, wl)
 
 	return ch_req
+}
+
+func (self *Faker2KV) GenerateCurrentPartition() string {
+	return utils.GeneratePartitionedRequest("hour")
 }

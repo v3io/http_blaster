@@ -7,12 +7,12 @@ import (
 )
 
 func Test_facker_generator(t *testing.T) {
-	gen := data_generator.Faker{}
+	gen := data_generator.Fake{}
 	gen.GenerateRandomData()
 }
 
 func Test_facker_generator_to_igzemditem(t *testing.T) {
-	gen := data_generator.Faker{}
+	gen := data_generator.Fake{}
 	gen.GenerateRandomData()
 	str := gen.ConvertToIgzEmdItemJson()
 	fmt.Println(str)
