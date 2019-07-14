@@ -26,15 +26,18 @@ type Fake struct {
 	JobTitle         string
 	Password         string
 	CurrencyShort    string
-	Year             string
-	Month            string
-	Day              string
-	Hour             string
+	Year             string `json:"year"`
+	Month            string `json:"month"`
+	Day              string `json:"day"`
+	Hour             string `json:"hour"`
 }
 
 func randomBase64String(l int) string {
 	buff := make([]byte, int(math.Round(float64(l)/float64(1.33333333333))))
-	rand.Read(buff)
+	_, err := rand.Read(buff)
+	if err != nil {
+		panic(err)
+	}
 	str := base64.RawURLEncoding.EncodeToString(buff)
 	return str[:l] // strip 1 extra character we get from odd length results
 }
@@ -84,10 +87,10 @@ func (self *Fake) ConvertToIgzEmdItemJson() string {
 	emdItem.InsertItemAttr("HackerPhrase", igz_data.T_STRING, self.HackerPhrase)
 	emdItem.InsertItemAttr("JobTitle", igz_data.T_STRING, self.JobTitle)
 	emdItem.InsertItemAttr("Password", igz_data.T_STRING, self.Password)
-	emdItem.InsertItemAttr("Year", igz_data.T_NUMBER, self.Year)
-	emdItem.InsertItemAttr("Month", igz_data.T_NUMBER, self.Month)
-	emdItem.InsertItemAttr("Day", igz_data.T_NUMBER, self.Day)
-	emdItem.InsertItemAttr("Hour", igz_data.T_NUMBER, self.Hour)
-	log.Info(emdItem.ToJsonString())
+	emdItem.InsertItemAttr("year", igz_data.T_NUMBER, self.Year)
+	emdItem.InsertItemAttr("month", igz_data.T_NUMBER, self.Month)
+	emdItem.InsertItemAttr("day", igz_data.T_NUMBER, self.Day)
+	emdItem.InsertItemAttr("hour", igz_data.T_NUMBER, self.Hour)
+	log.Debug(emdItem.ToJsonString())
 	return emdItem.ToJsonString()
 }
