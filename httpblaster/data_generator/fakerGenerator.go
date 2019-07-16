@@ -47,7 +47,7 @@ func (self *Fake) Init() {
 }
 
 func (self *Fake) GenerateRandomData() string {
-	t := time.Now()
+	t := time.Now().AddDate(0, 0, 0)
 	self.Key = randomBase64String(16)
 
 	self.Name = gofakeit.Name()                                         // Markus Moen
@@ -75,7 +75,10 @@ func (self *Fake) ConvertToIgzEmdItemJson() string {
 	emdItem := igz_data.IgzEmdItem{}
 	emdItem.ToJsonString()
 	emdItem.InitItem()
-	emdItem.InsertKey("key", igz_data.T_STRING, self.Key)
+	err := emdItem.InsertKey("key", igz_data.T_STRING, self.Key)
+	if err != nil {
+		log.Error(err)
+	}
 	emdItem.InsertItemAttr("Name", igz_data.T_STRING, self.Name)
 	emdItem.InsertItemAttr("Email", igz_data.T_STRING, self.Email)
 	emdItem.InsertItemAttr("Phone", igz_data.T_STRING, self.Phone)

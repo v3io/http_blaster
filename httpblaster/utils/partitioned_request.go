@@ -53,7 +53,8 @@ func PrintTime() {
 }
 
 func GeneratePartitionedRequest(partition_by string) string {
-	t := time.Now()
+	//t := time.Now()
+	t := time.Now().AddDate(0, 0, 0)
 	if partition_by == "year" {
 		return fmt.Sprintf("/year=%d/",
 			t.Year())
