@@ -23,6 +23,7 @@ const (
 	REPLAY      = "replay"
 	CSV2TSDB    = "csv2tsdb"
 	STATS2TSDB  = "stats2tsdb"
+	CSV2KVPERF  = "csv2kv_perf"
 )
 
 type RequestCommon struct {
