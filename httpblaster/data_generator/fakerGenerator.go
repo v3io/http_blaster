@@ -44,10 +44,10 @@ func randomBase64String(l int) string {
 }
 
 func (self *Fake) Init() {
-	gofakeit.Seed(0)
+	gofakeit.Seed(time.Now().UnixNano())
 }
 
-func (self *Fake) GenerateRandomData() string {
+func (self *Fake) GenerateRandomData() {
 	t := time.Now().AddDate(0, 0, 0)
 	self.Key = randomBase64String(16)
 
@@ -67,9 +67,6 @@ func (self *Fake) GenerateRandomData() string {
 	self.Month = strconv.Itoa(int(t.Month()))
 	self.Day = strconv.Itoa(t.Day())
 	self.Hour = strconv.Itoa(t.Hour())
-
-	//return self.ToJsonString()// USD
-	return ""
 }
 
 func (self *Fake) ConvertToIgzEmdItemJson() string {

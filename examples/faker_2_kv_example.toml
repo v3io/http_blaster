@@ -18,6 +18,7 @@ title = "Workload example"
         container="bigdata"
         lazy=10
         Target="faker2kv/"
-        workers=1
+        workers=100
+        Partition="day"
         [workloads.load_faker_to_kv.Header]
         "Authorization"="Basic abcdefg"

@@ -89,6 +89,7 @@ type Workload struct {
 	Separator        string
 	UpdateMode       string
 	UpdateExpression string
+	Partition        string //year,month,day,hour
 }
 
 func LoadConfig(file_path string) (TomlConfig, error) {
