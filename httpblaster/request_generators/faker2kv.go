@@ -6,6 +6,7 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/utils"
 	"runtime"
 	"sync"
+	"time"
 )
 
 var faker = data_generator.Fake{}
@@ -19,40 +20,12 @@ func (receiver *Faker2KV) UseCommon(c RequestCommon) {
 
 }
 
-func (receiver *Faker2KV) generateRequest(chRecords chan []string, chReq chan *Request, host string,
-	wg *sync.WaitGroup, cpuNumber int, wl config.Workload) {
-	defer wg.Done()
-	faker.Init()
-	for i := 0; i < wl.Count; i++ {
-
-		var contentType = "text/html"
-		faker.GenerateRandomData()
-		jsonPayload := faker.ConvertToIgzEmdItemJson()
-		req := AcquireRequest()
-		receiver.PrepareRequest(contentType, receiver.workload.Header, "PUT",
-			receiver.base_uri, jsonPayload, host, req.Request)
-		chReq <- req
-	}
-}
-
-func (receiver *Faker2KV) generate(ch_req chan *Request, payload string, host string, wl config.Workload) {
-	defer close(ch_req)
-	var chRecords = make(chan []string, 1000)
-	wg := sync.WaitGroup{}
-	wg.Add(runtime.NumCPU())
-	for c := 0; c < runtime.NumCPU(); c++ {
-		go receiver.generateRequest(chRecords, ch_req, host, &wg, c, wl)
-	}
-
-	close(chRecords)
-	wg.Wait()
-}
-
 func (receiver *Faker2KV) GenerateRequests(global config.Global, wl config.Workload, tlsMode bool, host string, retCh chan *Response, workerQd int) chan *Request {
 	// generating partition
+	t := time.Now().UTC().AddDate(0, 0, 0)
 	part := ""
 	if wl.Partition != "" {
-		part = receiver.GenerateCurrentPartition(wl.Partition)
+		part = receiver.GenerateCurrentPartition(wl.Partition, t)
 	}
 
 	receiver.workload = wl
@@ -71,6 +44,36 @@ func (receiver *Faker2KV) GenerateRequests(global config.Global, wl config.Workl
 	return ch_req
 }
 
-func (receiver *Faker2KV) GenerateCurrentPartition(partitionBy string) string {
-	return utils.GeneratePartitionedRequest(partitionBy)
+func (receiver *Faker2KV) generate(ch_req chan *Request, payload string, host string, wl config.Workload) {
+	defer close(ch_req)
+	var chRecords = make(chan []string, 1000)
+	wg := sync.WaitGroup{}
+	wg.Add(runtime.NumCPU())
+	for c := 0; c < runtime.NumCPU(); c++ {
+		go receiver.generateRequest(chRecords, ch_req, host, &wg, c, wl)
+	}
+
+	close(chRecords)
+	wg.Wait()
+}
+
+func (receiver *Faker2KV) generateRequest(chRecords chan []string, chReq chan *Request, host string,
+	wg *sync.WaitGroup, cpuNumber int, wl config.Workload) {
+	defer wg.Done()
+	faker.Init()
+	for i := 0; i < wl.Count; i++ {
+
+		//receiver.SetBaseUri(tlsMode, host, receiver.workload.Container, receiver.workload.Target+part)
+		var contentType = "text/html"
+		faker.GenerateRandomData(time.Now().UTC())
+		jsonPayload := faker.ConvertToIgzEmdItemJson()
+		req := AcquireRequest()
+		receiver.PrepareRequest(contentType, receiver.workload.Header, "PUT",
+			receiver.base_uri, jsonPayload, host, req.Request)
+		chReq <- req
+	}
+}
+
+func (receiver *Faker2KV) GenerateCurrentPartition(partitionBy string, t time.Time) string {
+	return utils.GeneratePartitionedRequest(partitionBy, t)
 }

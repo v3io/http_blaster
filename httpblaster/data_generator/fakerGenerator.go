@@ -33,7 +33,6 @@ type Fake struct {
 }
 
 func randomBase64String(l int) string {
-
 	buff := make([]byte, int(math.Round(float64(l)/float64(1.33333333333))))
 	_, err := rand.Read(buff)
 	if err != nil {
@@ -47,8 +46,8 @@ func (self *Fake) Init() {
 	gofakeit.Seed(time.Now().UnixNano())
 }
 
-func (self *Fake) GenerateRandomData() {
-	t := time.Now().AddDate(0, 0, 0)
+func (self *Fake) GenerateRandomData(t time.Time) {
+	//t := time.Now().UTC().AddDate(0, 0, 0)
 	self.Key = randomBase64String(16)
 
 	self.Name = gofakeit.Name()                                         // Markus Moen
