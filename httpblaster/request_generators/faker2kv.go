@@ -39,18 +39,18 @@ func (receiver *Faker2KV) GenerateRequests(global config.Global, wl config.Workl
 
 	ch_req := make(chan *Request, workerQd)
 
-	go receiver.generate(ch_req, receiver.workload.Payload, host, wl)
+	go receiver.generate(ch_req, receiver.workload.Payload, host, wl, tlsMode)
 
 	return ch_req
 }
 
-func (receiver *Faker2KV) generate(ch_req chan *Request, payload string, host string, wl config.Workload) {
+func (receiver *Faker2KV) generate(ch_req chan *Request, payload string, host string, wl config.Workload, tlsMode bool) {
 	defer close(ch_req)
 	var chRecords = make(chan []string, 1000)
 	wg := sync.WaitGroup{}
 	wg.Add(runtime.NumCPU())
 	for c := 0; c < runtime.NumCPU(); c++ {
-		go receiver.generateRequest(chRecords, ch_req, host, &wg, c, wl)
+		go receiver.generateRequest(chRecords, ch_req, host, &wg, c, wl, tlsMode)
 	}
 
 	close(chRecords)
@@ -58,15 +58,18 @@ func (receiver *Faker2KV) generate(ch_req chan *Request, payload string, host st
 }
 
 func (receiver *Faker2KV) generateRequest(chRecords chan []string, chReq chan *Request, host string,
-	wg *sync.WaitGroup, cpuNumber int, wl config.Workload) {
+	wg *sync.WaitGroup, cpuNumber int, wl config.Workload, tlsMode bool) {
 	defer wg.Done()
 	faker.Init()
 	for i := 0; i < wl.Count; i++ {
 
 		//receiver.SetBaseUri(tlsMode, host, receiver.workload.Container, receiver.workload.Target+part)
 		var contentType = "text/html"
-		faker.GenerateRandomData(time.Now().UTC())
+		current_time := time.Now().UTC()
+		faker.GenerateRandomData(current_time)
 		jsonPayload := faker.ConvertToIgzEmdItemJson()
+		part := receiver.GenerateCurrentPartition(receiver.workload.Partition, current_time)
+		receiver.SetBaseUri(tlsMode, host, receiver.workload.Container, receiver.workload.Target+part)
 		req := AcquireRequest()
 		receiver.PrepareRequest(contentType, receiver.workload.Header, "PUT",
 			receiver.base_uri, jsonPayload, host, req.Request)
