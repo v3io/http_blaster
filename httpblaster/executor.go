@@ -86,7 +86,6 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 		}
 		break
 
-
 	case request_generators.LINE2STREAM:
 		req_gen = &request_generators.Line2StreamGenerator{}
 		break
@@ -125,6 +124,9 @@ func (self *Executor) load_request_generator() (chan *request_generators.Request
 		break
 	case request_generators.STATS2TSDB:
 		req_gen = &request_generators.Stats2TSDB{}
+		break
+	case request_generators.FAKER2KV:
+		req_gen = &request_generators.Faker2KV{}
 		break
 
 	default:
