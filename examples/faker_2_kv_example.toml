@@ -1,23 +1,27 @@
 title = "Workload example"
 
 [global]
-    Duration = "160s"
-    server="webapi.default-tenant.app.hostname.lab.iguazeng.com"
-    port="8081"
-    TLSMode=false
+    Duration="3600s"
+    servers=["Servers"]
+    port="8444"
+    TLSMode=true
     [global.StatusCodesAcceptance]
         200 = 100.0 # upto 100% return status of 200
         204 = 100.0
         205 = 100.0
 
 [workloads]
-    [workloads.load_faker_to_kv]
-        name="faker_to_kv"
-        count=1
+    [workloads.fakertokv]
+        name="load_faker_to_kv"
         Generator="faker2kv"
-        container="bigdata"
-        lazy=10
-        Target="faker2kv/"
+        container="parquez"
+        count=10000000000000000
+        duration="72h"
+        lazy = 100
+        type="PUT"
         workers=1
-        [workloads.load_faker_to_kv.Header]
-        "Authorization"="Basic abcdefg"
+        Target="faker/"
+        Partition="day"
+    [workloads.fakertokv.Header]
+        "Authorization"="Authorization"
+

@@ -6,6 +6,7 @@ import (
 	"github.com/v3io/http_blaster/httpblaster/utils"
 	"runtime"
 	"sync"
+	"time"
 )
 
 var faker = data_generator.Fake{}
@@ -15,59 +16,67 @@ type Faker2KV struct {
 	RequestCommon
 }
 
-func (self *Faker2KV) UseCommon(c RequestCommon) {
+func (receiver *Faker2KV) UseCommon(c RequestCommon) {
 
 }
 
-func (self *Faker2KV) generate_request(ch_records chan []string, ch_req chan *Request, host string,
-	wg *sync.WaitGroup, cpuNumber int, wl config.Workload) {
-	defer wg.Done()
-	faker.Init()
-	for i := 0; i < wl.Count; i++ {
-
-		var contentType string = "text/html"
-		faker.GenerateRandomData()
-		json_payload := faker.ConvertToIgzEmdItemJson()
-		req := AcquireRequest()
-		self.PrepareRequest(contentType, self.workload.Header, "PUT",
-			self.base_uri, json_payload, host, req.Request)
-		ch_req <- req
-	}
-}
-
-func (self *Faker2KV) generate(ch_req chan *Request, payload string, host string, wl config.Workload) {
-	defer close(ch_req)
-	var ch_records chan []string = make(chan []string, 1000)
-	wg := sync.WaitGroup{}
-	wg.Add(runtime.NumCPU())
-	for c := 0; c < runtime.NumCPU(); c++ {
-		go self.generate_request(ch_records, ch_req, host, &wg, c, wl)
-	}
-
-	close(ch_records)
-	wg.Wait()
-}
-
-func (self *Faker2KV) GenerateRequests(global config.Global, wl config.Workload, tls_mode bool, host string, ret_ch chan *Response, worker_qd int) chan *Request {
+func (receiver *Faker2KV) GenerateRequests(global config.Global, wl config.Workload, tlsMode bool, host string, retCh chan *Response, workerQd int) chan *Request {
 	// generating partition
-	part := self.GenerateCurrentPartition()
-
-	self.workload = wl
-
-	if self.workload.Header == nil {
-		self.workload.Header = make(map[string]string)
+	t := time.Now().UTC().AddDate(0, 0, 0)
+	part := ""
+	if wl.Partition != "" {
+		part = receiver.GenerateCurrentPartition(wl.Partition, t)
 	}
-	self.workload.Header["X-v3io-function"] = "PutItem"
 
-	self.SetBaseUri(tls_mode, host, self.workload.Container, self.workload.Target+part)
+	receiver.workload = wl
 
-	ch_req := make(chan *Request, worker_qd)
+	if receiver.workload.Header == nil {
+		receiver.workload.Header = make(map[string]string)
+	}
+	receiver.workload.Header["X-v3io-function"] = "PutItem"
 
-	go self.generate(ch_req, self.workload.Payload, host, wl)
+	receiver.SetBaseUri(tlsMode, host, receiver.workload.Container, receiver.workload.Target+part)
+
+	ch_req := make(chan *Request, workerQd)
+
+	go receiver.generate(ch_req, receiver.workload.Payload, host, wl, tlsMode)
 
 	return ch_req
 }
 
-func (self *Faker2KV) GenerateCurrentPartition() string {
-	return utils.GeneratePartitionedRequest("hour")
+func (receiver *Faker2KV) generate(ch_req chan *Request, payload string, host string, wl config.Workload, tlsMode bool) {
+	defer close(ch_req)
+	var chRecords = make(chan []string, 1000)
+	wg := sync.WaitGroup{}
+	wg.Add(runtime.NumCPU())
+	for c := 0; c < runtime.NumCPU(); c++ {
+		go receiver.generateRequest(chRecords, ch_req, host, &wg, c, wl, tlsMode)
+	}
+
+	close(chRecords)
+	wg.Wait()
+}
+
+func (receiver *Faker2KV) generateRequest(chRecords chan []string, chReq chan *Request, host string,
+	wg *sync.WaitGroup, cpuNumber int, wl config.Workload, tlsMode bool) {
+	defer wg.Done()
+	faker.Init()
+	for i := 0; i < wl.Count; i++ {
+
+		//receiver.SetBaseUri(tlsMode, host, receiver.workload.Container, receiver.workload.Target+part)
+		var contentType = "text/html"
+		current_time := time.Now().UTC()
+		faker.GenerateRandomData(current_time)
+		jsonPayload := faker.ConvertToIgzEmdItemJson()
+		part := receiver.GenerateCurrentPartition(receiver.workload.Partition, current_time)
+		receiver.SetBaseUri(tlsMode, host, receiver.workload.Container, receiver.workload.Target+part)
+		req := AcquireRequest()
+		receiver.PrepareRequest(contentType, receiver.workload.Header, "PUT",
+			receiver.base_uri, jsonPayload, host, req.Request)
+		chReq <- req
+	}
+}
+
+func (receiver *Faker2KV) GenerateCurrentPartition(partitionBy string, t time.Time) string {
+	return utils.GeneratePartitionedRequest(partitionBy, t)
 }

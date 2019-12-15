@@ -13,15 +13,14 @@ title = "Workload example"
 [workloads]
     [workloads.load_to_t1]
         name="load_to_t1"
-        Generator="csv2kv"
-        container="1"
-        Target="t2/"
+        Generator="csv2kv_perf"
+        container="bigdata"
+        Target="mytable/"
         workers=10
+        duration="60s"
         payload="examples/payloads/order-book-sample.csv"
         schema="examples/schemas/schema_example.json"
-
-
-
-
-
+	[workloads.load_to_t1.header]
+          X-v3io-session-key="a90a2aa8-663a-497d-98d0-47f260080615"
+          X-v3io-function="PutItem"
 
