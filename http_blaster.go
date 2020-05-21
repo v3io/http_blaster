@@ -53,7 +53,7 @@ var (
 	ex_group       sync.WaitGroup
 	enable_log     bool
 	log_file       *os.File
-	worker_qd      int  = 10000
+	worker_qd      int  = 0
 	verbose        bool = false
 	enable_ui      bool
 	ch_put_latency chan time.Duration
@@ -79,7 +79,7 @@ func init() {
 		default_results_file  = "example.results"
 		usage_log_file        = "enable stdout to log"
 		default_log_file      = true
-		default_worker_qd     = 10000
+		default_worker_qd     = 0
 		usage_worker_qd       = "queue depth for worker requests"
 		usage_verbose         = "print debug logs"
 		default_verbose       = false
@@ -185,6 +185,7 @@ func generate_executors(term_ui *tui.Term_ui) {
 			Hosts:          cfg.Global.Servers,
 			TLS_mode:       cfg.Global.TLSMode,
 			Data_bfr:       dataBfr,
+			WorkerQd:       worker_qd,
 			TermUi:         term_ui,
 			Ch_get_latency: ch_get_latency,
 			Ch_put_latency: ch_put_latency,

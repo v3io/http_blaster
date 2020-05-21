@@ -67,8 +67,8 @@ type items_s struct {
 	Items            []map[string]map[string]interface{}
 }
 
-func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_ids map[string]interface{}) chan *BackupItem {
-	ch_items := make(chan *BackupItem, 100000)
+func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_ids map[string]interface{}, worker_qd int) chan *BackupItem {
+	ch_items := make(chan *BackupItem, worker_qd)
 	wg := sync.WaitGroup{}
 	routines := 1 //runtime.NumCPU()/2
 	wg.Add(routines)
@@ -194,7 +194,7 @@ func (self *RestoreGenerator) GenerateRequests(global config.Global, wl config.W
 
 	ch_lines := self.line_reader()
 
-	ch_items := self.generate_items(ch_lines, inode_map)
+	ch_items := self.generate_items(ch_lines, inode_map, worker_qd)
 
 	go self.generate(ch_req, ch_items, host)
 
