@@ -57,7 +57,7 @@ func (self *Fake) GenerateRandomData(t time.Time) {
 	self.BeerName = gofakeit.BeerName()                                 // Duvel
 	self.Color = gofakeit.Color()                                       // MediumOrchid
 	self.Company = gofakeit.Company()                                   // Moen, Pagac and Wuckert
-	self.CreditCardNumber = strconv.Itoa(gofakeit.CreditCardNumber())   // 4287271570245748
+	self.CreditCardNumber = gofakeit.CreditCardNumber(nil)              // 4287271570245748
 	self.HackerPhrase = gofakeit.HackerPhrase()                         // Connecting the array won't do anything, we need to generate the haptic COM driver!
 	self.JobTitle = gofakeit.JobTitle()                                 // Director
 	self.Password = gofakeit.Password(true, true, true, true, true, 32) // WV10MzLxq2DX79w1omH97_0ga59j8!kj
