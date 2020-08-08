@@ -19,7 +19,7 @@ import (
 )
 
 const DialTimeout = 600 * time.Second
-const RequestTimeout = 600 * time.Second
+const RequestTimeout = 900 * time.Second
 
 var do_once sync.Once
 
