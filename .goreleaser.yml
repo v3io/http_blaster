@@ -1,0 +1,74 @@
+project_name: http_blaster
+env:
+  - GO111MODULE=on
+  - GOPROXY=goproxy.devops.iguazeng.com
+before:
+  hooks:
+    - go mod download
+builds:
+  - id: http_blaster
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    binary: http_blaster
+    ldflags:
+      - -s -w -X main.AppVersion={{ .Version }}
+  - id: http_blaster_latest
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+    binary: http_blaster
+    ldflags:
+      - -s -w -X main.AppVersion={{ .Version }}
+archives:
+  - id: http_blaster
+    name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    format: binary
+    replacements:
+      amd64: x86_64
+    builds:
+      - http_blaster
+    allow_different_binary_count: true
+  - id: http_blaster_latest
+    name_template: '{{ .ProjectName }}'
+    format: binary
+    builds:
+      - http_blaster_latest
+    allow_different_binary_count: true
+release:
+  ids:
+    - http_blaster
+artifactories:
+  - name: iguazio
+    target: https://artifactory.iguazeng.com/artifactory/iguazio_naipi/{{ .ProjectName }}/{{ .Version }}/
+    mode: binary
+    checksum: true
+    ids:
+      - http_blaster
+  - name: naipi
+    target: https://artifactory.iguazeng.com/artifactory/iguazio_naipi/{{ .ProjectName }}/
+    mode: binary
+    checksum: true
+    ids:
+      - http_blaster_latest
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+  disable: false
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - Merge pull request
+      - Merge branch
