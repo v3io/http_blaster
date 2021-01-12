@@ -65,9 +65,9 @@ var (
 	dump_failures bool   = true
 	dump_location string = "."
 	max_concurrent_workloads int = 1000
+        AppVersion = "development"
 )
 
-const AppVersion = "3.0.10"
 
 func init() {
 	const (
