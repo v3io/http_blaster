@@ -85,6 +85,8 @@ github.com/rivo/uniseg v0.1.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJ
 github.com/rs/xid v1.1.0/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
 github.com/sasile/gohistogram v1.0.0 h1:vSRY29ZU0Us2mJJJOCxmmpwU1JfrYDDq00AjcwMzHhw=
 github.com/sasile/gohistogram v1.0.0/go.mod h1:i7H6SKiUj0wNdaPiGKb3oVUcLu3X4L+2eHctglOuC1Y=
+github.com/sasile/gohistogram v1.0.1-0.20180425111433-5001302df51a h1:oWWADuReCzBWnNGThpv+e5bjFvpikT/SiRtuipyN9nc=
+github.com/sasile/gohistogram v1.0.1-0.20180425111433-5001302df51a/go.mod h1:i7H6SKiUj0wNdaPiGKb3oVUcLu3X4L+2eHctglOuC1Y=
 github.com/shirou/gopsutil v3.20.12+incompatible h1:6VEGkOXP/eP4o2Ilk8cSsX0PhOEfX6leqAnD+urrp9M=
 github.com/shirou/gopsutil v3.20.12+incompatible/go.mod h1:5b4v6he4MtMOwMlS0TUMTu2PcXUg8+E1lC7eC3UO/RA=
 github.com/sirupsen/logrus v1.7.0 h1:ShrD1U9pZB12TX0cVy0DtePoCH97K8EtX+mg7ZARUtM=

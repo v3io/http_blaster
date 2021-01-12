@@ -3,12 +3,13 @@ package data_generator
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"github.com/brianvoe/gofakeit"
-	log "github.com/sirupsen/logrus"
-	"github.com/v3io/http_blaster/httpblaster/igz_data"
 	"math"
 	"strconv"
 	"time"
+
+	"github.com/brianvoe/gofakeit"
+	log "github.com/sirupsen/logrus"
+	"github.com/v3io/http_blaster/httpblaster/igz_data"
 )
 
 // Create structs with random injected data
@@ -21,7 +22,7 @@ type Fake struct {
 	BeerName         string
 	Color            string
 	Company          string
-	CreditCardNumber string
+	CreditCardNumber int
 	HackerPhrase     string
 	JobTitle         string
 	Password         string
@@ -57,7 +58,7 @@ func (self *Fake) GenerateRandomData(t time.Time) {
 	self.BeerName = gofakeit.BeerName()                                 // Duvel
 	self.Color = gofakeit.Color()                                       // MediumOrchid
 	self.Company = gofakeit.Company()                                   // Moen, Pagac and Wuckert
-	self.CreditCardNumber = gofakeit.CreditCardNumber(nil)              // 4287271570245748
+	self.CreditCardNumber = gofakeit.CreditCardNumber()                 // 4287271570245748
 	self.HackerPhrase = gofakeit.HackerPhrase()                         // Connecting the array won't do anything, we need to generate the haptic COM driver!
 	self.JobTitle = gofakeit.JobTitle()                                 // Director
 	self.Password = gofakeit.Password(true, true, true, true, true, 32) // WV10MzLxq2DX79w1omH97_0ga59j8!kj

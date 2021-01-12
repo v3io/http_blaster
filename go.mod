@@ -1,6 +1,6 @@
 module github.com/v3io/http_blaster
 
-go 1.14
+go 1.12
 
 replace github.com/v3io/v3io-tsdb => github.com/v3io/v3io-tsdb v0.11.6
 
@@ -18,7 +18,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/nsf/termbox-go v0.0.0-20201124104050-ed494de23a00 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/sasile/gohistogram v1.0.0
+	github.com/sasile/gohistogram v1.0.1-0.20180425111433-5001302df51a
 	github.com/shirou/gopsutil v3.20.12+incompatible
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1 // indirect
