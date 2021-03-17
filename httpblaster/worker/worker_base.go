@@ -133,6 +133,9 @@ func (w *WorkerBase) send(req *fasthttp.Request, resp *fasthttp.Response,
 		w.ch_duration <- end.Sub(start)
 	}()
 
+	if !w.timer.Stop() {
+		<-w.timer.C
+	}
 	w.timer.Reset(timeout)
 	select {
 	case duration := <-w.ch_duration:
