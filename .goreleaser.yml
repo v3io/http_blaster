@@ -39,8 +39,10 @@ archives:
       - http_blaster
     allow_different_binary_count: true
   - id: http_blaster_latest
-    name_template: '{{ .ProjectName }}'
+    name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
     format: binary
+    replacements:
+      amd64: x86_64
     builds:
       - http_blaster_latest
     allow_different_binary_count: true
