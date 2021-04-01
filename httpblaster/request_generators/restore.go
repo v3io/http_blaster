@@ -106,6 +106,7 @@ func (self *RestoreGenerator) generate_items(ch_lines chan []byte, collection_id
 							payload.WriteString(`{"Item": `)
 							payload.Write(j)
 							payload.WriteString(`}`)
+							log.Debugf("queuing req: %s\n", self.base_uri + dir_name.(string) + item_name.(string))
 							ch_items <- &BackupItem{Uri: self.base_uri + dir_name.(string) + item_name.(string),
 								Payload: payload.Bytes()}
 						} else {
