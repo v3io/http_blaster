@@ -133,6 +133,7 @@ func (self *RestoreGenerator) generate(ch_req chan *Request,
 				req := AcquireRequest()
 				self.PrepareRequestBytes(contentType, self.workload.Header, "PUT",
 					item.Uri, item.Payload, host, req.Request)
+				log.Debugf("item to restore: %s\n", item.Uri)
 				ch_req <- req
 			}
 		}()
