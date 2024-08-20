@@ -23,5 +23,5 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/v3io/v3io-tsdb v0.10.9
-	github.com/valyala/fasthttp v1.19.0
+	github.com/valyala/fasthttp v1.34.0
 )
